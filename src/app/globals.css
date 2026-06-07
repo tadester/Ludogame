@@ -1,26 +1,133 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #07111f;
+  --panel: #102238;
+  --panel-border: #31506c;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --accent: #d4af37;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: Arial, Helvetica, sans-serif;
-  --font-mono: "Courier New", Courier, monospace;
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--background);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  min-height: 100dvh;
+  margin: 0;
+  background:
+    radial-gradient(circle at top, #19324b 0, transparent 42%),
+    var(--background);
+  color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  width: min(100%, 72rem);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 3.5rem;
+}
+
+.brand-mark {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 1.25rem color-mix(in srgb, var(--accent), transparent 35%);
+}
+
+.brand-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.app-content {
+  padding: clamp(2rem, 10vw, 7rem) 0 3rem;
+}
+
+.hero {
+  max-width: 42rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 12vw, 5rem);
+  line-height: 0.95;
+}
+
+.hero-copy {
+  max-width: 36rem;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.play-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.play-card {
+  padding: 1.25rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--panel), transparent 8%);
+}
+
+.play-card h2 {
+  margin: 0;
+}
+
+.play-card p {
+  min-height: 3rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.play-card button {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.65rem;
+  background: transparent;
+  color: var(--muted);
+}
+
+@media (min-width: 42rem) {
+  .app-shell {
+    padding-inline: 2rem;
+  }
+
+  .play-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
