@@ -64,6 +64,47 @@ button {
   padding: clamp(2rem, 10vw, 7rem) 0 3rem;
 }
 
+.account-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--panel), transparent 12%);
+}
+
+.account-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.account-nav a,
+.account-nav button {
+  display: inline-flex;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.account-nav a:hover,
+.account-nav button:hover {
+  background: rgb(255 255 255 / 8%);
+}
+
+.account-nav button {
+  color: var(--muted);
+  cursor: pointer;
+}
+
 .hero {
   max-width: 42rem;
 }
@@ -203,6 +244,31 @@ button {
 }
 
 .auth-footer a {
+  color: var(--accent);
+}
+
+.profile-card,
+.placeholder-card {
+  width: min(100%, 42rem);
+  padding: clamp(1.25rem, 5vw, 2rem);
+  border: 1px solid var(--panel-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--panel), transparent 8%);
+}
+
+.profile-card h1,
+.placeholder-card h1 {
+  margin: 0;
+  font-size: clamp(2rem, 8vw, 3.5rem);
+}
+
+.profile-card > div > p:last-child,
+.placeholder-card > p:last-child {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.profile-card [role="status"] {
   color: var(--accent);
 }
 

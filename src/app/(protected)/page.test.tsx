@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import Home from "@/app/page";
+import Home from "@/app/(protected)/page";
 
 describe("Home", () => {
   it("presents the two approved play types", () => {
