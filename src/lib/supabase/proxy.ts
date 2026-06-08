@@ -4,9 +4,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { readSupabaseEnv } from "@/lib/supabase/env";
 
 const publicPaths = [
+  "/check-email",
   "/login",
   "/signup",
   "/forgot-password",
+  "/update-password",
   "/auth",
 ] as const;
 
