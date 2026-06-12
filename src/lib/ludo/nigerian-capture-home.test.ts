@@ -160,3 +160,152 @@ describe("Nigerian opening protection", () => {
     ).toMatchObject({ status: "yard", progress: null });
   });
 });
+
+describe("Nigerian home and remaining dice", () => {
+  it("requires exact progress 57 and grants one home bonus roll", () => {
+    let state = withToken(startedMatch("nigerian"), "p1-token-1", 56);
+    state = withToken(state, "p1-token-2", 20);
+    const ordered = rollAndOrder(state, [
+      { id: "one", value: 1 },
+      { id: "three", value: 3 },
+    ]);
+    const home = applyAction(ordered, {
+      type: "move-token",
+      expectedVersion: ordered.version,
+      playerId: "p1",
+      tokenId: "p1-token-1",
+      dieIds: ["one"],
+    });
+
+    expect(
+      home.state.tokens.find((token) => token.id === "p1-token-1"),
+    ).toMatchObject({ status: "won", progress: 57 });
+    expect(getLegalActions(home.state)).toContainEqual({
+      type: "move-token",
+      expectedVersion: home.state.version,
+      playerId: "p1",
+      tokenId: "p1-token-2",
+      dieIds: ["three"],
+    });
+  });
+
+  it("discards the remaining die when a token reaches home and no other token can use it", () => {
+    const state = withToken(startedMatch("nigerian"), "p1-token-1", 56);
+    const ordered = rollAndOrder(state, [
+      { id: "one", value: 1 },
+      { id: "three", value: 3 },
+    ]);
+    const result = applyAction(ordered, {
+      type: "move-token",
+      expectedVersion: ordered.version,
+      playerId: "p1",
+      tokenId: "p1-token-1",
+      dieIds: ["one"],
+    });
+
+    expect(result.state.phase).toBe("awaiting-roll");
+    expect(result.state.pendingRoll).toBeNull();
+    expect(result.events).toContainEqual({
+      type: "bonus-roll-granted",
+      playerId: "p1",
+      reason: "home",
+    });
+  });
+
+  it("does not expose a move that overshoots exact 57", () => {
+    let state = withToken(startedMatch("nigerian"), "p1-token-1", 56);
+    state = withToken(state, "p1-token-2", 20);
+    const ordered = rollAndOrder(state, [
+      { id: "two", value: 2 },
+      { id: "three", value: 3 },
+    ]);
+    expect(getLegalActions(ordered)).not.toContainEqual(
+      expect.objectContaining({ tokenId: "p1-token-1" }),
+    );
+  });
+});
+
+describe("Nigerian bonus rolls and victory", () => {
+  it("grants only one bonus when double six also brings a token home", () => {
+    let state = withToken(startedMatch("nigerian"), "p1-token-1", 51);
+    state = withToken(state, "p1-token-2", 20);
+    const ordered = rollAndOrder(state, [
+      { id: "six-a", value: 6 },
+      { id: "six-b", value: 6 },
+    ]);
+    const first = applyAction(ordered, {
+      type: "move-token",
+      expectedVersion: ordered.version,
+      playerId: "p1",
+      tokenId: "p1-token-1",
+      dieIds: ["six-a"],
+    }).state;
+    const result = applyAction(first, {
+      type: "move-token",
+      expectedVersion: first.version,
+      playerId: "p1",
+      tokenId: "p1-token-2",
+      dieIds: ["six-b"],
+    });
+
+    expect(
+      result.events.filter((event) => event.type === "bonus-roll-granted"),
+    ).toHaveLength(1);
+    expect(result.state.phase).toBe("awaiting-roll");
+  });
+
+  it("allows a bonus roll to earn another bonus roll", () => {
+    let state = withToken(startedMatch("nigerian"), "p1-token-1", 56);
+    state = withToken(state, "p1-token-2", 56);
+    state = withToken(state, "p1-token-3", 57);
+    state = withToken(state, "p1-token-4", 57);
+    const ordered = rollAndOrder(state, [
+      { id: "home-one", value: 1 },
+      { id: "blocked-six", value: 6 },
+    ]);
+    state = applyAction(ordered, {
+      type: "move-token",
+      expectedVersion: ordered.version,
+      playerId: "p1",
+      tokenId: "p1-token-1",
+      dieIds: ["home-one"],
+    }).state;
+    expect(state.phase).toBe("awaiting-roll");
+
+    const next = applyAction(state, {
+      type: "roll-dice",
+      expectedVersion: state.version,
+      playerId: "p1",
+      dice: [
+        { id: "bonus-six-a", value: 6 },
+        { id: "bonus-six-b", value: 6 },
+      ],
+    });
+    expect(next.state.players[next.state.activePlayerIndex].id).toBe("p1");
+  });
+
+  it("wins immediately when the fourth token becomes won", () => {
+    let state = startedMatch("nigerian");
+    for (const tokenId of ["p1-token-1", "p1-token-2", "p1-token-3"]) {
+      state = withToken(state, tokenId, 57);
+    }
+    state = withToken(state, "p1-token-4", 56);
+    const ordered = rollAndOrder(state, [
+      { id: "winning-one", value: 1 },
+      { id: "discarded-two", value: 2 },
+    ]);
+    const result = applyAction(ordered, {
+      type: "move-token",
+      expectedVersion: ordered.version,
+      playerId: "p1",
+      tokenId: "p1-token-4",
+      dieIds: ["winning-one"],
+    });
+
+    expect(result.state).toMatchObject({
+      status: "completed",
+      winnerPlayerId: "p1",
+      pendingRoll: null,
+    });
+  });
+});
