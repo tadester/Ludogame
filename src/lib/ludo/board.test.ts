@@ -5,6 +5,14 @@ import {
   OPENING_RING_INDEX,
   progressToRingIndex,
 } from "@/lib/ludo";
+import type {
+  ApplyActionResult,
+  MatchAction,
+  MatchState,
+  PlayableTurnAction,
+  ReplayEntry,
+  TurnSequence,
+} from "@/lib/ludo";
 
 describe("Ludo board topology", () => {
   it("uses the approved opening and Classic safe indexes", () => {
@@ -41,4 +49,49 @@ describe("Ludo board topology", () => {
       );
     },
   );
+
+  it.each([
+    ["negative", -1],
+    ["fractional", 1.5],
+    ["NaN", Number.NaN],
+    ["infinite", Number.POSITIVE_INFINITY],
+  ] as const)("rejects %s progress", (_description, progress) => {
+    expect(() => progressToRingIndex("red", progress)).toThrow(
+      "Progress 0 through 51 is required for the shared ring",
+    );
+  });
+
+  it("exposes immutable snapshots with playable-only turn sequences", () => {
+    const state = null as unknown as MatchState;
+    const result = null as unknown as ApplyActionResult;
+    const replayEntry = null as unknown as ReplayEntry;
+    const lifecycleAction = {
+      type: "set-connection",
+      expectedVersion: 1,
+      playerId: "player-1",
+      connected: false,
+    } satisfies MatchAction;
+
+    if (false) {
+      // @ts-expect-error Match snapshots are readonly.
+      state.version = 2;
+      // @ts-expect-error Snapshot collections are readonly.
+      state.players.push(state.players[0]);
+      // @ts-expect-error Result event collections are readonly.
+      result.events.push(result.events[0]);
+      // @ts-expect-error Replay entries are readonly.
+      replayEntry.stateVersion = 2;
+      // @ts-expect-error Replay event collections are readonly.
+      replayEntry.events.push(replayEntry.events[0]);
+      // @ts-expect-error Lifecycle actions are not playable turn actions.
+      const playableAction: PlayableTurnAction = lifecycleAction;
+      // @ts-expect-error Turn sequences contain only playable actions.
+      const actions: TurnSequence["actions"] = [lifecycleAction];
+
+      void playableAction;
+      void actions;
+    }
+
+    expect(lifecycleAction.type).toBe("set-connection");
+  });
 });

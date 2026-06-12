@@ -20,6 +20,7 @@ export type {
   MatchState,
   MatchStatus,
   PendingRoll,
+  PlayableTurnAction,
   PlayerColor,
   PlayerState,
   ReplayEntry,

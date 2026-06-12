@@ -7,173 +7,216 @@ export type TurnPhase =
   | "awaiting-move";
 
 export interface Die {
-  id: string;
-  value: 1 | 2 | 3 | 4 | 5 | 6;
+  readonly id: string;
+  readonly value: 1 | 2 | 3 | 4 | 5 | 6;
 }
 
 export interface TokenState {
-  id: string;
-  playerId: string;
-  color: PlayerColor;
-  status: "yard" | "active" | "won";
-  progress: number | null;
+  readonly id: string;
+  readonly playerId: string;
+  readonly color: PlayerColor;
+  readonly status: "yard" | "active" | "won";
+  readonly progress: number | null;
 }
 
 export interface PlayerState {
-  id: string;
-  color: PlayerColor;
-  displayName: string;
-  connected: boolean;
-  forfeited: boolean;
-  consecutiveTimeouts: number;
+  readonly id: string;
+  readonly color: PlayerColor;
+  readonly displayName: string;
+  readonly connected: boolean;
+  readonly forfeited: boolean;
+  readonly consecutiveTimeouts: number;
 }
 
 export interface PendingRoll {
-  dice: Die[];
-  remainingDieIds: string[];
-  selectedDieOrder: string[] | null;
-  forcedTokenId: string | null;
-  startedWithAllTokensInYard: boolean;
-  bonusReason: "double-six" | "home" | null;
+  readonly dice: readonly Die[];
+  readonly remainingDieIds: readonly string[];
+  readonly selectedDieOrder: readonly string[] | null;
+  readonly forcedTokenId: string | null;
+  readonly startedWithAllTokensInYard: boolean;
+  readonly bonusReason: "double-six" | "home" | null;
 }
 
 export interface MatchState {
-  id: string;
-  ruleset: Ruleset;
-  status: MatchStatus;
-  version: number;
-  hostPlayerId: string;
-  maxPlayers: 2 | 3 | 4;
-  players: PlayerState[];
-  tokens: TokenState[];
-  activePlayerIndex: number;
-  turnNumber: number;
-  rollNumber: number;
-  phase: TurnPhase;
-  pendingRoll: PendingRoll | null;
-  winnerPlayerId: string | null;
+  readonly id: string;
+  readonly ruleset: Ruleset;
+  readonly status: MatchStatus;
+  readonly version: number;
+  readonly hostPlayerId: string;
+  readonly maxPlayers: 2 | 3 | 4;
+  readonly players: readonly PlayerState[];
+  readonly tokens: readonly TokenState[];
+  readonly activePlayerIndex: number;
+  readonly turnNumber: number;
+  readonly rollNumber: number;
+  readonly phase: TurnPhase;
+  readonly pendingRoll: PendingRoll | null;
+  readonly winnerPlayerId: string | null;
 }
 
 export interface CreateMatchInput {
-  id: string;
-  ruleset: Ruleset;
-  maxPlayers: 2 | 3 | 4;
-  host: { id: string; displayName: string; color: PlayerColor };
+  readonly id: string;
+  readonly ruleset: Ruleset;
+  readonly maxPlayers: 2 | 3 | 4;
+  readonly host: {
+    readonly id: string;
+    readonly displayName: string;
+    readonly color: PlayerColor;
+  };
 }
 
+export type PlayableTurnAction =
+  | {
+      readonly type: "roll-dice";
+      readonly expectedVersion: number;
+      readonly playerId: string;
+      readonly dice: readonly Die[];
+    }
+  | {
+      readonly type: "select-die-order";
+      readonly expectedVersion: number;
+      readonly playerId: string;
+      readonly dieIds: readonly string[];
+    }
+  | {
+      readonly type: "release-token";
+      readonly expectedVersion: number;
+      readonly playerId: string;
+      readonly tokenId: string;
+      readonly dieId: string;
+    }
+  | {
+      readonly type: "move-token";
+      readonly expectedVersion: number;
+      readonly playerId: string;
+      readonly tokenId: string;
+      readonly dieIds: readonly string[];
+    };
+
 export type MatchAction =
+  | PlayableTurnAction
   | {
-      type: "join-seat";
-      expectedVersion: number;
-      player: { id: string; displayName: string; color: PlayerColor };
-    }
-  | { type: "start-match"; expectedVersion: number; playerId: string }
-  | {
-      type: "roll-dice";
-      expectedVersion: number;
-      playerId: string;
-      dice: Die[];
+      readonly type: "join-seat";
+      readonly expectedVersion: number;
+      readonly player: {
+        readonly id: string;
+        readonly displayName: string;
+        readonly color: PlayerColor;
+      };
     }
   | {
-      type: "select-die-order";
-      expectedVersion: number;
-      playerId: string;
-      dieIds: string[];
+      readonly type: "start-match";
+      readonly expectedVersion: number;
+      readonly playerId: string;
     }
   | {
-      type: "release-token";
-      expectedVersion: number;
-      playerId: string;
-      tokenId: string;
-      dieId: string;
+      readonly type: "resolve-timeout";
+      readonly expectedVersion: number;
+      readonly playerId: string;
+      readonly sequence: readonly PlayableTurnAction[];
     }
   | {
-      type: "move-token";
-      expectedVersion: number;
-      playerId: string;
-      tokenId: string;
-      dieIds: string[];
+      readonly type: "set-connection";
+      readonly expectedVersion: number;
+      readonly playerId: string;
+      readonly connected: boolean;
     }
   | {
-      type: "resolve-timeout";
-      expectedVersion: number;
-      playerId: string;
-      sequence: LegalAction[];
-    }
-  | {
-      type: "set-connection";
-      expectedVersion: number;
-      playerId: string;
-      connected: boolean;
-    }
-  | { type: "forfeit-player"; expectedVersion: number; playerId: string };
+      readonly type: "forfeit-player";
+      readonly expectedVersion: number;
+      readonly playerId: string;
+    };
 
 export type LegalAction = MatchAction;
 
 export type DomainEvent =
-  | { type: "player-joined"; playerId: string; color: PlayerColor }
-  | { type: "match-started"; playerId: string }
-  | { type: "dice-rolled"; playerId: string; dice: Die[] }
-  | { type: "die-order-selected"; playerId: string; dieIds: string[] }
   | {
-      type: "token-released";
-      playerId: string;
-      tokenId: string;
-      dieId: string;
-      ringIndex: number;
+      readonly type: "player-joined";
+      readonly playerId: string;
+      readonly color: PlayerColor;
+    }
+  | { readonly type: "match-started"; readonly playerId: string }
+  | {
+      readonly type: "dice-rolled";
+      readonly playerId: string;
+      readonly dice: readonly Die[];
     }
   | {
-      type: "token-moved";
-      playerId: string;
-      tokenId: string;
-      dieIds: string[];
-      fromProgress: number;
-      toProgress: number;
+      readonly type: "die-order-selected";
+      readonly playerId: string;
+      readonly dieIds: readonly string[];
     }
   | {
-      type: "token-captured";
-      playerId: string;
-      tokenId: string;
-      capturedTokenId: string;
-      ringIndex: number;
-    }
-  | { type: "token-entered-home"; playerId: string; tokenId: string }
-  | {
-      type: "token-won";
-      playerId: string;
-      tokenId: string;
-      reason: "home" | "capture";
+      readonly type: "token-released";
+      readonly playerId: string;
+      readonly tokenId: string;
+      readonly dieId: string;
+      readonly ringIndex: number;
     }
   | {
-      type: "bonus-roll-granted";
-      playerId: string;
-      reason: "six" | "double-six" | "home";
+      readonly type: "token-moved";
+      readonly playerId: string;
+      readonly tokenId: string;
+      readonly dieIds: readonly string[];
+      readonly fromProgress: number;
+      readonly toProgress: number;
     }
-  | { type: "turn-advanced"; fromPlayerId: string; toPlayerId: string }
   | {
-      type: "turn-timed-out";
-      playerId: string;
-      consecutiveTimeouts: number;
+      readonly type: "token-captured";
+      readonly playerId: string;
+      readonly tokenId: string;
+      readonly capturedTokenId: string;
+      readonly ringIndex: number;
     }
-  | { type: "connection-changed"; playerId: string; connected: boolean }
-  | { type: "player-forfeited"; playerId: string }
-  | { type: "match-completed"; winnerPlayerId: string };
+  | {
+      readonly type: "token-entered-home";
+      readonly playerId: string;
+      readonly tokenId: string;
+    }
+  | {
+      readonly type: "token-won";
+      readonly playerId: string;
+      readonly tokenId: string;
+      readonly reason: "home" | "capture";
+    }
+  | {
+      readonly type: "bonus-roll-granted";
+      readonly playerId: string;
+      readonly reason: "six" | "double-six" | "home";
+    }
+  | {
+      readonly type: "turn-advanced";
+      readonly fromPlayerId: string;
+      readonly toPlayerId: string;
+    }
+  | {
+      readonly type: "turn-timed-out";
+      readonly playerId: string;
+      readonly consecutiveTimeouts: number;
+    }
+  | {
+      readonly type: "connection-changed";
+      readonly playerId: string;
+      readonly connected: boolean;
+    }
+  | { readonly type: "player-forfeited"; readonly playerId: string }
+  | { readonly type: "match-completed"; readonly winnerPlayerId: string };
 
 export interface ApplyActionResult {
-  state: MatchState;
-  events: DomainEvent[];
+  readonly state: MatchState;
+  readonly events: readonly DomainEvent[];
 }
 
 export interface TurnSequence {
-  actions: LegalAction[];
-  state: MatchState;
-  events: DomainEvent[];
+  readonly actions: readonly PlayableTurnAction[];
+  readonly state: MatchState;
+  readonly events: readonly DomainEvent[];
 }
 
 export interface ReplayEntry {
-  action: MatchAction;
-  events: DomainEvent[];
-  stateVersion: number;
+  readonly action: MatchAction;
+  readonly events: readonly DomainEvent[];
+  readonly stateVersion: number;
 }
 
 export class LudoRuleError extends Error {
