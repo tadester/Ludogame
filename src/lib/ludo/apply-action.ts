@@ -1,4 +1,8 @@
+import { applyClassicAction } from "./classic";
 import { createPlayer, createTokens } from "./create-match";
+import { getLegalActions } from "./legal-actions";
+import { deepEquals } from "./serialize";
+import { requireActiveMatch } from "./turn-flow";
 import { LudoRuleError } from "./types";
 import type {
   ApplyActionResult,
@@ -85,6 +89,19 @@ function applyStartMatch(
   };
 }
 
+function applyRulesetAction(
+  state: MatchState,
+  action: MatchAction,
+): ApplyActionResult {
+  if (state.ruleset === "classic") {
+    return applyClassicAction(state, action);
+  }
+  throw new LudoRuleError(
+    "INVALID_ACTION",
+    `Action ${action.type} is not supported`,
+  );
+}
+
 function dispatchAction(
   state: MatchState,
   action: MatchAction,
@@ -94,6 +111,24 @@ function dispatchAction(
       return applyJoinSeat(state, action);
     case "start-match":
       return applyStartMatch(state, action);
+    case "roll-dice":
+      requireActiveMatch(state);
+      return applyRulesetAction(state, action);
+    case "select-die-order":
+    case "release-token":
+    case "move-token": {
+      requireActiveMatch(state);
+      const legal = getLegalActions(state).some((candidate) =>
+        deepEquals(candidate, action),
+      );
+      if (!legal) {
+        throw new LudoRuleError(
+          "INVALID_ACTION",
+          `Action ${action.type} is not legal in the current state`,
+        );
+      }
+      return applyRulesetAction(state, action);
+    }
     default:
       throw new LudoRuleError(
         "INVALID_ACTION",

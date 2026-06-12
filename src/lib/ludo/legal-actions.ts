@@ -1,3 +1,4 @@
+import { getClassicLegalActions } from "./classic";
 import { PLAYER_COLORS } from "./constants";
 import { stableStringify } from "./serialize";
 import type { LegalAction, MatchState } from "./types";
@@ -43,6 +44,9 @@ export function getLegalActions(state: MatchState): LegalAction[] {
   }
   if (state.status === "completed") {
     return [];
+  }
+  if (state.ruleset === "classic") {
+    return getClassicLegalActions(state);
   }
   return [];
 }
