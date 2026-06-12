@@ -1,5 +1,6 @@
 import { getClassicLegalActions } from "./classic";
 import { PLAYER_COLORS } from "./constants";
+import { getNigerianLegalActions } from "./nigerian";
 import { stableStringify } from "./serialize";
 import type { LegalAction, MatchState } from "./types";
 
@@ -48,5 +49,5 @@ export function getLegalActions(state: MatchState): LegalAction[] {
   if (state.ruleset === "classic") {
     return getClassicLegalActions(state);
   }
-  return [];
+  return getNigerianLegalActions(state);
 }

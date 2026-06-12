@@ -1,6 +1,7 @@
 import { applyClassicAction } from "./classic";
 import { createPlayer, createTokens } from "./create-match";
 import { getLegalActions } from "./legal-actions";
+import { applyNigerianAction } from "./nigerian";
 import { deepEquals } from "./serialize";
 import { requireActiveMatch } from "./turn-flow";
 import { LudoRuleError } from "./types";
@@ -96,10 +97,7 @@ function applyRulesetAction(
   if (state.ruleset === "classic") {
     return applyClassicAction(state, action);
   }
-  throw new LudoRuleError(
-    "INVALID_ACTION",
-    `Action ${action.type} is not supported`,
-  );
+  return applyNigerianAction(state, action);
 }
 
 function dispatchAction(
