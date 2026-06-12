@@ -1,4 +1,7 @@
+export { applyAction } from "./apply-action";
 export { progressToRingIndex } from "./board";
+export { createMatch } from "./create-match";
+export { getLegalActions } from "./legal-actions";
 export {
   CLASSIC_SAFE_RING_INDEXES,
   HOME_LANE_PROGRESS_MAX,
