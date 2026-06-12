@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { applyAction } from "@/lib/ludo";
+import { applyAction, enumerateLegalTurnSequences } from "@/lib/ludo";
 import { startedMatch, withToken } from "@/lib/ludo/test/builders";
 
 describe("match lifecycle actions", () => {
@@ -77,5 +77,78 @@ describe("match lifecycle actions", () => {
     expect(
       result.state.players.find((player) => player.id === "p1"),
     ).toMatchObject({ consecutiveTimeouts: 0 });
+  });
+
+  it("accepts only a complete enumerated timeout sequence", () => {
+    const state = withToken(startedMatch("classic"), "p1-token-1", 10);
+    const rolled = applyAction(state, {
+      type: "roll-dice",
+      expectedVersion: state.version,
+      playerId: "p1",
+      dice: [{ id: "timeout-three", value: 3 }],
+    }).state;
+    const sequence = enumerateLegalTurnSequences(rolled)[0].actions;
+    const result = applyAction(rolled, {
+      type: "resolve-timeout",
+      expectedVersion: rolled.version,
+      playerId: "p1",
+      sequence,
+    });
+
+    expect(result.events).toContainEqual({
+      type: "turn-timed-out",
+      playerId: "p1",
+      consecutiveTimeouts: 1,
+    });
+    expect(result.state.players[0].consecutiveTimeouts).toBe(1);
+  });
+
+  it("rejects a partial timeout sequence", () => {
+    const state = startedMatch("classic");
+    const rolled = applyAction(state, {
+      type: "roll-dice",
+      expectedVersion: state.version,
+      playerId: "p1",
+      dice: [{ id: "timeout-six", value: 6 }],
+    }).state;
+
+    expect(() =>
+      applyAction(rolled, {
+        type: "resolve-timeout",
+        expectedVersion: rolled.version,
+        playerId: "p1",
+        sequence: [],
+      }),
+    ).toThrow("Timeout sequence is not a complete legal turn");
+  });
+
+  it("forfeits on the third consecutive timeout", () => {
+    const base = withToken(startedMatch("classic"), "p1-token-1", 10);
+    const state = {
+      ...base,
+      players: base.players.map((player) =>
+        player.id === "p1" ? { ...player, consecutiveTimeouts: 2 } : player,
+      ),
+    };
+    const rolled = applyAction(state, {
+      type: "roll-dice",
+      expectedVersion: state.version,
+      playerId: "p1",
+      dice: [{ id: "third-timeout", value: 2 }],
+    }).state;
+    const sequence = enumerateLegalTurnSequences(rolled)[0].actions;
+    const result = applyAction(rolled, {
+      type: "resolve-timeout",
+      expectedVersion: rolled.version,
+      playerId: "p1",
+      sequence,
+    });
+
+    expect(
+      result.state.players.find((player) => player.id === "p1")?.forfeited,
+    ).toBe(true);
+    expect(result.state.tokens.some((token) => token.playerId === "p1")).toBe(
+      false,
+    );
   });
 });

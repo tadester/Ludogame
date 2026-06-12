@@ -8,7 +8,9 @@ import {
   completeMatch,
   nextNonForfeitedIndex,
   requireActiveMatch,
+  requireActivePlayer,
 } from "./turn-flow";
+import { enumerateLegalTurnSequences } from "./turn-sequences";
 import { LudoRuleError } from "./types";
 import type {
   ApplyActionResult,
@@ -192,6 +194,49 @@ function applyForfeitPlayer(
   return forfeitPlayer(state, action.playerId);
 }
 
+function applyResolveTimeout(
+  state: MatchState,
+  action: ActionOf<"resolve-timeout">,
+): ApplyActionResult {
+  requireActiveMatch(state);
+  requireActivePlayer(state, action.playerId);
+  const match = enumerateLegalTurnSequences(state).find((sequence) =>
+    deepEquals(sequence.actions, action.sequence),
+  );
+  if (!match) {
+    throw new LudoRuleError(
+      "INVALID_ACTION",
+      "Timeout sequence is not a complete legal turn",
+    );
+  }
+
+  const previousTimeouts = state.players.find(
+    (player) => player.id === action.playerId,
+  )!.consecutiveTimeouts;
+  const consecutiveTimeouts = previousTimeouts + 1;
+  const adopted: MatchState = {
+    ...match.state,
+    players: match.state.players.map((player) =>
+      player.id === action.playerId
+        ? { ...player, consecutiveTimeouts }
+        : player,
+    ),
+  };
+  const events: DomainEvent[] = [
+    ...match.events,
+    { type: "turn-timed-out", playerId: action.playerId, consecutiveTimeouts },
+  ];
+
+  if (consecutiveTimeouts >= 3 && adopted.status === "active") {
+    const forfeited = forfeitPlayer(adopted, action.playerId);
+    return {
+      state: forfeited.state,
+      events: [...events, ...forfeited.events],
+    };
+  }
+  return { state: adopted, events };
+}
+
 function applyRulesetAction(
   state: MatchState,
   action: MatchAction,
@@ -215,6 +260,8 @@ function dispatchAction(
       return applySetConnection(state, action);
     case "forfeit-player":
       return applyForfeitPlayer(state, action);
+    case "resolve-timeout":
+      return applyResolveTimeout(state, action);
     case "roll-dice":
       requireActiveMatch(state);
       return applyRulesetAction(state, action);
@@ -233,11 +280,6 @@ function dispatchAction(
       }
       return applyRulesetAction(state, action);
     }
-    default:
-      throw new LudoRuleError(
-        "INVALID_ACTION",
-        `Action ${action.type} is not supported`,
-      );
   }
 }
 
