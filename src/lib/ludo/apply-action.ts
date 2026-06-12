@@ -3,7 +3,12 @@ import { createPlayer, createTokens } from "./create-match";
 import { getLegalActions } from "./legal-actions";
 import { applyNigerianAction } from "./nigerian";
 import { deepEquals } from "./serialize";
-import { requireActiveMatch } from "./turn-flow";
+import {
+  activePlayer,
+  completeMatch,
+  nextNonForfeitedIndex,
+  requireActiveMatch,
+} from "./turn-flow";
 import { LudoRuleError } from "./types";
 import type {
   ApplyActionResult,
@@ -90,6 +95,103 @@ function applyStartMatch(
   };
 }
 
+function requirePlayer(state: MatchState, playerId: string): void {
+  if (!state.players.some((player) => player.id === playerId)) {
+    throw new LudoRuleError(
+      "INVALID_ACTION",
+      `Player ${playerId} is not in this match`,
+    );
+  }
+}
+
+function applySetConnection(
+  state: MatchState,
+  action: ActionOf<"set-connection">,
+): ApplyActionResult {
+  requirePlayer(state, action.playerId);
+  return {
+    state: {
+      ...state,
+      players: state.players.map((player) =>
+        player.id === action.playerId
+          ? { ...player, connected: action.connected }
+          : player,
+      ),
+    },
+    events: [
+      {
+        type: "connection-changed",
+        playerId: action.playerId,
+        connected: action.connected,
+      },
+    ],
+  };
+}
+
+export function forfeitPlayer(
+  state: MatchState,
+  playerId: string,
+): ApplyActionResult {
+  const wasActivePlayer = activePlayer(state).id === playerId;
+  let next: MatchState = {
+    ...state,
+    players: state.players.map((player) =>
+      player.id === playerId ? { ...player, forfeited: true } : player,
+    ),
+    tokens: state.tokens.filter((token) => token.playerId !== playerId),
+  };
+  const events: DomainEvent[] = [{ type: "player-forfeited", playerId }];
+
+  const remaining = next.players.filter((player) => !player.forfeited);
+  if (remaining.length === 1) {
+    const winnerIndex = next.players.findIndex(
+      (player) => player.id === remaining[0].id,
+    );
+    const completed = completeMatch(
+      { ...next, activePlayerIndex: winnerIndex },
+      remaining[0].id,
+    );
+    return {
+      state: completed.state,
+      events: [...events, ...completed.events],
+    };
+  }
+
+  if (wasActivePlayer) {
+    const nextIndex = nextNonForfeitedIndex(next, next.activePlayerIndex);
+    events.push({
+      type: "turn-advanced",
+      fromPlayerId: playerId,
+      toPlayerId: next.players[nextIndex].id,
+    });
+    next = {
+      ...next,
+      activePlayerIndex: nextIndex,
+      turnNumber: next.turnNumber + 1,
+      phase: "awaiting-roll",
+      pendingRoll: null,
+    };
+  }
+  return { state: next, events };
+}
+
+function applyForfeitPlayer(
+  state: MatchState,
+  action: ActionOf<"forfeit-player">,
+): ApplyActionResult {
+  requireActiveMatch(state);
+  requirePlayer(state, action.playerId);
+  if (
+    state.players.find((player) => player.id === action.playerId)!.forfeited
+  ) {
+    throw new LudoRuleError(
+      "INVALID_ACTION",
+      `Player ${action.playerId} already forfeited`,
+    );
+  }
+  return forfeitPlayer(state, action.playerId);
+}
+
 function applyRulesetAction(
   state: MatchState,
   action: MatchAction,
@@ -109,6 +211,10 @@ function dispatchAction(
       return applyJoinSeat(state, action);
     case "start-match":
       return applyStartMatch(state, action);
+    case "set-connection":
+      return applySetConnection(state, action);
+    case "forfeit-player":
+      return applyForfeitPlayer(state, action);
     case "roll-dice":
       requireActiveMatch(state);
       return applyRulesetAction(state, action);
