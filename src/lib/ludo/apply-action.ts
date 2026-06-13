@@ -1,5 +1,6 @@
 import { applyClassicAction } from "./classic";
 import { createPlayer, createTokens } from "./create-match";
+import { assertMatchInvariants } from "./invariants";
 import { getLegalActions } from "./legal-actions";
 import { applyNigerianAction } from "./nigerian";
 import { deepEquals } from "./serialize";
@@ -287,6 +288,7 @@ export function applyAction(
   state: MatchState,
   action: MatchAction,
 ): ApplyActionResult {
+  assertMatchInvariants(state);
   if (action.expectedVersion !== state.version) {
     throw new LudoRuleError(
       "STALE_VERSION",
@@ -295,8 +297,7 @@ export function applyAction(
   }
 
   const result = dispatchAction(state, action);
-  return {
-    state: { ...result.state, version: state.version + 1 },
-    events: result.events,
-  };
+  const next = { ...result.state, version: state.version + 1 };
+  assertMatchInvariants(next);
+  return { state: next, events: result.events };
 }

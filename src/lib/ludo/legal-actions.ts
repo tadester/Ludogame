@@ -1,5 +1,6 @@
 import { getClassicLegalActions } from "./classic";
 import { PLAYER_COLORS } from "./constants";
+import { assertMatchInvariants } from "./invariants";
 import { getNigerianLegalActions } from "./nigerian";
 import { stableStringify } from "./serialize";
 import type { LegalAction, MatchState } from "./types";
@@ -40,6 +41,7 @@ function getLobbyLegalActions(state: MatchState): LegalAction[] {
 }
 
 export function getLegalActions(state: MatchState): LegalAction[] {
+  assertMatchInvariants(state);
   if (state.status === "lobby") {
     return getLobbyLegalActions(state);
   }

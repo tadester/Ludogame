@@ -1,6 +1,7 @@
 export { applyAction } from "./apply-action";
 export { progressToRingIndex } from "./board";
 export { createMatch } from "./create-match";
+export { assertMatchInvariants } from "./invariants";
 export { getLegalActions } from "./legal-actions";
 export { replayMatch } from "./replay";
 export { enumerateLegalTurnSequences } from "./turn-sequences";
