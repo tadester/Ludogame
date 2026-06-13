@@ -1,3 +1,6 @@
+export { applyAction } from "./apply-action";
+export { createMatch } from "./create-match";
+export { getLegalActions } from "./legal-actions";
 export { progressToRingIndex } from "./board";
 export {
   CLASSIC_SAFE_RING_INDEXES,
