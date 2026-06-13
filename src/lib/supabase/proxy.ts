@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { readSupabaseEnv } from "@/lib/supabase/env";
 
 const publicPaths = [
+  "/play",
   "/check-email",
   "/login",
   "/signup",
