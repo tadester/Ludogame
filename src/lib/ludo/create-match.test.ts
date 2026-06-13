@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import * as engine from "@/lib/ludo";
 import { applyAction, createMatch, getLegalActions } from "@/lib/ludo";
 
 describe("createMatch", () => {
@@ -114,4 +115,19 @@ describe("createMatch", () => {
       }),
     ).toThrow("Match requires 2 players before starting");
   });
+});
+
+it("exports the supported rules-engine API", () => {
+  expect(Object.keys(engine).sort()).toEqual([
+    "CLASSIC_SAFE_RING_INDEXES",
+    "LudoRuleError",
+    "OPENING_RING_INDEX",
+    "applyAction",
+    "assertMatchInvariants",
+    "createMatch",
+    "enumerateLegalTurnSequences",
+    "getLegalActions",
+    "progressToRingIndex",
+    "replayMatch",
+  ]);
 });
