@@ -11,8 +11,9 @@ describe("Home", () => {
       screen.getByRole("heading", { name: "Choose how to play" }),
     ).toBeVisible();
     expect(screen.getByRole("button", { name: "Friend room" })).toBeDisabled();
-    expect(
-      screen.getByRole("button", { name: "Pass the phone" }),
-    ).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Pass the phone" })).toHaveAttribute(
+      "href",
+      "/play",
+    );
   });
 });
