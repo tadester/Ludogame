@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 
+import { signUpErrorMessage } from "@/lib/auth/errors";
 import { safeNextPath } from "@/lib/auth/redirect";
 import { validateSignIn, validateSignUp } from "@/lib/auth/validation";
 import { createClient } from "@/lib/supabase/server";
@@ -63,10 +64,7 @@ export async function signUp(formData: FormData) {
   });
 
   if (error) {
-    redirectWithMessage(
-      "/signup",
-      "Unable to create the account. Check your details and try again.",
-    );
+    redirectWithMessage("/signup", signUpErrorMessage(error));
   }
 
   redirect("/check-email");
