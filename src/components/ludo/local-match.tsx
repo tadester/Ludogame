@@ -3,13 +3,16 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { applyAction, getLegalActions } from "@/lib/ludo";
-import type { DomainEvent, MatchState } from "@/lib/ludo";
+import type { DomainEvent, MatchState, Ruleset } from "@/lib/ludo";
 import { moveWaypoints } from "@/lib/ludo-ui/geometry";
 import type { Cell, PlayerColor } from "@/lib/ludo-ui/geometry";
 import {
+  actionDestination,
   defaultName,
+  diceCountFor,
+  dieOrderOptions,
   legalMovesByToken,
-  rollAction,
+  rollActionFor,
   rollDie,
   setupLocalMatch,
 } from "@/lib/ludo-ui/local-game";
@@ -19,6 +22,10 @@ import { LudoBoard } from "./ludo-board";
 import styles from "./local-match.module.css";
 
 const SETUP_COLORS: PlayerColor[] = ["red", "green", "yellow", "blue"];
+const RULESETS: { id: Ruleset; label: string }[] = [
+  { id: "classic", label: "Classic" },
+  { id: "nigerian", label: "Nigerian" },
+];
 const STEP_MS = 165;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -31,10 +38,11 @@ const COLOR_CLASS: Record<PlayerColor, string> = {
 
 export function LocalMatch() {
   const [count, setCount] = useState(2);
+  const [ruleset, setRuleset] = useState<Ruleset>("classic");
   const [names, setNames] = useState<string[]>(["", "", "", ""]);
   const [match, setMatch] = useState<MatchState | null>(null);
   const [busy, setBusy] = useState(false);
-  const [dieFace, setDieFace] = useState<number | null>(null);
+  const [dieFaces, setDieFaces] = useState<number[]>([]);
   const [rolling, setRolling] = useState(false);
   const [override, setOverride] = useState<{
     tokenId: string;
@@ -56,23 +64,31 @@ export function LocalMatch() {
     [movesByToken],
   );
 
+  const dieOrders = useMemo(() => {
+    if (!match || match.phase !== "awaiting-die-order" || busy) {
+      return [];
+    }
+    return dieOrderOptions(getLegalActions(match));
+  }, [match, busy]);
+
   const activePlayer = match ? match.players[match.activePlayerIndex] : null;
 
   const start = useCallback(() => {
     const next = setupLocalMatch(
       Array.from({ length: count }, (_, i) => ({ name: names[i] ?? "" })),
+      ruleset,
     );
     setMatch(next);
     setWinner(null);
-    setDieFace(null);
+    setDieFaces([]);
     setOverride(null);
     setCaptured(new Set());
-    const name = next.players[next.activePlayerIndex].displayName;
-    setMessage(`${name} to roll.`);
-  }, [count, names]);
+    setMessage(`${next.players[next.activePlayerIndex].displayName} to roll.`);
+  }, [count, ruleset, names]);
 
-  const announce = useCallback(
-    (next: MatchState, events: readonly DomainEvent[]) => {
+  // Flashes captured tokens and returns the status line for a transition.
+  const resolve = useCallback(
+    (next: MatchState, events: readonly DomainEvent[], prefix = "") => {
       const capturedIds = events
         .filter((e) => e.type === "token-captured")
         .map((e) => (e as { capturedTokenId: string }).capturedTokenId);
@@ -91,15 +107,20 @@ export function LocalMatch() {
         return;
       }
 
-      const nextName = next.players[next.activePlayerIndex].displayName;
-      const bonus = events.some((e) => e.type === "bonus-roll-granted");
-      if (capturedIds.length > 0) {
-        setMessage(`Capture! ${nextName} rolls again.`);
-      } else if (bonus) {
-        setMessage(`Bonus roll — ${nextName} goes again.`);
+      const name = next.players[next.activePlayerIndex].displayName;
+      let status: string;
+      if (next.phase === "awaiting-die-order") {
+        status = `${name}: choose the dice order.`;
+      } else if (next.phase === "awaiting-move") {
+        status = `${name}: pick a token to move.`;
+      } else if (capturedIds.length > 0) {
+        status = `Capture! ${name} rolls again.`;
+      } else if (events.some((e) => e.type === "bonus-roll-granted")) {
+        status = `Bonus roll — ${name} goes again.`;
       } else {
-        setMessage(`${nextName}'s turn — roll the dice.`);
+        status = `${name}'s turn — roll the dice.`;
       }
+      setMessage(prefix + status);
     },
     [],
   );
@@ -107,31 +128,37 @@ export function LocalMatch() {
   const handleRoll = useCallback(async () => {
     if (!match || busy || match.phase !== "awaiting-roll") return;
 
+    const diceCount = diceCountFor(match.ruleset);
     setBusy(true);
     setRolling(true);
-    const value = rollDie();
+    const values = Array.from({ length: diceCount }, () => rollDie());
     for (let i = 0; i < 9; i += 1) {
-      setDieFace(rollDie());
+      setDieFaces(Array.from({ length: diceCount }, () => rollDie()));
       await sleep(55);
     }
-    setDieFace(value);
+    setDieFaces(values);
     setRolling(false);
 
-    const roller = match.players[match.activePlayerIndex];
-    const result = applyAction(match, rollAction(match, value));
+    const result = applyAction(match, rollActionFor(match, values));
     setMatch(result.state);
-
-    if (result.state.phase === "awaiting-move") {
-      setMessage(`${roller.displayName} rolled ${value} — pick a token to move.`);
-    } else {
-      const nextName =
-        result.state.players[result.state.activePlayerIndex].displayName;
-      setMessage(
-        `${roller.displayName} rolled ${value}. No moves — ${nextName}'s turn.`,
-      );
-    }
+    resolve(result.state, result.events, `Rolled ${values.join(" + ")}. `);
     setBusy(false);
-  }, [match, busy]);
+  }, [match, busy, resolve]);
+
+  const handleSelectOrder = useCallback(
+    (dieIds: readonly string[]) => {
+      if (!match || busy || match.phase !== "awaiting-die-order") return;
+      const result = applyAction(match, {
+        type: "select-die-order",
+        expectedVersion: match.version,
+        playerId: match.players[match.activePlayerIndex].id,
+        dieIds: [...dieIds],
+      });
+      setMatch(result.state);
+      resolve(result.state, result.events);
+    },
+    [match, busy, resolve],
+  );
 
   const handleToken = useCallback(
     async (tokenId: string) => {
@@ -140,13 +167,12 @@ export function LocalMatch() {
         tokenId,
       );
       if (!action) return;
+      const dest = actionDestination(match, action);
+      if (!dest) return;
 
       setBusy(true);
       const token = match.tokens.find((t) => t.id === tokenId)!;
-      const die = match.pendingRoll!.dice[0].value;
-      const to = token.progress === null ? 0 : token.progress + die;
-
-      for (const cell of moveWaypoints(token.color, token.progress, to)) {
+      for (const cell of moveWaypoints(token.color, dest.from, dest.to)) {
         setOverride({ tokenId, cell });
         await sleep(STEP_MS);
       }
@@ -154,16 +180,34 @@ export function LocalMatch() {
       const result = applyAction(match, action);
       setOverride(null);
       setMatch(result.state);
-      announce(result.state, result.events);
+      resolve(result.state, result.events);
       setBusy(false);
     },
-    [match, busy, announce],
+    [match, busy, resolve],
   );
+
+  const dieValue = (dieId: string) =>
+    match?.pendingRoll?.dice.find((d) => d.id === dieId)?.value ?? 0;
 
   if (!match) {
     return (
       <div className={styles.setup}>
         <h1>Pass &amp; play</h1>
+        <div className={styles.field}>
+          <span className={styles.fieldLabel}>Mode</span>
+          <div className={styles.segment}>
+            {RULESETS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={`${styles.segmentButton} ${ruleset === option.id ? styles.segmentActive : ""}`}
+                onClick={() => setRuleset(option.id)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className={styles.field}>
           <span className={styles.fieldLabel}>Players</span>
           <div className={styles.segment}>
@@ -208,6 +252,8 @@ export function LocalMatch() {
     );
   }
 
+  const diceCount = diceCountFor(match.ruleset);
+  const canRoll = !busy && match.phase === "awaiting-roll" && !winner;
   const homeCounts = (playerId: string) =>
     match.tokens.filter((t) => t.playerId === playerId && t.status === "won")
       .length;
@@ -236,15 +282,35 @@ export function LocalMatch() {
           ) : null}
 
           <div className={styles.controls}>
-            <Dice
-              value={dieFace}
-              rolling={rolling}
-              ready={!busy && match.phase === "awaiting-roll" && !winner}
-              disabled={busy || match.phase !== "awaiting-roll" || !!winner}
-              onRoll={handleRoll}
-            />
+            <div className={styles.diceRow}>
+              {Array.from({ length: diceCount }, (_, i) => (
+                <Dice
+                  key={i}
+                  value={dieFaces[i] ?? null}
+                  rolling={rolling}
+                  ready={canRoll}
+                  disabled={!canRoll}
+                  onRoll={handleRoll}
+                />
+              ))}
+            </div>
             <p className={styles.message}>{message}</p>
           </div>
+
+          {dieOrders.length > 0 ? (
+            <div className={styles.dieOrders}>
+              {dieOrders.map((option) => (
+                <button
+                  key={option.dieIds.join("-")}
+                  type="button"
+                  className={styles.segmentButton}
+                  onClick={() => handleSelectOrder(option.dieIds)}
+                >
+                  Play {option.dieIds.map((id) => dieValue(id)).join(" then ")}
+                </button>
+              ))}
+            </div>
+          ) : null}
 
           <div className={styles.players}>
             {match.players.map((player) => (

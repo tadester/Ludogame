@@ -53,18 +53,66 @@ export function defaultName(color: PlayerColor): string {
 
 /** A `roll-dice` action carrying a deterministic, replay-stable die id. */
 export function rollAction(state: MatchState, value: number): MatchAction {
+  return rollActionFor(state, [value]);
+}
+
+/** How many dice the active ruleset rolls each turn. */
+export function diceCountFor(ruleset: Ruleset): number {
+  return ruleset === "nigerian" ? 2 : 1;
+}
+
+/** A `roll-dice` action for one or two dice with stable, unique ids. */
+export function rollActionFor(
+  state: MatchState,
+  values: readonly number[],
+): MatchAction {
   const playerId = state.players[state.activePlayerIndex].id;
   return {
     type: "roll-dice",
     expectedVersion: state.version,
     playerId,
-    dice: [
-      {
-        id: `roll-${state.turnNumber}-${state.rollNumber}`,
-        value: value as 1 | 2 | 3 | 4 | 5 | 6,
-      },
-    ],
+    dice: values.map((value, index) => ({
+      id: `roll-${state.turnNumber}-${state.rollNumber}-${index}`,
+      value: value as 1 | 2 | 3 | 4 | 5 | 6,
+    })),
   };
+}
+
+/**
+ * The token and from/to progress a release or move action produces, so the UI
+ * can animate it without knowing ruleset-specific dice details.
+ */
+export function actionDestination(
+  state: MatchState,
+  action: LegalAction,
+): { tokenId: string; from: number | null; to: number } | null {
+  if (action.type === "release-token") {
+    return { tokenId: action.tokenId, from: null, to: 0 };
+  }
+  if (action.type === "move-token") {
+    const token = state.tokens.find((t) => t.id === action.tokenId);
+    if (!token) return null;
+    const dice = state.pendingRoll?.dice ?? [];
+    const distance = action.dieIds.reduce(
+      (sum, dieId) => sum + (dice.find((d) => d.id === dieId)?.value ?? 0),
+      0,
+    );
+    const from = token.progress;
+    return { tokenId: action.tokenId, from, to: (from ?? 0) + distance };
+  }
+  return null;
+}
+
+/** The die-order choices offered while awaiting a Nigerian die-order pick. */
+export function dieOrderOptions(
+  actions: readonly LegalAction[],
+): { dieIds: readonly string[]; action: LegalAction }[] {
+  return actions
+    .filter((action) => action.type === "select-die-order")
+    .map((action) => ({
+      dieIds: (action as { dieIds: readonly string[] }).dieIds,
+      action,
+    }));
 }
 
 /** Maps each currently-movable token id to the legal action that moves it. */

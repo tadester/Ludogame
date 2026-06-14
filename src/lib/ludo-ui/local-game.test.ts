@@ -7,7 +7,13 @@ import {
 } from "@/lib/ludo";
 import type { MatchState } from "@/lib/ludo";
 
-import { legalMovesByToken, rollAction, setupLocalMatch } from "./local-game";
+import {
+  dieOrderOptions,
+  legalMovesByToken,
+  rollAction,
+  rollActionFor,
+  setupLocalMatch,
+} from "./local-game";
 
 function progressOfMove(
   state: MatchState,
@@ -92,5 +98,41 @@ describe("local-game helpers", () => {
       (t) => t.playerId === state.winnerPlayerId && t.status === "won",
     );
     expect(champion).toHaveLength(4);
+  });
+
+  it("plays a full Nigerian game through the UI action path", () => {
+    let state = setupLocalMatch([{ name: "Ada" }, { name: "Ben" }], "nigerian");
+    expect(state.ruleset).toBe("nigerian");
+    let seed = 0x51ed5;
+    const nextDie = () => {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return 1 + (seed % 6);
+    };
+
+    let guard = 0;
+    while (state.status !== "completed" && guard < 200000) {
+      guard += 1;
+      if (state.phase === "awaiting-roll") {
+        state = applyAction(
+          state,
+          rollActionFor(state, [nextDie(), nextDie()]),
+        ).state;
+      } else if (state.phase === "awaiting-die-order") {
+        const [first] = dieOrderOptions(getLegalActions(state));
+        state = applyAction(state, first.action).state;
+      } else {
+        const moves = [
+          ...legalMovesByToken(state, getLegalActions(state)).values(),
+        ];
+        const best = moves.reduce((a, b) =>
+          progressOfMove(state, b) > progressOfMove(state, a) ? b : a,
+        );
+        state = applyAction(state, best).state;
+      }
+      assertMatchInvariants(state);
+    }
+
+    expect(state.status).toBe("completed");
+    expect(state.winnerPlayerId).not.toBeNull();
   });
 });
