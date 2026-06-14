@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { applyAction, getLegalActions } from "@/lib/ludo";
 import type { DomainEvent, MatchState, Ruleset } from "@/lib/ludo";
@@ -16,6 +16,13 @@ import {
   rollDie,
   setupLocalMatch,
 } from "@/lib/ludo-ui/local-game";
+import {
+  clearMatch,
+  loadMatch,
+  loadPreferences,
+  saveMatch,
+  savePreferences,
+} from "@/lib/ludo-ui/local-storage";
 
 import { Dice } from "./dice";
 import { LudoBoard } from "./ludo-board";
@@ -36,6 +43,8 @@ const COLOR_CLASS: Record<PlayerColor, string> = {
   blue: styles.colorBlue,
 };
 
+type Seat = MatchState["players"][number];
+
 export function LocalMatch() {
   const [count, setCount] = useState(2);
   const [ruleset, setRuleset] = useState<Ruleset>("classic");
@@ -51,6 +60,8 @@ export function LocalMatch() {
   const [captured, setCaptured] = useState<ReadonlySet<string>>(new Set());
   const [message, setMessage] = useState("");
   const [winner, setWinner] = useState<string | null>(null);
+  const [handoffTo, setHandoffTo] = useState<Seat | null>(null);
+  const [savedMatch, setSavedMatch] = useState<MatchState | null>(null);
 
   const movesByToken = useMemo(() => {
     if (!match || match.phase !== "awaiting-move" || busy) {
@@ -74,6 +85,7 @@ export function LocalMatch() {
   const activePlayer = match ? match.players[match.activePlayerIndex] : null;
 
   const start = useCallback(() => {
+    savePreferences({ count, ruleset, names });
     const next = setupLocalMatch(
       Array.from({ length: count }, (_, i) => ({ name: names[i] ?? "" })),
       ruleset,
@@ -83,8 +95,16 @@ export function LocalMatch() {
     setDieFaces([]);
     setOverride(null);
     setCaptured(new Set());
+    setHandoffTo(null);
     setMessage(`${next.players[next.activePlayerIndex].displayName} to roll.`);
   }, [count, ruleset, names]);
+
+  const newGame = useCallback(() => {
+    clearMatch();
+    setSavedMatch(null);
+    setHandoffTo(null);
+    setMatch(null);
+  }, []);
 
   // Flashes captured tokens and returns the status line for a transition.
   const resolve = useCallback(
@@ -107,6 +127,15 @@ export function LocalMatch() {
         return;
       }
 
+      // A turn change hands the device to the next player — gate behind a
+      // private handoff screen so play passes cleanly.
+      if (
+        next.status === "active" &&
+        events.some((e) => e.type === "turn-advanced")
+      ) {
+        setHandoffTo(next.players[next.activePlayerIndex]);
+      }
+
       const name = next.players[next.activePlayerIndex].displayName;
       let status: string;
       if (next.phase === "awaiting-die-order") {
@@ -124,6 +153,26 @@ export function LocalMatch() {
     },
     [],
   );
+
+  const resume = useCallback(() => {
+    const saved = loadMatch();
+    if (!saved) return;
+    setMatch(saved);
+    setOverride(null);
+    setCaptured(new Set());
+    setHandoffTo(null);
+    setDieFaces(
+      saved.pendingRoll ? saved.pendingRoll.dice.map((d) => d.value) : [],
+    );
+    if (saved.status === "completed" && saved.winnerPlayerId) {
+      const champ = saved.players.find((p) => p.id === saved.winnerPlayerId);
+      setWinner(champ?.displayName ?? "Winner");
+      setMessage(`${champ?.displayName ?? "A player"} wins the game!`);
+    } else {
+      setWinner(null);
+      resolve(saved, []);
+    }
+  }, [resolve]);
 
   const handleRoll = useCallback(async () => {
     if (!match || busy || match.phase !== "awaiting-roll") return;
@@ -185,6 +234,26 @@ export function LocalMatch() {
     },
     [match, busy, resolve],
   );
+
+  // Hydrate saved preferences and any in-progress match once on mount. This
+  // must run in an effect (not a lazy initializer) so server and client render
+  // the same defaults and avoid a hydration mismatch.
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    const prefs = loadPreferences();
+    if (prefs) {
+      setCount(prefs.count);
+      setRuleset(prefs.ruleset);
+      setNames([0, 1, 2, 3].map((i) => prefs.names[i] ?? ""));
+    }
+    setSavedMatch(loadMatch());
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
+
+  // Persist the in-progress match so a refresh can resume it.
+  useEffect(() => {
+    if (match) saveMatch(match);
+  }, [match]);
 
   const dieValue = (dieId: string) =>
     match?.pendingRoll?.dice.find((d) => d.id === dieId)?.value ?? 0;
@@ -248,12 +317,18 @@ export function LocalMatch() {
         <button type="button" className={styles.startButton} onClick={start}>
           Start game
         </button>
+        {savedMatch ? (
+          <button type="button" className={styles.newGame} onClick={resume}>
+            Resume saved game
+          </button>
+        ) : null}
       </div>
     );
   }
 
   const diceCount = diceCountFor(match.ruleset);
-  const canRoll = !busy && match.phase === "awaiting-roll" && !winner;
+  const canRoll =
+    !busy && match.phase === "awaiting-roll" && !winner && !handoffTo;
   const homeCounts = (playerId: string) =>
     match.tokens.filter((t) => t.playerId === playerId && t.status === "won")
       .length;
@@ -334,15 +409,33 @@ export function LocalMatch() {
             ))}
           </div>
 
-          <button
-            type="button"
-            className={styles.newGame}
-            onClick={() => setMatch(null)}
-          >
+          <button type="button" className={styles.newGame} onClick={newGame}>
             New game
           </button>
         </aside>
       </div>
+
+      {handoffTo && !winner ? (
+        <div className={styles.overlay}>
+          <div className={styles.dialog}>
+            <span
+              className={`${styles.dot} ${COLOR_CLASS[handoffTo.color]}`}
+              style={{ margin: "0 auto" }}
+            />
+            <h2>Pass to {handoffTo.displayName}</h2>
+            <p className={styles.message}>
+              Hand the device over, then start the turn.
+            </p>
+            <button
+              type="button"
+              className={styles.startButton}
+              onClick={() => setHandoffTo(null)}
+            >
+              Start turn
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {winner ? (
         <div className={styles.overlay}>
