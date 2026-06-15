@@ -44,6 +44,12 @@ customization.
   numbered seat, host controls for ruleset, player count, board skin, and
   optional 30/60/90-second turn timers, and host handoff on leave.
 - Direct friend-to-room invites with atomic accept/decline.
+- Server-authoritative online matches: versioned snapshots and append-only
+  events with optimistic concurrency, dice generated server-side, the host
+  starts the match from the room lobby, and the board streams over Supabase
+  Realtime with snapshot resync on version conflicts.
+- Turn-timeout resolution (auto-roll plus a random complete legal turn), the
+  three-strike forfeit, player presence reporting, and forfeit handling.
 - Detailed product, architecture, authentication, foundation, and rules-engine
   implementation plans under `docs/superpowers`.
 
@@ -51,17 +57,16 @@ customization.
 
 - **PWA:** manifest and shell exist; service-worker caching, offline behavior,
   install prompts, accessibility polish, and final responsive QA remain.
-- **Rooms:** lobbies, seats, invites, and host settings exist; starting an
-  online match from a room and in-room presence remain.
+- **Online lifecycle:** snapshot/event persistence, the action handlers, and
+  the timeout/presence/forfeit logic exist; the scheduled job that fires turn
+  timers and enforces the two-minute reconnect window is a deployment task.
 - **Customize:** a protected placeholder page exists; its database model and
   product behavior remain.
 
 ### Not Implemented Yet
 
-- Friend and room presence indicators.
-- Starting a server-authoritative match from a private room.
-- Server-authoritative online matches and Realtime synchronization.
-- Reconnect windows, turn timers, automated timeout moves, and forfeits.
+- The scheduled timer/reconnect job (cron or edge function) that drives the
+  turn-timeout and reconnect-window endpoints.
 - Cosmetic catalogs, ownership, loadouts, backgrounds, boards, dice, tokens,
   animation packs, sounds, and visual effects.
 - Complete-match browser tests and production deployment configuration.
