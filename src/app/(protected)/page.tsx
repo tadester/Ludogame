@@ -7,8 +7,8 @@ export default function Home() {
         <p className="eyebrow">Classic and Nigerian rules</p>
         <h1>Choose how to play</h1>
         <p className="hero-copy">
-          Pass-the-phone matches are ready to play. Online friend rooms arrive
-          in a later section.
+          Pass-the-phone matches are ready to play. Create a private friend room
+          to set up an online match.
         </p>
       </section>
       <section className="play-grid" aria-label="Play types">
@@ -22,9 +22,9 @@ export default function Home() {
         <article className="play-card">
           <h2>Friend room</h2>
           <p>Invite friends to a private online match.</p>
-          <button type="button" disabled>
+          <Link className="primary-button" href="/rooms">
             Friend room
-          </button>
+          </Link>
         </article>
       </section>
     </>
