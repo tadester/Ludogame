@@ -50,6 +50,10 @@ customization.
   Realtime with snapshot resync on version conflicts.
 - Turn-timeout resolution (auto-roll plus a random complete legal turn), the
   three-strike forfeit, player presence reporting, and forfeit handling.
+- Cosmetics: a seeded catalog with per-user ownership, an equippable loadout,
+  and reduced-motion and muted-audio preferences, all enforced with RLS and
+  atomic functions. The customize page manages them, and the equipped
+  background and reduced-motion preference apply across the app.
 - Detailed product, architecture, authentication, foundation, and rules-engine
   implementation plans under `docs/superpowers`.
 
@@ -60,15 +64,16 @@ customization.
 - **Online lifecycle:** snapshot/event persistence, the action handlers, and
   the timeout/presence/forfeit logic exist; the scheduled job that fires turn
   timers and enforces the two-minute reconnect window is a deployment task.
-- **Customize:** a protected placeholder page exists; its database model and
-  product behavior remain.
+- **Cosmetics:** the catalog, ownership, loadout, preferences, and background
+  themes exist; rendering board/dice/token skin variations and the animation,
+  sound, and effect packs remain.
 
 ### Not Implemented Yet
 
 - The scheduled timer/reconnect job (cron or edge function) that drives the
   turn-timeout and reconnect-window endpoints.
-- Cosmetic catalogs, ownership, loadouts, backgrounds, boards, dice, tokens,
-  animation packs, sounds, and visual effects.
+- Board, dice, and token skin rendering, plus animation, sound, and visual
+  effect packs.
 - Complete-match browser tests and production deployment configuration.
 
 ## Game Modes
