@@ -1,4 +1,9 @@
-import type { DomainEvent, MatchState, Ruleset } from "@/lib/ludo";
+import type {
+  ApplyActionResult,
+  DomainEvent,
+  MatchState,
+  Ruleset,
+} from "@/lib/ludo";
 
 import { buildStartedMatch, resolveIntent } from "./authority";
 import type { DiceRng, OnlineSeat, ServerIntent } from "./authority";
@@ -113,5 +118,22 @@ export async function submitIntent(
     events,
   );
 
+  return { snapshot: state, events, version };
+}
+
+/** Commit a system-initiated transition (timeout resolution, connection
+ *  change, forfeit) that does not originate from a single player's intent. */
+export async function commitSystemAction(
+  store: MatchStore,
+  matchId: string,
+  produce: (snapshot: MatchState) => ApplyActionResult,
+): Promise<SubmitIntentResult> {
+  const current = await store.load(matchId);
+  if (!current) {
+    throw new MatchAuthorizationError("Match not found.");
+  }
+
+  const { state, events } = produce(current.snapshot);
+  const version = await store.commit(matchId, current.version, state, events);
   return { snapshot: state, events, version };
 }
