@@ -33,6 +33,17 @@ customization.
 - Shared 52-space ring topology, color opening indexes, Classic safe-space
   indexes, home-lane bounds, and exact-win progress constants.
 - Property-testing dependency (`fast-check`) for upcoming engine invariants.
+- Complete Classic and Nigerian rules engine: match creation, legal actions,
+  movement, captures, home entry, turn flow, deterministic replay, and
+  invariant validation.
+- Playable pass-the-phone board UI with animated tokens and dice, private turn
+  handoff screens, and owner-scoped local match and preference persistence.
+- Friends: send, accept, decline, and remove requests, plus add-by-username,
+  backed by a `friendships` model with atomic functions and Row Level Security.
+- Private rooms: create with a generated invite code, join by code into a
+  numbered seat, host controls for ruleset, player count, board skin, and
+  optional 30/60/90-second turn timers, and host handoff on leave.
+- Direct friend-to-room invites with atomic accept/decline.
 - Detailed product, architecture, authentication, foundation, and rules-engine
   implementation plans under `docs/superpowers`.
 
@@ -40,18 +51,15 @@ customization.
 
 - **PWA:** manifest and shell exist; service-worker caching, offline behavior,
   install prompts, accessibility polish, and final responsive QA remain.
-- **Rules engine:** contracts and board topology exist; match creation, legal
-  actions, movement, captures, home entry, turn flow, replay, lifecycle, and
-  invariant checks remain.
-- **Friends and Customize:** protected placeholder pages exist; their database
-  models and product behavior remain.
+- **Rooms:** lobbies, seats, invites, and host settings exist; starting an
+  online match from a room and in-room presence remain.
+- **Customize:** a protected placeholder page exists; its database model and
+  product behavior remain.
 
 ### Not Implemented Yet
 
-- A rendered Ludo board and playable game interface.
-- Pass-the-phone setup, handoff privacy, and local match persistence.
-- Friend requests, friend lists, presence, and invitations.
-- Private rooms, invite codes, seats, host settings, and room lifecycle.
+- Friend and room presence indicators.
+- Starting a server-authoritative match from a private room.
 - Server-authoritative online matches and Realtime synchronization.
 - Reconnect windows, turn timers, automated timeout moves, and forfeits.
 - Cosmetic catalogs, ownership, loadouts, backgrounds, boards, dice, tokens,
