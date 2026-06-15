@@ -155,3 +155,8 @@ grant execute on function public.create_match_record(uuid, jsonb)
   to service_role;
 grant execute on function public.commit_match_action(uuid, int, jsonb, jsonb)
   to service_role;
+
+-- Stream snapshot and event changes to authorized clients via Realtime. RLS
+-- still governs which rows each client may receive.
+alter publication supabase_realtime add table public.matches;
+alter publication supabase_realtime add table public.match_events;

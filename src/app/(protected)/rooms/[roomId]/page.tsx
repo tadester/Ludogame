@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import {
@@ -6,6 +7,7 @@ import {
   updateRoomSettings,
 } from "@/app/(protected)/rooms/actions";
 import { RoomSettingsFields } from "@/app/(protected)/rooms/RoomSettingsFields";
+import { StartMatchButton } from "@/app/(protected)/rooms/StartMatchButton";
 import { groupFriends } from "@/lib/friends/friends";
 import type { FriendRow } from "@/lib/friends/friends";
 import { describeTimer, isHost } from "@/lib/rooms/rooms";
@@ -58,7 +60,14 @@ export default async function RoomLobbyPage({
   const invitableFriends = friends.filter((f) => !seated.has(f.friend_id));
   const roomFull = members.length >= room.max_players;
 
+  const { data: matchRow } = await supabase
+    .from("matches")
+    .select("id")
+    .eq("room_id", roomId)
+    .maybeSingle<{ id: string }>();
+
   const host = isHost(room, userId);
+  const canStart = host && !matchRow && members.length >= 2;
   const { message } = await searchParams;
 
   return (
@@ -100,6 +109,23 @@ export default async function RoomLobbyPage({
             );
           })}
         </ul>
+      </div>
+
+      <div className={styles.group}>
+        <h2>Match</h2>
+        {matchRow ? (
+          <Link className="primary-button" href={`/matches/${matchRow.id}`}>
+            Go to match
+          </Link>
+        ) : canStart ? (
+          <StartMatchButton roomId={room.id} />
+        ) : (
+          <p className={styles.empty}>
+            {host
+              ? "Add at least one more player to start."
+              : "Waiting for the host to start the match."}
+          </p>
+        )}
       </div>
 
       {!roomFull && invitableFriends.length > 0 ? (
