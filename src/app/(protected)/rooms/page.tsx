@@ -1,11 +1,24 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { createRoom, joinRoom } from "@/app/(protected)/rooms/actions";
+import {
+  createRoom,
+  joinRoom,
+  respondToRoomInvite,
+} from "@/app/(protected)/rooms/actions";
 import { RoomSettingsFields } from "@/app/(protected)/rooms/RoomSettingsFields";
 import { describeTimer } from "@/lib/rooms/rooms";
 import type { Room } from "@/lib/rooms/rooms";
 import { createClient } from "@/lib/supabase/server";
+
+interface RoomInvite {
+  readonly invite_id: string;
+  readonly room_id: string;
+  readonly invite_code: string;
+  readonly ruleset: string;
+  readonly inviter_name: string;
+  readonly created_at: string;
+}
 
 import styles from "./rooms.module.css";
 
@@ -36,6 +49,10 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
   }
 
   const rooms = (data ?? []) as Room[];
+
+  const { data: inviteData } = await supabase.rpc("list_room_invites");
+  const invites = (inviteData ?? []) as RoomInvite[];
+
   const { message } = await searchParams;
 
   return (
@@ -79,6 +96,39 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
           </button>
         </form>
       </div>
+
+      {invites.length > 0 ? (
+        <div className={styles.group}>
+          <h2>Invites</h2>
+          <ul className={styles.list}>
+            {invites.map((invite) => (
+              <li className={styles.row} key={invite.invite_id}>
+                <span className={styles.name}>
+                  {RULESET_LABELS[invite.ruleset] ?? invite.ruleset} room
+                  <small>From {invite.inviter_name}</small>
+                </span>
+                <span className={styles.actions}>
+                  <form action={respondToRoomInvite}>
+                    <input name="inviteId" type="hidden" value={invite.invite_id} />
+                    <input name="roomId" type="hidden" value={invite.room_id} />
+                    <input name="accept" type="hidden" value="true" />
+                    <button className="primary-button" type="submit">
+                      Join
+                    </button>
+                  </form>
+                  <form action={respondToRoomInvite}>
+                    <input name="inviteId" type="hidden" value={invite.invite_id} />
+                    <input name="accept" type="hidden" value="false" />
+                    <button className={styles.ghost} type="submit">
+                      Decline
+                    </button>
+                  </form>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div className={styles.group}>
         <h2>Your active rooms</h2>

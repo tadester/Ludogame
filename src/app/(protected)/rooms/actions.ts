@@ -101,6 +101,64 @@ export async function leaveRoom(formData: FormData) {
   roomsRedirect("You left the room.");
 }
 
+function friendlyInviteError(message: string): string {
+  if (message.includes("already in the room")) {
+    return "That friend is already in the room.";
+  }
+  if (message.includes("only invite friends")) {
+    return "You can only invite players on your friends list.";
+  }
+  if (message.includes("full")) {
+    return "The room is already full.";
+  }
+  return "Unable to send that invite. Try again.";
+}
+
+export async function inviteFriendToRoom(formData: FormData) {
+  const roomId = String(formData.get("roomId") ?? "");
+  const friendId = String(formData.get("friendId") ?? "");
+  if (!roomId || !friendId) {
+    roomsRedirect("That invite is no longer available.");
+  }
+
+  const supabase = await requireClient();
+  const { error } = await supabase.rpc("invite_friend_to_room", {
+    p_room_id: roomId,
+    p_friend_id: friendId,
+  });
+
+  if (error) {
+    lobbyRedirect(roomId, friendlyInviteError(error.message));
+  }
+
+  revalidatePath(`/rooms/${roomId}`);
+  lobbyRedirect(roomId, "Invite sent.");
+}
+
+export async function respondToRoomInvite(formData: FormData) {
+  const inviteId = String(formData.get("inviteId") ?? "");
+  const roomId = String(formData.get("roomId") ?? "");
+  const accept = String(formData.get("accept") ?? "") === "true";
+  if (!inviteId) {
+    roomsRedirect("That invite is no longer available.");
+  }
+
+  const supabase = await requireClient();
+  const { error } = await supabase.rpc("respond_to_room_invite", {
+    p_invite_id: inviteId,
+    p_accept: accept,
+  });
+
+  if (error) {
+    roomsRedirect(friendlyInviteError(error.message));
+  }
+
+  if (accept && roomId) {
+    redirect(`/rooms/${roomId}`);
+  }
+  roomsRedirect(accept ? "Joined the room." : "Invite declined.");
+}
+
 export async function updateRoomSettings(formData: FormData) {
   const roomId = String(formData.get("roomId") ?? "");
   const result = validateRoomSettings(formData);

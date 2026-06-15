@@ -1,10 +1,13 @@
 import { redirect } from "next/navigation";
 
 import {
+  inviteFriendToRoom,
   leaveRoom,
   updateRoomSettings,
 } from "@/app/(protected)/rooms/actions";
 import { RoomSettingsFields } from "@/app/(protected)/rooms/RoomSettingsFields";
+import { groupFriends } from "@/lib/friends/friends";
+import type { FriendRow } from "@/lib/friends/friends";
 import { describeTimer, isHost } from "@/lib/rooms/rooms";
 import type { Room, RoomMember, TurnTimer } from "@/lib/rooms/rooms";
 import { createClient } from "@/lib/supabase/server";
@@ -49,6 +52,12 @@ export default async function RoomLobbyPage({
   });
   const members = (memberData ?? []) as RoomMember[];
 
+  const { data: friendData } = await supabase.rpc("list_friends");
+  const { friends } = groupFriends((friendData ?? []) as FriendRow[]);
+  const seated = new Set(members.map((m) => m.user_id));
+  const invitableFriends = friends.filter((f) => !seated.has(f.friend_id));
+  const roomFull = members.length >= room.max_players;
+
   const host = isHost(room, userId);
   const { message } = await searchParams;
 
@@ -92,6 +101,31 @@ export default async function RoomLobbyPage({
           })}
         </ul>
       </div>
+
+      {!roomFull && invitableFriends.length > 0 ? (
+        <div className={styles.group}>
+          <h2>Invite friends</h2>
+          <ul className={styles.list}>
+            {invitableFriends.map((friend) => (
+              <li className={styles.row} key={friend.friend_id}>
+                <span className={styles.name}>
+                  {friend.display_name}
+                  <small>
+                    {friend.username ? `@${friend.username}` : "Friend"}
+                  </small>
+                </span>
+                <form action={inviteFriendToRoom}>
+                  <input name="roomId" type="hidden" value={room.id} />
+                  <input name="friendId" type="hidden" value={friend.friend_id} />
+                  <button className={styles.ghost} type="submit">
+                    Invite
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {host ? (
         <form action={updateRoomSettings} className={styles.panel}>
