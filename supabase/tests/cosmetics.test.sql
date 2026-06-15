@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(26);
+select plan(28);
 
 -- Structure -----------------------------------------------------------------
 
@@ -36,6 +36,8 @@ select has_function('public', 'list_cosmetics', '{}'::text[],
   'list_cosmetics function exists');
 select has_function('public', 'grant_cosmetic', array['uuid', 'uuid'],
   'grant_cosmetic function exists');
+select has_function('public', 'get_player_theme', '{}'::text[],
+  'get_player_theme function exists');
 
 select table_privs_are('public', 'cosmetic_items', 'authenticated',
   array['SELECT'], 'authenticated users can only select the catalog');
@@ -139,6 +141,12 @@ select throws_ok(
   $$ select public.equip_cosmetic('00000000-0000-0000-0000-0000000000ff') $$,
   'P0002', null,
   'equipping a nonexistent item is rejected'
+);
+
+select results_eq(
+  $$ select background_code, reduced_motion from public.get_player_theme() $$,
+  $$ values ('aurora', true) $$,
+  'get_player_theme resolves equipped codes and preferences'
 );
 
 select * from finish();

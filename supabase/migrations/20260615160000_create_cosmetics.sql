@@ -230,6 +230,46 @@ begin
 end;
 $$;
 
+-- The caller's equipped item codes and preferences, resolved in one call for
+-- applying the theme app-wide.
+create function public.get_player_theme()
+returns table (
+  background_code text,
+  board_code text,
+  dice_code text,
+  token_code text,
+  animation_code text,
+  sound_code text,
+  effect_code text,
+  reduced_motion boolean,
+  muted_audio boolean
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := (select auth.uid());
+begin
+  if v_uid is null then
+    raise exception 'authentication required' using errcode = '28000';
+  end if;
+  perform private.ensure_player_cosmetics(v_uid);
+  return query
+    select bg.code, bd.code, di.code, tk.code, an.code, so.code, ef.code,
+      pc.reduced_motion, pc.muted_audio
+    from public.player_cosmetics pc
+    left join public.cosmetic_items bg on bg.id = pc.background_item_id
+    left join public.cosmetic_items bd on bd.id = pc.board_item_id
+    left join public.cosmetic_items di on di.id = pc.dice_item_id
+    left join public.cosmetic_items tk on tk.id = pc.token_item_id
+    left join public.cosmetic_items an on an.id = pc.animation_item_id
+    left join public.cosmetic_items so on so.id = pc.sound_item_id
+    left join public.cosmetic_items ef on ef.id = pc.effect_item_id
+    where pc.user_id = v_uid;
+end;
+$$;
+
 -- The catalog with an `owned` flag for the caller.
 create function public.list_cosmetics()
 returns table (
@@ -277,6 +317,7 @@ revoke all on function public.equip_cosmetic(uuid) from public, anon;
 revoke all on function public.update_cosmetic_preferences(boolean, boolean)
   from public, anon;
 revoke all on function public.get_player_cosmetics() from public, anon;
+revoke all on function public.get_player_theme() from public, anon;
 revoke all on function public.list_cosmetics() from public, anon;
 revoke all on function public.grant_cosmetic(uuid, uuid)
   from public, anon, authenticated;
@@ -285,6 +326,7 @@ grant execute on function public.equip_cosmetic(uuid) to authenticated;
 grant execute on function public.update_cosmetic_preferences(boolean, boolean)
   to authenticated;
 grant execute on function public.get_player_cosmetics() to authenticated;
+grant execute on function public.get_player_theme() to authenticated;
 grant execute on function public.list_cosmetics() to authenticated;
 grant execute on function public.grant_cosmetic(uuid, uuid) to service_role;
 
