@@ -105,6 +105,33 @@ export type ServerIntent =
       readonly dieIds: readonly string[];
     };
 
+/** Parse and validate an untrusted intent payload (e.g. a request body). */
+export function parseServerIntent(value: unknown): ServerIntent | null {
+  if (!value || typeof value !== "object") return null;
+  const v = value as Record<string, unknown>;
+  const stringArray = (x: unknown): x is string[] =>
+    Array.isArray(x) && x.every((item) => typeof item === "string");
+
+  switch (v.kind) {
+    case "roll":
+      return { kind: "roll" };
+    case "select-die-order":
+      return stringArray(v.dieIds)
+        ? { kind: "select-die-order", dieIds: v.dieIds }
+        : null;
+    case "release-token":
+      return typeof v.tokenId === "string" && typeof v.dieId === "string"
+        ? { kind: "release-token", tokenId: v.tokenId, dieId: v.dieId }
+        : null;
+    case "move-token":
+      return typeof v.tokenId === "string" && stringArray(v.dieIds)
+        ? { kind: "move-token", tokenId: v.tokenId, dieIds: v.dieIds }
+        : null;
+    default:
+      return null;
+  }
+}
+
 export class NotYourTurnError extends Error {
   constructor() {
     super("It is not that player's turn.");

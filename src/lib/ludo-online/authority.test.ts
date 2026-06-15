@@ -7,6 +7,7 @@ import {
   buildStartedMatch,
   diceCountForRuleset,
   NotYourTurnError,
+  parseServerIntent,
   resolveIntent,
   serverRoll,
 } from "./authority";
@@ -61,6 +62,27 @@ describe("serverRoll", () => {
     const state = buildStartedMatch("m", SEATS, "classic");
     expect(() => serverRoll(state, fixedRng(7))).toThrow();
     expect(() => serverRoll(state, fixedRng(0))).toThrow();
+  });
+});
+
+describe("parseServerIntent", () => {
+  it("accepts well-formed intents", () => {
+    expect(parseServerIntent({ kind: "roll" })).toEqual({ kind: "roll" });
+    expect(
+      parseServerIntent({ kind: "move-token", tokenId: "t1", dieIds: ["d1"] }),
+    ).toEqual({ kind: "move-token", tokenId: "t1", dieIds: ["d1"] });
+    expect(
+      parseServerIntent({ kind: "release-token", tokenId: "t1", dieId: "d1" }),
+    ).toEqual({ kind: "release-token", tokenId: "t1", dieId: "d1" });
+  });
+
+  it("rejects malformed or unknown intents", () => {
+    expect(parseServerIntent(null)).toBeNull();
+    expect(parseServerIntent({ kind: "nope" })).toBeNull();
+    expect(parseServerIntent({ kind: "move-token", tokenId: "t1" })).toBeNull();
+    expect(
+      parseServerIntent({ kind: "release-token", tokenId: 1, dieId: "d1" }),
+    ).toBeNull();
   });
 });
 
