@@ -19,15 +19,35 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
   const { data } = await supabase
     .from("matches")
-    .select("id, snapshot")
+    .select("id, room_id, snapshot")
     .eq("id", matchId)
-    .maybeSingle<{ id: string; snapshot: MatchState }>();
+    .maybeSingle<{ id: string; room_id: string; snapshot: MatchState }>();
 
   if (!data) {
     redirect("/rooms?message=That+match+is+no+longer+available.");
   }
 
+  // The board skin is shared (host's room choice); dice and tokens are each
+  // player's own equipped cosmetics.
+  const [{ data: room }, { data: theme }] = await Promise.all([
+    supabase
+      .from("rooms")
+      .select("board_skin")
+      .eq("id", data.room_id)
+      .maybeSingle<{ board_skin: string }>(),
+    supabase
+      .rpc("get_player_theme")
+      .maybeSingle<{ dice_code: string | null; token_code: string | null }>(),
+  ]);
+
   return (
-    <OnlineMatch matchId={data.id} userId={userId} initial={data.snapshot} />
+    <OnlineMatch
+      matchId={data.id}
+      userId={userId}
+      initial={data.snapshot}
+      boardSkin={room?.board_skin ?? "classic"}
+      diceSkin={theme?.dice_code ?? "ivory"}
+      tokenSkin={theme?.token_code ?? "classic"}
+    />
   );
 }

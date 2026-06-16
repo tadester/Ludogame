@@ -53,6 +53,8 @@ interface LudoBoardProps {
   capturedTokenIds: ReadonlySet<string>;
   interactive: boolean;
   onTokenClick: (tokenId: string) => void;
+  boardSkin?: string;
+  tokenSkin?: string;
 }
 
 export function LudoBoard({
@@ -63,6 +65,8 @@ export function LudoBoard({
   capturedTokenIds,
   interactive,
   onTokenClick,
+  boardSkin = "classic",
+  tokenSkin = "classic",
 }: LudoBoardProps) {
   const placed = useMemo(
     () =>
@@ -72,7 +76,7 @@ export function LudoBoard({
 
   return (
     <div className={styles.boardWrap}>
-      <div className={styles.board}>
+      <div className={styles.board} data-board-skin={boardSkin}>
         <div className={styles.grid}>
           {PLAY_ORDER.map((color) => (
             <Yard key={color} color={color} />
@@ -106,7 +110,7 @@ export function LudoBoard({
         </div>
 
         <div className={styles.tokenLayer}>
-          <div className={styles.tokenInner}>
+          <div className={styles.tokenInner} data-token-skin={tokenSkin}>
             {placed.map(({ token, left, top }) => {
               const movable = movableTokenIds.has(token.id);
               const classes = [

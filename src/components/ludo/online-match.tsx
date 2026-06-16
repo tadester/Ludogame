@@ -19,9 +19,19 @@ interface OnlineMatchProps {
   readonly matchId: string;
   readonly userId: string;
   readonly initial: MatchState;
+  readonly boardSkin?: string;
+  readonly tokenSkin?: string;
+  readonly diceSkin?: string;
 }
 
-export function OnlineMatch({ matchId, userId, initial }: OnlineMatchProps) {
+export function OnlineMatch({
+  matchId,
+  userId,
+  initial,
+  boardSkin = "classic",
+  tokenSkin = "classic",
+  diceSkin = "ivory",
+}: OnlineMatchProps) {
   const [snapshot, setSnapshot] = useState<MatchState>(initial);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -143,6 +153,8 @@ export function OnlineMatch({ matchId, userId, initial }: OnlineMatchProps) {
         capturedTokenIds={EMPTY}
         interactive={view.isMyTurn && !busy}
         onTokenClick={onTokenClick}
+        boardSkin={boardSkin}
+        tokenSkin={tokenSkin}
       />
 
       {message ? <p className={styles.message}>{message}</p> : null}
@@ -155,6 +167,7 @@ export function OnlineMatch({ matchId, userId, initial }: OnlineMatchProps) {
               rolling={false}
               ready={!busy}
               disabled={busy}
+              skin={diceSkin}
               onRoll={() => void send({ kind: "roll" })}
             />
           ) : view.phase === "awaiting-die-order" ? (

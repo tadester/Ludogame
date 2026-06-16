@@ -241,3 +241,20 @@
     animation: none;
   }
 }
+
+/* --- board + token skins ----------------------------------------------- */
+.board[data-board-skin="emerald"] {
+  background: linear-gradient(145deg, #14402f, #06160f);
+}
+
+[data-token-skin="gem"] .disc {
+  clip-path: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%);
+  box-shadow:
+    inset 0 0 0 0.06rem rgb(255 255 255 / 55%),
+    inset 0 -0.12rem 0.22rem rgb(0 0 0 / 40%),
+    0 0.1rem 0.3rem rgb(0 0 0 / 45%);
+}
+
+[data-token-skin="gem"] .disc::after {
+  opacity: 0.85;
+}
