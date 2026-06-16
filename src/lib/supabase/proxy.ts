@@ -4,6 +4,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { readSupabaseEnv } from "@/lib/supabase/env";
 
 const publicPaths = [
+  // API routes authenticate themselves and return JSON, so the middleware
+  // refreshes the session but must not redirect them to the login page.
+  "/api",
+  "/play",
   "/check-email",
   "/login",
   "/signup",

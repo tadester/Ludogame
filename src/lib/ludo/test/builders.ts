@@ -1,5 +1,7 @@
 import { applyAction, createMatch } from "@/lib/ludo";
-import type { MatchState, PlayerColor, Ruleset } from "@/lib/ludo";
+import type { MatchState, Ruleset } from "@/lib/ludo";
+
+import type { PlayerColor } from "../types";
 
 export function startedMatch(ruleset: Ruleset = "classic"): MatchState {
   let state = createMatch({
@@ -32,11 +34,7 @@ export function withToken(
         ? {
             ...token,
             status:
-              progress === null
-                ? "yard"
-                : progress === 57
-                  ? "won"
-                  : "active",
+              progress === null ? "yard" : progress === 57 ? "won" : "active",
             progress,
           }
         : token,
@@ -49,8 +47,6 @@ export function playerIdForColor(
   color: PlayerColor,
 ): string {
   const player = state.players.find((candidate) => candidate.color === color);
-  if (!player) {
-    throw new Error(`No ${color} player`);
-  }
+  if (!player) throw new Error(`No ${color} player`);
   return player.id;
 }

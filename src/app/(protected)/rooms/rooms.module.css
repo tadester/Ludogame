@@ -1,0 +1,153 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: min(100%, 46rem);
+  margin: 0 auto;
+  padding: 1.5rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--panel), transparent 8%);
+}
+
+.banner {
+  margin: 0;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--accent), transparent 88%);
+  color: var(--text);
+}
+
+.columns {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--panel), transparent 12%);
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.fields {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+}
+
+.panel label,
+.fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.panel select,
+.panel input,
+.fields select {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--panel), transparent 4%);
+  color: var(--text);
+}
+
+.panel select:focus,
+.panel input:focus,
+.fields select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.codeInput {
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-size: 1.1rem;
+}
+
+.code {
+  letter-spacing: 0.2em;
+  color: var(--accent);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.group h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--panel), transparent 12%);
+}
+
+.name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.name small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ghost {
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.55rem;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.ghost:hover {
+  border-color: var(--accent);
+}
+
+.empty {
+  margin: 0;
+  color: var(--muted);
+}

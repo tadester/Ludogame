@@ -1,0 +1,243 @@
+.boardWrap {
+  width: min(92vw, 34rem);
+  margin-inline: auto;
+}
+
+.board {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 1.1rem;
+  padding: 2.4%;
+  background: linear-gradient(145deg, #1b3350, #0d1c30);
+  box-shadow:
+    0 1.6rem 3.5rem rgb(0 0 0 / 45%),
+    inset 0 0 0 1px rgb(255 255 255 / 6%);
+}
+
+.grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  grid-template-rows: repeat(15, 1fr);
+  width: 100%;
+  height: 100%;
+  border-radius: 0.6rem;
+  overflow: hidden;
+  background: #f7f9fc;
+}
+
+/* --- yards ------------------------------------------------------------- */
+
+.yard {
+  display: grid;
+  place-items: center;
+  margin: 8%;
+  border-radius: 18%;
+}
+
+.yardInner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16%;
+  place-items: center;
+  width: 78%;
+  height: 78%;
+  padding: 12%;
+  border-radius: 14%;
+  background: #ffffff;
+}
+
+.homeSlot {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgb(15 28 48 / 12%);
+  box-shadow: inset 0 0.12rem 0.3rem rgb(0 0 0 / 18%);
+}
+
+/* --- path cells -------------------------------------------------------- */
+
+.cell {
+  border: 1px solid #dde4ee;
+  background: #ffffff;
+}
+
+.pathCell {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.safeStar {
+  font-size: clamp(0.5rem, 2.2vw, 0.95rem);
+  line-height: 1;
+  color: rgb(15 28 48 / 38%);
+}
+
+/* --- center home ------------------------------------------------------- */
+
+.center {
+  position: relative;
+  overflow: hidden;
+}
+
+.tri {
+  position: absolute;
+  inset: 0;
+}
+
+.triRed {
+  clip-path: polygon(0 0, 50% 50%, 0 100%);
+}
+.triGreen {
+  clip-path: polygon(0 0, 100% 0, 50% 50%);
+}
+.triYellow {
+  clip-path: polygon(100% 0, 100% 100%, 50% 50%);
+}
+.triBlue {
+  clip-path: polygon(0 100%, 50% 50%, 100% 100%);
+}
+
+/* --- color fills ------------------------------------------------------- */
+
+.fillRed {
+  background: var(--red);
+}
+.fillGreen {
+  background: var(--green);
+}
+.fillYellow {
+  background: var(--yellow);
+}
+.fillBlue {
+  background: var(--blue);
+}
+
+.softRed {
+  background: color-mix(in srgb, var(--red), white 55%);
+}
+.softGreen {
+  background: color-mix(in srgb, var(--green), white 55%);
+}
+.softYellow {
+  background: color-mix(in srgb, var(--yellow), white 50%);
+}
+.softBlue {
+  background: color-mix(in srgb, var(--blue), white 55%);
+}
+
+/* --- tokens ------------------------------------------------------------ */
+
+.tokenLayer {
+  position: absolute;
+  inset: 2.4%;
+  pointer-events: none;
+}
+
+.tokenInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.token {
+  position: absolute;
+  width: 5.2%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -60%);
+  transition:
+    left 0.16s ease,
+    top 0.16s ease;
+  pointer-events: auto;
+  border: none;
+  padding: 0;
+  background: none;
+  cursor: default;
+  z-index: 5;
+}
+
+.disc {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 0.12rem solid rgb(255 255 255 / 85%);
+  box-shadow:
+    0 0.28rem 0.42rem rgb(0 0 0 / 38%),
+    inset 0 -0.18rem 0.28rem rgb(0 0 0 / 28%),
+    inset 0 0.16rem 0.22rem rgb(255 255 255 / 45%);
+}
+
+.disc::after {
+  content: "";
+  position: absolute;
+  top: 16%;
+  left: 22%;
+  width: 30%;
+  height: 24%;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 55%);
+}
+
+.discRed {
+  background: radial-gradient(circle at 34% 28%, #ff8a8d, var(--red));
+}
+.discGreen {
+  background: radial-gradient(circle at 34% 28%, #79e2ab, var(--green));
+}
+.discYellow {
+  background: radial-gradient(circle at 34% 28%, #ffd576, var(--yellow));
+}
+.discBlue {
+  background: radial-gradient(circle at 34% 28%, #93bdff, var(--blue));
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.movable {
+  z-index: 7;
+  animation: bob 0.9s ease-in-out infinite;
+}
+
+.movable .disc {
+  outline: 0.18rem solid rgb(255 255 255 / 92%);
+  outline-offset: 0.06rem;
+}
+
+.captured {
+  animation: flash 0.45s ease;
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translate(-50%, -60%);
+  }
+  50% {
+    transform: translate(-50%, -82%);
+  }
+}
+
+@keyframes flash {
+  0% {
+    filter: brightness(2.4);
+    transform: translate(-50%, -60%) scale(1.35);
+  }
+  100% {
+    filter: none;
+    transform: translate(-50%, -60%) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .token {
+    transition: none;
+  }
+  .movable {
+    animation: none;
+  }
+}

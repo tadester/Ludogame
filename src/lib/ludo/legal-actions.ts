@@ -1,37 +1,27 @@
+import { getClassicLegalActions } from "./classic";
 import { PLAYER_COLORS } from "./constants";
+import { assertMatchInvariants } from "./invariants";
+import { getNigerianLegalActions } from "./nigerian";
+import { stableStringify } from "./serialize";
 import type { LegalAction, MatchState } from "./types";
 
-function actionSortKey(action: LegalAction) {
-  switch (action.type) {
-    case "join-seat":
-      return `${action.type}:${action.player.color}:${action.player.id}`;
-    case "start-match":
-    case "roll-dice":
-    case "resolve-timeout":
-    case "set-connection":
-    case "forfeit-player":
-      return `${action.type}:${action.playerId}`;
-    case "select-die-order":
-      return `${action.type}:${action.playerId}:${action.dieIds.join(",")}`;
-    case "release-token":
-      return `${action.type}:${action.playerId}:${action.tokenId}:${action.dieId}`;
-    case "move-token":
-      return `${action.type}:${action.playerId}:${action.tokenId}:${action.dieIds.join(",")}`;
-  }
+export function sortLegalActions(actions: LegalAction[]): LegalAction[] {
+  return actions.slice().sort((left, right) => {
+    if (left.type !== right.type) {
+      return left.type < right.type ? -1 : 1;
+    }
+    const leftKey = stableStringify(left);
+    const rightKey = stableStringify(right);
+    return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+  });
 }
 
-export function getLegalActions(state: MatchState): LegalAction[] {
-  if (state.status !== "lobby") {
-    return [];
-  }
-
+function getLobbyLegalActions(state: MatchState): LegalAction[] {
   const actions: LegalAction[] = [];
-
   if (state.players.length < state.maxPlayers) {
-    const occupiedColors = new Set(state.players.map((player) => player.color));
-
+    const usedColors = new Set(state.players.map((player) => player.color));
     for (const color of PLAYER_COLORS) {
-      if (!occupiedColors.has(color)) {
+      if (!usedColors.has(color)) {
         actions.push({
           type: "join-seat",
           expectedVersion: state.version,
@@ -40,7 +30,6 @@ export function getLegalActions(state: MatchState): LegalAction[] {
       }
     }
   }
-
   if (state.players.length === state.maxPlayers) {
     actions.push({
       type: "start-match",
@@ -48,8 +37,19 @@ export function getLegalActions(state: MatchState): LegalAction[] {
       playerId: state.hostPlayerId,
     });
   }
+  return sortLegalActions(actions);
+}
 
-  return actions.sort((left, right) =>
-    actionSortKey(left).localeCompare(actionSortKey(right)),
-  );
+export function getLegalActions(state: MatchState): LegalAction[] {
+  assertMatchInvariants(state);
+  if (state.status === "lobby") {
+    return getLobbyLegalActions(state);
+  }
+  if (state.status === "completed") {
+    return [];
+  }
+  if (state.ruleset === "classic") {
+    return getClassicLegalActions(state);
+  }
+  return getNigerianLegalActions(state);
 }
