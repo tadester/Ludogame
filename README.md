@@ -71,14 +71,14 @@ customization.
   the timeout/presence/forfeit logic exist; the scheduled job that fires turn
   timers and enforces the two-minute reconnect window is a deployment task.
 - **Cosmetics:** the catalog, ownership, loadout, preferences, background
-  themes, and board/dice/token skin rendering exist; the animation, sound, and
-  effect packs remain.
+  themes, board/dice/token skin rendering, anime cosmetic packs, and animation
+  and win-effect packs exist; richer per-pack art remains.
 
 ### Not Implemented Yet
 
 - The scheduled timer/reconnect job (cron or edge function) that drives the
   turn-timeout and reconnect-window endpoints.
-- Animation, sound, and visual effect packs.
+- Sound packs.
 - Complete-match browser tests and production deployment configuration.
 - Replacing the temporary visual direction once final UI and art are ready.
 
