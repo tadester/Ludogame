@@ -18,6 +18,7 @@ interface DiceProps {
   disabled: boolean;
   onRoll: () => void;
   skin?: string;
+  animation?: string;
 }
 
 export function Dice({
@@ -27,6 +28,7 @@ export function Dice({
   disabled,
   onRoll,
   skin = "ivory",
+  animation = "standard",
 }: DiceProps) {
   const pips = PIP_LAYOUT[value ?? 0] ?? new Set<number>();
   const classes = [
@@ -42,6 +44,7 @@ export function Dice({
       type="button"
       className={classes}
       data-dice-skin={skin}
+      data-roll-animation={animation}
       onClick={onRoll}
       disabled={disabled}
       aria-label={value ? `Dice showing ${value}. Roll again.` : "Roll dice"}

@@ -55,6 +55,7 @@ interface LudoBoardProps {
   onTokenClick: (tokenId: string) => void;
   boardSkin?: string;
   tokenSkin?: string;
+  animationSkin?: string;
 }
 
 export function LudoBoard({
@@ -67,6 +68,7 @@ export function LudoBoard({
   onTokenClick,
   boardSkin = "classic",
   tokenSkin = "classic",
+  animationSkin = "standard",
 }: LudoBoardProps) {
   const placed = useMemo(
     () =>
@@ -110,7 +112,11 @@ export function LudoBoard({
         </div>
 
         <div className={styles.tokenLayer}>
-          <div className={styles.tokenInner} data-token-skin={tokenSkin}>
+          <div
+            className={styles.tokenInner}
+            data-token-skin={tokenSkin}
+            data-animation={animationSkin}
+          >
             {placed.map(({ token, left, top }) => {
               const movable = movableTokenIds.has(token.id);
               const classes = [

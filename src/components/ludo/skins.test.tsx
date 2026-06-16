@@ -46,7 +46,24 @@ describe("board and dice skins", () => {
     ).not.toBeNull();
   });
 
-  it("applies the dice skin", () => {
+  it("applies the animation pack to the board", () => {
+    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
+    const { container } = render(
+      <LudoBoard
+        match={match}
+        movableTokenIds={new Set()}
+        animatingTokenId={null}
+        animatingCell={null}
+        capturedTokenIds={new Set()}
+        interactive={false}
+        onTokenClick={() => {}}
+        animationSkin="dynamic"
+      />,
+    );
+    expect(container.querySelector('[data-animation="dynamic"]')).not.toBeNull();
+  });
+
+  it("applies the dice skin and roll animation", () => {
     render(
       <Dice
         value={6}
@@ -55,10 +72,11 @@ describe("board and dice skins", () => {
         disabled={false}
         onRoll={() => {}}
         skin="onyx"
+        animation="dynamic"
       />,
     );
-    expect(screen.getByRole("button").getAttribute("data-dice-skin")).toBe(
-      "onyx",
-    );
+    const button = screen.getByRole("button");
+    expect(button.getAttribute("data-dice-skin")).toBe("onyx");
+    expect(button.getAttribute("data-roll-animation")).toBe("dynamic");
   });
 });

@@ -35,9 +35,12 @@ export default async function MatchPage({ params }: MatchPageProps) {
       .select("board_skin")
       .eq("id", data.room_id)
       .maybeSingle<{ board_skin: string }>(),
-    supabase
-      .rpc("get_player_theme")
-      .maybeSingle<{ dice_code: string | null; token_code: string | null }>(),
+    supabase.rpc("get_player_theme").maybeSingle<{
+      dice_code: string | null;
+      token_code: string | null;
+      animation_code: string | null;
+      effect_code: string | null;
+    }>(),
   ]);
 
   return (
@@ -48,6 +51,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
       boardSkin={room?.board_skin ?? "classic"}
       diceSkin={theme?.dice_code ?? "ivory"}
       tokenSkin={theme?.token_code ?? "classic"}
+      animationSkin={theme?.animation_code ?? "standard"}
+      effectSkin={theme?.effect_code ?? "none"}
     />
   );
 }

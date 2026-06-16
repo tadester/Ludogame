@@ -22,6 +22,8 @@ interface OnlineMatchProps {
   readonly boardSkin?: string;
   readonly tokenSkin?: string;
   readonly diceSkin?: string;
+  readonly animationSkin?: string;
+  readonly effectSkin?: string;
 }
 
 export function OnlineMatch({
@@ -31,6 +33,8 @@ export function OnlineMatch({
   boardSkin = "classic",
   tokenSkin = "classic",
   diceSkin = "ivory",
+  animationSkin = "standard",
+  effectSkin = "none",
 }: OnlineMatchProps) {
   const [snapshot, setSnapshot] = useState<MatchState>(initial);
   const [busy, setBusy] = useState(false);
@@ -155,7 +159,16 @@ export function OnlineMatch({
         onTokenClick={onTokenClick}
         boardSkin={boardSkin}
         tokenSkin={tokenSkin}
+        animationSkin={animationSkin}
       />
+
+      {view.winnerName && effectSkin !== "none" ? (
+        <div aria-hidden="true" className={styles.winEffect} data-effect={effectSkin}>
+          {Array.from({ length: 12 }, (_, i) => (
+            <span key={i} className={styles.spark} />
+          ))}
+        </div>
+      ) : null}
 
       {message ? <p className={styles.message}>{message}</p> : null}
 
@@ -168,6 +181,7 @@ export function OnlineMatch({
               ready={!busy}
               disabled={busy}
               skin={diceSkin}
+              animation={animationSkin}
               onRoll={() => void send({ kind: "roll" })}
             />
           ) : view.phase === "awaiting-die-order" ? (

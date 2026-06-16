@@ -48,3 +48,81 @@
   margin: 0;
   color: var(--muted);
 }
+
+/* Win effect overlay (cosmetic). */
+.winEffect {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 30;
+}
+
+.winEffect .spark {
+  position: absolute;
+  top: -8%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 2px;
+  opacity: 0;
+}
+
+.winEffect[data-effect="sparkle"] .spark {
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0.5rem var(--accent);
+  animation: fall 1.8s ease-in infinite;
+}
+
+.winEffect[data-effect="confetti"] .spark {
+  background: var(--red);
+  animation: fall 1.9s linear infinite;
+}
+
+.winEffect[data-effect="confetti"] .spark:nth-child(3n) {
+  background: var(--green);
+}
+.winEffect[data-effect="confetti"] .spark:nth-child(3n + 1) {
+  background: var(--blue);
+}
+.winEffect[data-effect="confetti"] .spark:nth-child(3n + 2) {
+  background: var(--yellow);
+}
+
+.winEffect[data-effect="speed_lines"] .spark {
+  width: 40%;
+  height: 2px;
+  border-radius: 0;
+  background: linear-gradient(90deg, transparent, var(--text));
+  animation: streak 0.6s ease-in infinite;
+}
+
+.winEffect .spark:nth-child(1) { left: 8%; animation-delay: 0s; }
+.winEffect .spark:nth-child(2) { left: 18%; animation-delay: 0.2s; }
+.winEffect .spark:nth-child(3) { left: 28%; animation-delay: 0.5s; }
+.winEffect .spark:nth-child(4) { left: 38%; animation-delay: 0.1s; }
+.winEffect .spark:nth-child(5) { left: 48%; animation-delay: 0.4s; }
+.winEffect .spark:nth-child(6) { left: 58%; animation-delay: 0.7s; }
+.winEffect .spark:nth-child(7) { left: 68%; animation-delay: 0.15s; }
+.winEffect .spark:nth-child(8) { left: 78%; animation-delay: 0.55s; }
+.winEffect .spark:nth-child(9) { left: 88%; animation-delay: 0.3s; }
+.winEffect .spark:nth-child(10) { left: 14%; animation-delay: 0.65s; }
+.winEffect .spark:nth-child(11) { left: 52%; animation-delay: 0.85s; }
+.winEffect .spark:nth-child(12) { left: 72%; animation-delay: 0.95s; }
+
+@keyframes fall {
+  0% { transform: translateY(0) rotate(0); opacity: 1; }
+  100% { transform: translateY(105vh) rotate(420deg); opacity: 0.9; }
+}
+
+@keyframes streak {
+  0% { transform: translateX(-60vw); opacity: 0; }
+  50% { opacity: 0.7; }
+  100% { transform: translateX(60vw); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .winEffect {
+    display: none;
+  }
+}
