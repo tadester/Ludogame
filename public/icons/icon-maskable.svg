@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Ludo">
+  <rect width="512" height="512" fill="#07111f" />
+  <g>
+    <circle cx="186" cy="186" r="44" fill="#e5484d" />
+    <circle cx="326" cy="186" r="44" fill="#2fa56c" />
+    <circle cx="186" cy="326" r="44" fill="#4593f7" />
+    <circle cx="326" cy="326" r="44" fill="#f5b524" />
+    <circle cx="256" cy="256" r="40" fill="#d4af37" />
+  </g>
+</svg>
