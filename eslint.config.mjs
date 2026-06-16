@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     ".worktrees/**",
+    // Service worker runs in a worker environment and is not bundled by Next.
+    "public/sw.js",
   ]),
 ]);
 

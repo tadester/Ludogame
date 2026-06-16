@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { AccountNav } from "@/components/account-nav";
 import { AppShell } from "@/components/app-shell";
+import { loadPlayerTheme } from "@/lib/cosmetics/theme";
 import { createClient } from "@/lib/supabase/server";
 
 type ProtectedLayoutProps = {
@@ -19,8 +20,13 @@ export default async function ProtectedLayout({
     redirect("/login");
   }
 
+  const theme = await loadPlayerTheme();
+
   return (
-    <AppShell>
+    <AppShell
+      background={theme.background}
+      reducedMotion={theme.reducedMotion}
+    >
       <AccountNav />
       {children}
     </AppShell>

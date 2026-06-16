@@ -1,0 +1,128 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: min(100%, 48rem);
+  margin: 0 auto;
+  padding: 1.5rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--panel), transparent 8%);
+}
+
+.banner {
+  margin: 0;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--accent), transparent 88%);
+  color: var(--text);
+}
+
+.prefs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--panel), transparent 12%);
+}
+
+.prefs h2 {
+  margin: 0;
+  width: 100%;
+  font-size: 1rem;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.group h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--panel), transparent 12%);
+}
+
+.equipped {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent), transparent 90%);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.tag {
+  font-size: 0.72rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.locked {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  flex: 1;
+}
+
+.equipButton {
+  align-self: flex-start;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.55rem;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.equipButton:hover {
+  border-color: var(--accent);
+}
