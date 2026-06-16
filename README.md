@@ -54,13 +54,18 @@ customization.
   and reduced-motion and muted-audio preferences, all enforced with RLS and
   atomic functions. The customize page manages them, and the equipped
   background and reduced-motion preference apply across the app.
+- PWA offline support: a service worker that caches static assets and serves an
+  offline fallback (never caching API or auth routes), registered in
+  production, plus a maskable icon and richer manifest for clean installs.
+- Loading, error-boundary, and not-found states, a skip-to-content link, and
+  global keyboard-focus styling.
 - Detailed product, architecture, authentication, foundation, and rules-engine
   implementation plans under `docs/superpowers`.
 
 ### Partially Implemented
 
-- **PWA:** manifest and shell exist; service-worker caching, offline behavior,
-  install prompts, accessibility polish, and final responsive QA remain.
+- **PWA:** the manifest, shell, service worker, offline fallback, and install
+  metadata exist; an install prompt and final responsive QA remain.
 - **Online lifecycle:** snapshot/event persistence, the action handlers, and
   the timeout/presence/forfeit logic exist; the scheduled job that fires turn
   timers and enforces the two-minute reconnect window is a deployment task.
@@ -75,6 +80,7 @@ customization.
 - Board, dice, and token skin rendering, plus animation, sound, and visual
   effect packs.
 - Complete-match browser tests and production deployment configuration.
+- Replacing the temporary visual direction once final UI and art are ready.
 
 ## Game Modes
 
