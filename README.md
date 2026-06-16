@@ -19,7 +19,8 @@ customization.
 - Installable PWA manifest and mobile browser smoke-test foundation.
 - Unit/component testing with Vitest and Testing Library.
 - Browser testing with Playwright.
-- GitHub Actions verification foundation.
+- GitHub Actions CI running lint, typecheck, unit tests, build, the database
+  (pgTAP) suite, and browser tests against a local Supabase stack.
 - Local Supabase development configuration.
 - Supabase email/password sign-up and sign-in.
 - Email verification callback flow.
@@ -69,16 +70,15 @@ customization.
 - **Online lifecycle:** snapshot/event persistence, the action handlers, and
   the timeout/presence/forfeit logic exist; the scheduled job that fires turn
   timers and enforces the two-minute reconnect window is a deployment task.
-- **Cosmetics:** the catalog, ownership, loadout, preferences, and background
-  themes exist; rendering board/dice/token skin variations and the animation,
-  sound, and effect packs remain.
+- **Cosmetics:** the catalog, ownership, loadout, preferences, background
+  themes, and board/dice/token skin rendering exist; the animation, sound, and
+  effect packs remain.
 
 ### Not Implemented Yet
 
 - The scheduled timer/reconnect job (cron or edge function) that drives the
   turn-timeout and reconnect-window endpoints.
-- Board, dice, and token skin rendering, plus animation, sound, and visual
-  effect packs.
+- Animation, sound, and visual effect packs.
 - Complete-match browser tests and production deployment configuration.
 - Replacing the temporary visual direction once final UI and art are ready.
 
