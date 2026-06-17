@@ -126,3 +126,25 @@
     display: none;
   }
 }
+
+/* Anime-inspired victory effects. */
+.winEffect[data-effect="spiral_orb"] .spark {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #cdebff, #2f8fff);
+  box-shadow: 0 0 0.7rem rgb(80 170 255 / 80%);
+  animation: swirl 1.6s ease-in-out infinite;
+}
+
+.winEffect[data-effect="jolly_roger"] .spark {
+  background: var(--accent);
+  box-shadow: 0 0 0.4rem var(--accent);
+  animation: fall 1.7s linear infinite;
+}
+
+@keyframes swirl {
+  0% { transform: translateY(20vh) rotate(0) scale(0.6); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateY(60vh) rotate(540deg) scale(1.1); opacity: 0; }
+}
