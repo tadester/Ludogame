@@ -239,17 +239,21 @@ export function LocalMatch() {
   );
 
   const handleUsePower = useCallback(
-    (tokenId: string) => {
+    (power: "shield" | "dash", tokenId: string) => {
       if (!match || busy || match.phase !== "awaiting-roll") return;
       const result = applyAction(match, {
         type: "use-power",
         expectedVersion: match.version,
         playerId: match.players[match.activePlayerIndex].id,
-        power: "shield",
+        power,
         tokenId,
       });
       setMatch(result.state);
-      resolve(result.state, result.events, "Shield raised. ");
+      resolve(
+        result.state,
+        result.events,
+        power === "shield" ? "Shield raised. " : "Dash armed. ",
+      );
     },
     [match, busy, resolve],
   );
@@ -411,35 +415,58 @@ export function LocalMatch() {
             </div>
           ) : null}
 
-          {match.ruleset === "extreme" && activePlayer ? (
-            <div className={styles.dieOrders}>
-              <p className={styles.message}>
-                Shields:{" "}
-                {(match.powerUps?.inventory[activePlayer.id] ?? []).length}
-              </p>
-              {!busy &&
-              match.phase === "awaiting-roll" &&
-              (match.powerUps?.inventory[activePlayer.id] ?? []).length > 0
-                ? match.tokens
-                    .filter(
-                      (t) =>
-                        t.playerId === activePlayer.id &&
-                        t.status === "active" &&
-                        !match.powerUps?.shieldedTokenIds.includes(t.id),
-                    )
-                    .map((t) => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        className={styles.segmentButton}
-                        onClick={() => handleUsePower(t.id)}
-                      >
-                        Shield {t.color} piece {t.id.split("-").at(-1)}
-                      </button>
-                    ))
-                : null}
-            </div>
-          ) : null}
+          {match.ruleset === "extreme" && activePlayer
+            ? (() => {
+                const held = match.powerUps?.inventory[activePlayer.id] ?? [];
+                const shields = held.filter((p) => p === "shield").length;
+                const dashes = held.filter((p) => p === "dash").length;
+                const canUse = !busy && match.phase === "awaiting-roll";
+                const myActive = match.tokens.filter(
+                  (t) =>
+                    t.playerId === activePlayer.id && t.status === "active",
+                );
+                return (
+                  <div className={styles.dieOrders}>
+                    <p className={styles.message}>
+                      Shields: {shields} · Dashes: {dashes}
+                    </p>
+                    {canUse && shields > 0
+                      ? myActive
+                          .filter(
+                            (t) =>
+                              !match.powerUps?.shieldedTokenIds.includes(t.id),
+                          )
+                          .map((t) => (
+                            <button
+                              key={`shield-${t.id}`}
+                              type="button"
+                              className={styles.segmentButton}
+                              onClick={() => handleUsePower("shield", t.id)}
+                            >
+                              Shield {t.color} #{t.id.split("-").at(-1)}
+                            </button>
+                          ))
+                      : null}
+                    {canUse && dashes > 0
+                      ? myActive
+                          .filter(
+                            (t) => !match.powerUps?.dashTokenIds.includes(t.id),
+                          )
+                          .map((t) => (
+                            <button
+                              key={`dash-${t.id}`}
+                              type="button"
+                              className={styles.segmentButton}
+                              onClick={() => handleUsePower("dash", t.id)}
+                            >
+                              Dash {t.color} #{t.id.split("-").at(-1)}
+                            </button>
+                          ))
+                      : null}
+                  </div>
+                );
+              })()
+            : null}
 
           <div className={styles.players}>
             {match.players.map((player) => (

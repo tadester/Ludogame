@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { applyAction } from "@/lib/ludo";
+import { applyAction, getLegalActions } from "@/lib/ludo";
 import type { MatchState } from "@/lib/ludo";
-import { setupLocalMatch } from "@/lib/ludo-ui/local-game";
+import {
+  legalMovesByToken,
+  rollActionFor,
+  setupLocalMatch,
+} from "@/lib/ludo-ui/local-game";
 
 import {
   applyUsePower,
@@ -128,5 +132,54 @@ describe("use-power", () => {
         tokenId: "p2-token-1",
       }),
     ).toThrow();
+  });
+});
+
+describe("dash power", () => {
+  function withDash(progress: number, dashed: boolean): MatchState {
+    const base = extremeMatch();
+    return {
+      ...base,
+      tokens: base.tokens.map((t) =>
+        t.id === "p1-token-1"
+          ? { ...t, status: "active" as const, progress }
+          : t,
+      ),
+      powerUps: {
+        ...base.powerUps!,
+        inventory: { ...base.powerUps!.inventory, p1: dashed ? ["dash"] : [] },
+        dashTokenIds: dashed ? ["p1-token-1"] : [],
+      },
+    };
+  }
+
+  it("doubles the move and consumes the dash", () => {
+    let state = withDash(2, true);
+    // Strip the held dash now it's armed on the token.
+    state = {
+      ...state,
+      powerUps: { ...state.powerUps!, inventory: { p1: [] } },
+    };
+    state = applyAction(state, rollActionFor(state, [3])).state;
+    const move = legalMovesByToken(state, getLegalActions(state)).get(
+      "p1-token-1",
+    )!;
+    const next = applyAction(state, move).state;
+    const token = next.tokens.find((t) => t.id === "p1-token-1");
+    expect(token?.progress).toBe(8); // 2 + 3 * 2
+    expect(next.powerUps?.dashTokenIds).not.toContain("p1-token-1");
+  });
+
+  it("makes an otherwise-legal move illegal when it would overshoot home", () => {
+    // At progress 50 a 6 normally reaches 56 (legal); doubled it overshoots 57.
+    const dashed = applyAction(withDash(50, true), rollActionFor(withDash(50, true), [6])).state;
+    expect(
+      legalMovesByToken(dashed, getLegalActions(dashed)).has("p1-token-1"),
+    ).toBe(false);
+
+    const plain = applyAction(withDash(50, false), rollActionFor(withDash(50, false), [6])).state;
+    expect(
+      legalMovesByToken(plain, getLegalActions(plain)).has("p1-token-1"),
+    ).toBe(true);
   });
 });

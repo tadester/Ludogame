@@ -28,9 +28,9 @@ export const TOKENS_PER_PLAYER = 4;
 // collecting and shielding both matter. Each grants one shield.
 export const EXTREME_POWER_TILES = [
   { ringIndex: 5, power: "shield" as const },
-  { ringIndex: 18, power: "shield" as const },
+  { ringIndex: 18, power: "dash" as const },
   { ringIndex: 31, power: "shield" as const },
-  { ringIndex: 44, power: "shield" as const },
+  { ringIndex: 44, power: "dash" as const },
 ];
 
 /** Most powers a player may hold at once, to keep Extreme fair. */

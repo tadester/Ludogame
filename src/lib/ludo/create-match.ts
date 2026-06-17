@@ -59,6 +59,7 @@ export function createMatch(input: CreateMatchInput): MatchState {
             tiles: EXTREME_POWER_TILES.map((tile) => ({ ...tile })),
             inventory: { [host.id]: [] },
             shieldedTokenIds: [],
+            dashTokenIds: [],
           },
         }
       : {}),

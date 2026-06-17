@@ -28,6 +28,13 @@ import type {
 
 const CLASSIC_SAFE = new Set<number>(CLASSIC_SAFE_RING_INDEXES);
 
+/** A token's step for a die, doubled when the token is dash-armed (Extreme). */
+function stepFor(state: MatchState, tokenId: string, die: Die): number {
+  return state.powerUps?.dashTokenIds.includes(tokenId)
+    ? die.value * 2
+    : die.value;
+}
+
 function dieUses(
   state: MatchState,
   die: Die,
@@ -40,7 +47,7 @@ function dieUses(
       (token) =>
         token.status === "active" &&
         token.progress !== null &&
-        token.progress + die.value <= WON_PROGRESS,
+        token.progress + stepFor(state, token.id, die) <= WON_PROGRESS,
     ),
   };
 }
@@ -218,10 +225,22 @@ function applyClassicMove(
   const die = state.pendingRoll!.dice[0];
   const token = state.tokens.find((entry) => entry.id === action.tokenId)!;
   const fromProgress = token.progress!;
-  const toProgress = fromProgress + die.value;
+  const toProgress = fromProgress + stepFor(state, action.tokenId, die);
+
+  // Consume a dash on this token once it moves (Extreme only).
+  const consumedPowerUps =
+    state.powerUps && state.powerUps.dashTokenIds.includes(action.tokenId)
+      ? {
+          ...state.powerUps,
+          dashTokenIds: state.powerUps.dashTokenIds.filter(
+            (id) => id !== action.tokenId,
+          ),
+        }
+      : state.powerUps;
 
   let next: MatchState = {
     ...state,
+    powerUps: consumedPowerUps,
     tokens: state.tokens.map((entry) =>
       entry.id === action.tokenId
         ? {

@@ -43,7 +43,7 @@ export interface PendingRoll {
 }
 
 /** Collectible powers in Extreme mode. Kept deliberately small and fair. */
-export type PowerKind = "shield";
+export type PowerKind = "shield" | "dash";
 
 export interface PowerTile {
   readonly ringIndex: number;
@@ -56,6 +56,8 @@ export interface ExtremePowerState {
   readonly tiles: readonly PowerTile[];
   readonly inventory: Readonly<Record<string, readonly PowerKind[]>>;
   readonly shieldedTokenIds: readonly string[];
+  /** Tokens whose next move advances double the roll (dash power). */
+  readonly dashTokenIds: readonly string[];
 }
 
 export interface MatchState {

@@ -96,7 +96,16 @@ export function resolveExtremeLanding(
     }
   }
 
-  return { tokens, powerUps: { tiles, inventory, shieldedTokenIds }, events };
+  return {
+    tokens,
+    powerUps: { ...power, tiles, inventory, shieldedTokenIds },
+    events,
+  };
+}
+
+/** Tokens the given player has armed with dash (their next move is doubled). */
+export function dashTokensOf(state: MatchState): readonly string[] {
+  return state.powerUps?.dashTokenIds ?? [];
 }
 
 /** Spend a held power. v1: shield one of your own active tokens from the next
@@ -113,14 +122,17 @@ export function applyUsePower(
   if (state.phase !== "awaiting-roll") {
     throw new LudoRuleError("INVALID_ACTION", "Use powers before rolling");
   }
-  if (action.power !== "shield") {
+  if (action.power !== "shield" && action.power !== "dash") {
     throw new LudoRuleError("INVALID_ACTION", `Unknown power ${action.power}`);
   }
 
   const held = powersOf(state, action.playerId);
-  const index = held.indexOf("shield");
+  const index = held.indexOf(action.power);
   if (index === -1) {
-    throw new LudoRuleError("INVALID_ACTION", "You have no shield to use");
+    throw new LudoRuleError(
+      "INVALID_ACTION",
+      `You have no ${action.power} to use`,
+    );
   }
 
   const token = state.tokens.find((entry) => entry.id === action.tokenId);
@@ -128,17 +140,35 @@ export function applyUsePower(
     throw new LudoRuleError("INVALID_ACTION", "That is not your token");
   }
   if (token.status !== "active") {
-    throw new LudoRuleError("INVALID_ACTION", "Only active tokens can be shielded");
+    throw new LudoRuleError(
+      "INVALID_ACTION",
+      "Powers can only target active tokens",
+    );
   }
-  if (state.powerUps.shieldedTokenIds.includes(token.id)) {
-    throw new LudoRuleError("INVALID_ACTION", "That token is already shielded");
+
+  const list =
+    action.power === "shield"
+      ? state.powerUps.shieldedTokenIds
+      : state.powerUps.dashTokenIds;
+  if (list.includes(token.id)) {
+    throw new LudoRuleError(
+      "INVALID_ACTION",
+      `That token already has ${action.power}`,
+    );
   }
 
   const remaining = [...held.slice(0, index), ...held.slice(index + 1)];
   const powerUps: ExtremePowerState = {
     ...state.powerUps,
     inventory: { ...state.powerUps.inventory, [action.playerId]: remaining },
-    shieldedTokenIds: [...state.powerUps.shieldedTokenIds, token.id],
+    shieldedTokenIds:
+      action.power === "shield"
+        ? [...state.powerUps.shieldedTokenIds, token.id]
+        : state.powerUps.shieldedTokenIds,
+    dashTokenIds:
+      action.power === "dash"
+        ? [...state.powerUps.dashTokenIds, token.id]
+        : state.powerUps.dashTokenIds,
   };
 
   return {
@@ -147,7 +177,7 @@ export function applyUsePower(
       {
         type: "power-used",
         playerId: action.playerId,
-        power: "shield",
+        power: action.power,
         tokenId: token.id,
       },
     ],
