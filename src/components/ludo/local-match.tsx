@@ -34,6 +34,7 @@ const RULESETS: { id: Ruleset; label: string }[] = [
   { id: "nigerian", label: "Nigerian" },
   { id: "peaceful", label: "Peaceful" },
   { id: "blitz", label: "Blitz" },
+  { id: "extreme", label: "Extreme" },
 ];
 const STEP_MS = 165;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -237,6 +238,22 @@ export function LocalMatch() {
     [match, busy, resolve],
   );
 
+  const handleUsePower = useCallback(
+    (tokenId: string) => {
+      if (!match || busy || match.phase !== "awaiting-roll") return;
+      const result = applyAction(match, {
+        type: "use-power",
+        expectedVersion: match.version,
+        playerId: match.players[match.activePlayerIndex].id,
+        power: "shield",
+        tokenId,
+      });
+      setMatch(result.state);
+      resolve(result.state, result.events, "Shield raised. ");
+    },
+    [match, busy, resolve],
+  );
+
   // Hydrate saved preferences and any in-progress match once on mount. This
   // must run in an effect (not a lazy initializer) so server and client render
   // the same defaults and avoid a hydration mismatch.
@@ -346,6 +363,11 @@ export function LocalMatch() {
           capturedTokenIds={captured}
           interactive={!busy}
           onTokenClick={handleToken}
+          powerTileRingIndexes={
+            match.powerUps
+              ? new Set(match.powerUps.tiles.map((t) => t.ringIndex))
+              : undefined
+          }
         />
 
         <aside className={styles.panel}>
@@ -386,6 +408,36 @@ export function LocalMatch() {
                   Play {option.dieIds.map((id) => dieValue(id)).join(" then ")}
                 </button>
               ))}
+            </div>
+          ) : null}
+
+          {match.ruleset === "extreme" && activePlayer ? (
+            <div className={styles.dieOrders}>
+              <p className={styles.message}>
+                Shields:{" "}
+                {(match.powerUps?.inventory[activePlayer.id] ?? []).length}
+              </p>
+              {!busy &&
+              match.phase === "awaiting-roll" &&
+              (match.powerUps?.inventory[activePlayer.id] ?? []).length > 0
+                ? match.tokens
+                    .filter(
+                      (t) =>
+                        t.playerId === activePlayer.id &&
+                        t.status === "active" &&
+                        !match.powerUps?.shieldedTokenIds.includes(t.id),
+                    )
+                    .map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        className={styles.segmentButton}
+                        onClick={() => handleUsePower(t.id)}
+                      >
+                        Shield {t.color} piece {t.id.split("-").at(-1)}
+                      </button>
+                    ))
+                : null}
             </div>
           ) : null}
 

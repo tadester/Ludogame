@@ -1,5 +1,10 @@
 export type PlayerColor = "red" | "green" | "yellow" | "blue";
-export type Ruleset = "classic" | "nigerian" | "peaceful" | "blitz";
+export type Ruleset =
+  | "classic"
+  | "nigerian"
+  | "peaceful"
+  | "blitz"
+  | "extreme";
 export type MatchStatus = "lobby" | "active" | "completed";
 export type TurnPhase =
   | "awaiting-roll"
@@ -37,6 +42,22 @@ export interface PendingRoll {
   readonly bonusReason: "double-six" | "home" | null;
 }
 
+/** Collectible powers in Extreme mode. Kept deliberately small and fair. */
+export type PowerKind = "shield";
+
+export interface PowerTile {
+  readonly ringIndex: number;
+  readonly power: PowerKind;
+}
+
+/** Extreme-mode state: power tiles still on the board, each player's collected
+ *  powers, and which tokens are currently shielded from one capture. */
+export interface ExtremePowerState {
+  readonly tiles: readonly PowerTile[];
+  readonly inventory: Readonly<Record<string, readonly PowerKind[]>>;
+  readonly shieldedTokenIds: readonly string[];
+}
+
 export interface MatchState {
   readonly id: string;
   readonly ruleset: Ruleset;
@@ -52,6 +73,8 @@ export interface MatchState {
   readonly phase: TurnPhase;
   readonly pendingRoll: PendingRoll | null;
   readonly winnerPlayerId: string | null;
+  /** Present only in Extreme mode. */
+  readonly powerUps?: ExtremePowerState;
 }
 
 export interface CreateMatchInput {
@@ -125,6 +148,13 @@ export type MatchAction =
       readonly type: "forfeit-player";
       readonly expectedVersion: number;
       readonly playerId: string;
+    }
+  | {
+      readonly type: "use-power";
+      readonly expectedVersion: number;
+      readonly playerId: string;
+      readonly power: PowerKind;
+      readonly tokenId: string;
     };
 
 export type LegalAction = MatchAction;
@@ -200,7 +230,25 @@ export type DomainEvent =
       readonly connected: boolean;
     }
   | { readonly type: "player-forfeited"; readonly playerId: string }
-  | { readonly type: "match-completed"; readonly winnerPlayerId: string };
+  | { readonly type: "match-completed"; readonly winnerPlayerId: string }
+  | {
+      readonly type: "power-collected";
+      readonly playerId: string;
+      readonly power: PowerKind;
+      readonly ringIndex: number;
+    }
+  | {
+      readonly type: "power-used";
+      readonly playerId: string;
+      readonly power: PowerKind;
+      readonly tokenId: string;
+    }
+  | {
+      readonly type: "capture-blocked";
+      readonly playerId: string;
+      readonly tokenId: string;
+      readonly ringIndex: number;
+    };
 
 export interface ApplyActionResult {
   readonly state: MatchState;

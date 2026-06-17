@@ -1,5 +1,6 @@
 import { applyClassicAction } from "./classic";
 import { createPlayer, createTokens } from "./create-match";
+import { applyUsePower } from "./extreme";
 import { assertMatchInvariants } from "./invariants";
 import { getLegalActions } from "./legal-actions";
 import { applyNigerianAction } from "./nigerian";
@@ -264,6 +265,8 @@ function dispatchAction(
       return applyForfeitPlayer(state, action);
     case "resolve-timeout":
       return applyResolveTimeout(state, action);
+    case "use-power":
+      return applyUsePower(state, action);
     case "roll-dice":
       requireActiveMatch(state);
       return applyRulesetAction(state, action);

@@ -4,6 +4,7 @@ import {
   RING_PROGRESS_MAX,
   WON_PROGRESS,
 } from "./constants";
+import { resolveExtremeLanding } from "./extreme";
 import { sortLegalActions } from "./legal-actions";
 import {
   activePlayer,
@@ -245,11 +246,17 @@ function applyClassicMove(
     },
   ];
 
-  if (toProgress <= RING_PROGRESS_MAX && state.ruleset !== "peaceful") {
+  if (toProgress <= RING_PROGRESS_MAX) {
     const ringIndex = progressToRingIndex(token.color, toProgress);
-    const captured = captureOnRing(next, action.playerId, ringIndex);
-    next = { ...next, tokens: captured.tokens };
-    events.push(...captured.events);
+    if (state.ruleset === "extreme") {
+      const landing = resolveExtremeLanding(next, action.playerId, ringIndex);
+      next = { ...next, tokens: landing.tokens, powerUps: landing.powerUps };
+      events.push(...landing.events);
+    } else if (state.ruleset !== "peaceful") {
+      const captured = captureOnRing(next, action.playerId, ringIndex);
+      next = { ...next, tokens: captured.tokens };
+      events.push(...captured.events);
+    }
   } else if (toProgress === WON_PROGRESS) {
     events.push(
       {

@@ -552,3 +552,23 @@
     border-radius: 50%;
   }
 }
+
+/* Extreme-mode power tile marker on the ring. */
+.powerTile {
+  font-size: clamp(0.55rem, 2.4vw, 1rem);
+  line-height: 1;
+  color: var(--accent);
+  text-shadow: 0 0 0.35rem color-mix(in srgb, var(--accent), transparent 35%);
+  animation: powerPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes powerPulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .powerTile {
+    animation: none;
+  }
+}

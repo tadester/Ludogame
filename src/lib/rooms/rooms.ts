@@ -34,6 +34,7 @@ export const RULESETS: readonly Ruleset[] = [
   "nigerian",
   "peaceful",
   "blitz",
+  "extreme",
 ];
 export const TURN_TIMER_OPTIONS: readonly TurnTimer[] = [null, 30, 60, 90];
 const inviteCodePattern = /^[A-Z0-9]{6}$/;

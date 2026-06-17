@@ -172,6 +172,21 @@ function assertStatusAndPhase(state: MatchState): void {
   }
 }
 
+function assertPowerUps(state: MatchState): void {
+  if (state.ruleset === "extreme" && !state.powerUps) {
+    fail("Extreme matches must carry power-up state");
+  }
+  if (!state.powerUps) {
+    return;
+  }
+  const tokenIds = new Set(state.tokens.map((token) => token.id));
+  for (const tokenId of state.powerUps.shieldedTokenIds) {
+    if (!tokenIds.has(tokenId)) {
+      fail("Shielded token does not exist");
+    }
+  }
+}
+
 export function assertMatchInvariants(state: MatchState): void {
   assertPlayers(state);
   assertTokens(state);
@@ -179,4 +194,5 @@ export function assertMatchInvariants(state: MatchState): void {
     assertPendingRoll(state, state.pendingRoll);
   }
   assertStatusAndPhase(state);
+  assertPowerUps(state);
 }

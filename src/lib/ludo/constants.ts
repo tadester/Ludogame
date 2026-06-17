@@ -23,3 +23,15 @@ export const HOME_LANE_PROGRESS_MIN = 52;
 export const HOME_LANE_PROGRESS_MAX = 56;
 export const WON_PROGRESS = 57;
 export const TOKENS_PER_PLAYER = 4;
+
+// Extreme mode: power tiles sit on non-safe ring squares (one per quadrant) so
+// collecting and shielding both matter. Each grants one shield.
+export const EXTREME_POWER_TILES = [
+  { ringIndex: 5, power: "shield" as const },
+  { ringIndex: 18, power: "shield" as const },
+  { ringIndex: 31, power: "shield" as const },
+  { ringIndex: 44, power: "shield" as const },
+];
+
+/** Most powers a player may hold at once, to keep Extreme fair. */
+export const POWER_INVENTORY_CAP = 3;

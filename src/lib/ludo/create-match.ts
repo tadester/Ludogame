@@ -1,4 +1,4 @@
-import { TOKENS_PER_PLAYER } from "./constants";
+import { EXTREME_POWER_TILES, TOKENS_PER_PLAYER } from "./constants";
 import type {
   CreateMatchInput,
   MatchState,
@@ -53,5 +53,14 @@ export function createMatch(input: CreateMatchInput): MatchState {
     phase: "awaiting-roll",
     pendingRoll: null,
     winnerPlayerId: null,
+    ...(input.ruleset === "extreme"
+      ? {
+          powerUps: {
+            tiles: EXTREME_POWER_TILES.map((tile) => ({ ...tile })),
+            inventory: { [host.id]: [] },
+            shieldedTokenIds: [],
+          },
+        }
+      : {}),
   };
 }

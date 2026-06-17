@@ -17,6 +17,7 @@ const RULESET_LABELS: Record<Ruleset, string> = {
   nigerian: "Nigerian",
   peaceful: "Peaceful",
   blitz: "Blitz",
+  extreme: "Extreme",
 };
 
 function timerValue(timer: TurnTimer): string {

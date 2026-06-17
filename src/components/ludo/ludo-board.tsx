@@ -57,7 +57,10 @@ interface LudoBoardProps {
   backgroundSkin?: string;
   tokenSkin?: string;
   animationSkin?: string;
+  powerTileRingIndexes?: ReadonlySet<number>;
 }
+
+const NO_POWER_TILES: ReadonlySet<number> = new Set();
 
 export function LudoBoard({
   match,
@@ -71,6 +74,7 @@ export function LudoBoard({
   backgroundSkin = "midnight",
   tokenSkin = "classic",
   animationSkin = "standard",
+  powerTileRingIndexes = NO_POWER_TILES,
 }: LudoBoardProps) {
   const placed = useMemo(
     () =>
@@ -87,7 +91,12 @@ export function LudoBoard({
           ))}
 
           {RING_PATH.map((cell, ringIndex) => (
-            <PathCell key={`ring-${ringIndex}`} cell={cell} ringIndex={ringIndex} />
+            <PathCell
+              key={`ring-${ringIndex}`}
+              cell={cell}
+              ringIndex={ringIndex}
+              isPowerTile={powerTileRingIndexes.has(ringIndex)}
+            />
           ))}
 
           {PLAY_ORDER.flatMap((color) =>
@@ -175,7 +184,15 @@ function Yard({ color }: { color: PlayerColor }) {
   );
 }
 
-function PathCell({ cell, ringIndex }: { cell: Cell; ringIndex: number }) {
+function PathCell({
+  cell,
+  ringIndex,
+  isPowerTile,
+}: {
+  cell: Cell;
+  ringIndex: number;
+  isPowerTile: boolean;
+}) {
   const openingColor = RING_INDEX_TO_COLOR[ringIndex];
   const isSafe = SAFE_RING_INDEXES.has(ringIndex);
   const classes = [styles.cell, styles.pathCell];
@@ -184,7 +201,11 @@ function PathCell({ cell, ringIndex }: { cell: Cell; ringIndex: number }) {
   }
   return (
     <div className={classes.join(" ")} style={cellStyle(cell)}>
-      {!openingColor && isSafe ? (
+      {isPowerTile ? (
+        <span className={styles.powerTile} aria-label="power tile">
+          ✦
+        </span>
+      ) : !openingColor && isSafe ? (
         <span className={styles.safeStar}>★</span>
       ) : null}
     </div>
