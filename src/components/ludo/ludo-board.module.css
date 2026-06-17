@@ -329,3 +329,110 @@
 [data-animation="smooth"] .movable {
   animation: bob 1.4s ease-in-out infinite;
 }
+
+/* --- Anime-inspired board packs ---------------------------------------- */
+.board[data-board-skin="leaf_village"] {
+  background:
+    radial-gradient(circle at 50% 0, rgb(255 168 76 / 40%) 0, transparent 50%),
+    linear-gradient(145deg, #2f4a22, #14250f);
+  box-shadow:
+    0 1.6rem 3.5rem rgb(0 0 0 / 50%),
+    inset 0 0 0 1px rgb(255 196 120 / 30%),
+    0 0 2rem rgb(255 150 60 / 22%);
+}
+
+.board[data-board-skin="pirate_seas"] {
+  background:
+    repeating-linear-gradient(90deg,
+      rgb(120 80 40 / 22%) 0 0.9rem, rgb(90 60 30 / 22%) 0.9rem 1.8rem),
+    linear-gradient(145deg, #0c3b40, #05181c);
+  box-shadow:
+    0 1.6rem 3.5rem rgb(0 0 0 / 55%),
+    inset 0 0 0 1px rgb(120 200 200 / 25%);
+}
+
+.board[data-board-skin="advanced_class"] {
+  background: linear-gradient(145deg, #1f2c47, #0a1426);
+  box-shadow:
+    0 1.6rem 3.5rem rgb(0 0 0 / 50%),
+    inset 0 0 0 1px rgb(255 255 255 / 22%);
+}
+
+.board[data-board-skin="manga_panel"] {
+  background:
+    radial-gradient(rgb(0 0 0 / 16%) 22%, transparent 24%) 0 0 / 0.7rem 0.7rem,
+    linear-gradient(145deg, #f4f4f4, #d9d9d9);
+  box-shadow:
+    0 1.6rem 3.5rem rgb(0 0 0 / 55%),
+    inset 0 0 0 2px #111;
+}
+
+/* --- Anime-inspired token packs (player color preserved) --------------- */
+[data-token-skin="ninja"] .disc {
+  border-color: rgb(20 20 20 / 85%);
+}
+[data-token-skin="ninja"] .disc::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 210deg,
+    rgb(0 0 0 / 50%),
+    transparent 35%,
+    rgb(0 0 0 / 45%) 70%,
+    transparent 92%
+  );
+}
+
+[data-token-skin="straw_hat"] .disc::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(
+    transparent 40%,
+    rgb(229 72 77 / 92%) 40% 60%,
+    transparent 60%
+  );
+}
+
+[data-token-skin="class_point"] .disc {
+  border: 0.14rem solid #ffffff;
+  box-shadow:
+    0 0.18rem 0.3rem rgb(0 0 0 / 35%),
+    inset 0 0 0 0.04rem rgb(0 0 0 / 25%);
+}
+[data-token-skin="class_point"] .disc::after {
+  display: none;
+}
+
+/* --- Anime-inspired animation packs ------------------------------------ */
+[data-animation="shadow_clone"] .token {
+  transition:
+    left 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.2),
+    top 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+[data-animation="shadow_clone"] .disc {
+  box-shadow:
+    0 0.28rem 0.42rem rgb(0 0 0 / 38%),
+    -0.35rem 0 0.2rem rgb(120 200 255 / 30%),
+    0.35rem 0 0.2rem rgb(120 200 255 / 25%);
+}
+[data-animation="shadow_clone"] .movable {
+  animation: bob 0.5s ease-in-out infinite;
+}
+
+[data-animation="dramatic"] .token {
+  transition:
+    left 0.32s cubic-bezier(0.5, -0.4, 0.3, 1.6),
+    top 0.32s cubic-bezier(0.5, -0.4, 0.3, 1.6);
+}
+[data-animation="dramatic"] .movable {
+  animation: dramaticPulse 0.7s ease-in-out infinite;
+}
+
+@keyframes dramaticPulse {
+  0%, 100% { transform: translate(-50%, -60%) scale(1); }
+  50% { transform: translate(-50%, -64%) scale(1.18); }
+}
