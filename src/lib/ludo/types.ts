@@ -280,6 +280,11 @@ export type DomainEvent =
       readonly tokenId: string;
       readonly targetTokenId: string;
     }
+  | {
+      readonly type: "map-event";
+      readonly event: "earthquake" | "power-surge";
+      readonly turnNumber: number;
+    }
   | { readonly type: "power-tiles-refilled" };
 
 export interface ApplyActionResult {

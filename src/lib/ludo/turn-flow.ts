@@ -1,4 +1,5 @@
 import { TOKENS_PER_PLAYER } from "./constants";
+import { applyMapEvent } from "./map-events";
 import { LudoRuleError } from "./types";
 import type {
   Die,
@@ -68,27 +69,33 @@ export function nextNonForfeitedIndex(
 export function advanceTurn(state: MatchState): TransitionResult {
   const mover = activePlayer(state);
   const nextIndex = nextNonForfeitedIndex(state, state.activePlayerIndex);
-  return {
-    state: {
-      ...state,
-      players: state.players.map((player) =>
-        player.id === mover.id && player.consecutiveTimeouts !== 0
-          ? { ...player, consecutiveTimeouts: 0 }
-          : player,
-      ),
-      activePlayerIndex: nextIndex,
-      turnNumber: state.turnNumber + 1,
-      phase: "awaiting-roll",
-      pendingRoll: null,
-    },
-    events: [
-      {
-        type: "turn-advanced",
-        fromPlayerId: mover.id,
-        toPlayerId: state.players[nextIndex].id,
-      },
-    ],
+  const advanced: MatchState = {
+    ...state,
+    players: state.players.map((player) =>
+      player.id === mover.id && player.consecutiveTimeouts !== 0
+        ? { ...player, consecutiveTimeouts: 0 }
+        : player,
+    ),
+    activePlayerIndex: nextIndex,
+    turnNumber: state.turnNumber + 1,
+    phase: "awaiting-roll",
+    pendingRoll: null,
   };
+  const events: DomainEvent[] = [
+    {
+      type: "turn-advanced",
+      fromPlayerId: mover.id,
+      toPlayerId: state.players[nextIndex].id,
+    },
+  ];
+
+  // Extreme map events fire as the new turn begins, shaking up the board for
+  // everyone equally.
+  const mapEvent = applyMapEvent(advanced);
+  if (mapEvent) {
+    return { state: mapEvent.state, events: [...events, mapEvent.event] };
+  }
+  return { state: advanced, events };
 }
 
 export function grantBonusRoll(

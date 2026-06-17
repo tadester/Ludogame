@@ -35,3 +35,10 @@ export const EXTREME_POWER_TILES = [
 
 /** Most powers a player may hold at once, to keep Extreme fair. */
 export const POWER_INVENTORY_CAP = 3;
+
+/** Extreme map events fire every this many turns, affecting everyone equally
+ *  so the board stays unpredictable but fair. */
+export const MAP_EVENT_INTERVAL = 7;
+
+/** How far an earthquake slides each exposed (non-safe) token back. */
+export const EARTHQUAKE_SETBACK = 4;

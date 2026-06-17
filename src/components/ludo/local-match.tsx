@@ -202,6 +202,15 @@ export function LocalMatch() {
         setHandoffTo(next.players[next.activePlayerIndex]);
       }
 
+      const mapEvent = events.find((e) => e.type === "map-event") as
+        | { event: "earthquake" | "power-surge" }
+        | undefined;
+      const mapPrefix = mapEvent
+        ? mapEvent.event === "earthquake"
+          ? "🌋 Earthquake! Exposed tokens slid back. "
+          : "⚡ Power surge! Everyone banks a power. "
+        : "";
+
       const name = next.players[next.activePlayerIndex].displayName;
       let status: string;
       if (next.phase === "awaiting-die-order") {
@@ -215,7 +224,7 @@ export function LocalMatch() {
       } else {
         status = `${name}'s turn — roll the dice.`;
       }
-      setMessage(prefix + status);
+      setMessage(prefix + mapPrefix + status);
     },
     [],
   );

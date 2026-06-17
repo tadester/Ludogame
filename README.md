@@ -147,16 +147,29 @@ mechanics, only in this mode):
 
 - **Power tiles** sit on four ring squares; landing on one banks a power
   (inventory capped at three). Tiles refill once the board is cleared.
+- **Strategy book** — before a match each player equips up to five powers.
+  A power tile then grants a random power drawn from the equipped set
+  (deterministically, so replays match); with no book equipped it grants the
+  tile's own power.
 - **Shield** — protect one of your tokens from the next capture.
 - **Dash** — your chosen token's next move advances double the roll.
-- **Last Stand** — when you are down to a single piece with none home yet,
-  that lone token automatically moves double, a comeback boost for whoever is
-  furthest behind.
+- **Warp** — jump one of your tokens to the next safe square ahead.
+- **Snipe** — send an exposed opponent token home from range; a safe square
+  blocks it and a shield absorbs it (spending the shield).
+- **Swap** — exchange the board position of one of your tokens with an
+  opponent's.
+- **Last Stand** — when you are down to a single piece with none home yet and
+  an opponent holds a clear lead (two or more tokens home), that lone token
+  automatically moves double — a comeback boost only when you are genuinely
+  behind.
+- **Map events** fire every few turns and hit everyone equally: an
+  *earthquake* slides every exposed (non-safe) token back, and a *power surge*
+  banks an extra power for every player.
 - Boosts never stack (a move at most doubles), and exact-roll home entry still
   applies, so the mode stays balanced.
 
-Further Extreme ideas (character ultimates with range, map events, a bigger
-board, a strategy book) are planned as future increments.
+Further Extreme ideas (character ultimates with range, a bigger board) are
+planned as future increments.
 
 ## Architecture
 
