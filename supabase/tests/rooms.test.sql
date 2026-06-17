@@ -23,7 +23,7 @@ select ok(
 );
 
 select has_function('public', 'create_room',
-  array['public.ludo_ruleset', 'integer', 'text', 'integer'],
+  array['public.ludo_ruleset', 'integer', 'text', 'integer', 'boolean', 'integer'],
   'create_room function exists');
 select has_function('public', 'join_room', array['text'],
   'join_room function exists');

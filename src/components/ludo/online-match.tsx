@@ -20,6 +20,7 @@ interface OnlineMatchProps {
   readonly userId: string;
   readonly initial: MatchState;
   readonly boardSkin?: string;
+  readonly backgroundSkin?: string;
   readonly tokenSkin?: string;
   readonly diceSkin?: string;
   readonly animationSkin?: string;
@@ -31,6 +32,7 @@ export function OnlineMatch({
   userId,
   initial,
   boardSkin = "classic",
+  backgroundSkin = "midnight",
   tokenSkin = "classic",
   diceSkin = "ivory",
   animationSkin = "standard",
@@ -143,7 +145,7 @@ export function OnlineMatch({
   const pendingDice = snapshot.pendingRoll?.dice ?? [];
 
   return (
-    <section className={styles.match}>
+    <section className={styles.match} data-background-skin={backgroundSkin}>
       <header className={styles.status} role="status">
         {view.winnerName
           ? `${view.winnerName} wins!`
@@ -161,6 +163,7 @@ export function OnlineMatch({
         interactive={view.isMyTurn && !busy}
         onTokenClick={onTokenClick}
         boardSkin={boardSkin}
+        backgroundSkin={backgroundSkin}
         tokenSkin={tokenSkin}
         animationSkin={animationSkin}
       />

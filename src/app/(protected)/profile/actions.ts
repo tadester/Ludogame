@@ -26,16 +26,17 @@ export async function updateProfile(formData: FormData) {
     redirect("/login");
   }
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      display_name: result.value.displayName,
-      username: result.value.username,
-    })
-    .eq("id", userId);
+  const { error } = await supabase.rpc("update_player_profile", {
+    p_display_name: result.value.displayName,
+    p_username: result.value.username,
+  });
 
   if (error?.code === "23505") {
     profileRedirect("That username is already taken.");
+  }
+
+  if (error?.code === "23514") {
+    profileRedirect(error.message || "Check your profile details and try again.");
   }
 
   if (error) {

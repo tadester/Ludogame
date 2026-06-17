@@ -28,6 +28,45 @@ describe("board and dice skins", () => {
     expect(container.querySelector('[data-token-skin="gem"]')).not.toBeNull();
   });
 
+  it("applies an in-game background skin", () => {
+    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
+    const { container } = render(
+      <LudoBoard
+        match={match}
+        movableTokenIds={new Set()}
+        animatingTokenId={null}
+        animatingCell={null}
+        capturedTokenIds={new Set()}
+        interactive={false}
+        onTokenClick={() => {}}
+        backgroundSkin="hidden_leaf"
+      />,
+    );
+
+    expect(
+      container.querySelector('[data-background-skin="hidden_leaf"]'),
+    ).not.toBeNull();
+  });
+
+  it("keeps an obvious team-color tint on styled tokens", () => {
+    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
+    const { container } = render(
+      <LudoBoard
+        match={match}
+        movableTokenIds={new Set()}
+        animatingTokenId={null}
+        animatingCell={null}
+        capturedTokenIds={new Set()}
+        interactive={false}
+        onTokenClick={() => {}}
+        tokenSkin="straw_hat"
+      />,
+    );
+
+    expect(container.querySelector('[data-team-color="red"]')).not.toBeNull();
+    expect(container.querySelector('[data-team-color="green"]')).not.toBeNull();
+  });
+
   it("defaults to the classic board skin", () => {
     const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
     const { container } = render(

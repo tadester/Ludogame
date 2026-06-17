@@ -54,6 +54,7 @@ interface LudoBoardProps {
   interactive: boolean;
   onTokenClick: (tokenId: string) => void;
   boardSkin?: string;
+  backgroundSkin?: string;
   tokenSkin?: string;
   animationSkin?: string;
 }
@@ -67,6 +68,7 @@ export function LudoBoard({
   interactive,
   onTokenClick,
   boardSkin = "classic",
+  backgroundSkin = "midnight",
   tokenSkin = "classic",
   animationSkin = "standard",
 }: LudoBoardProps) {
@@ -77,7 +79,7 @@ export function LudoBoard({
   );
 
   return (
-    <div className={styles.boardWrap}>
+    <div className={styles.boardWrap} data-background-skin={backgroundSkin}>
       <div className={styles.board} data-board-skin={boardSkin}>
         <div className={styles.grid}>
           {PLAY_ORDER.map((color) => (
@@ -143,7 +145,7 @@ export function LudoBoard({
                   aria-label={`${token.color} token ${tokenSlotIndex(token.id) + 1}`}
                   disabled={!interactive || !movable}
                 >
-                  <span className={discClasses} />
+                  <span className={discClasses} data-team-color={token.color} />
                 </button>
               );
             })}

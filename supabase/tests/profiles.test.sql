@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(12);
+select plan(15);
 
 select has_table('public', 'profiles', 'profiles table exists');
 select col_is_pk('public', 'profiles', 'id', 'profiles.id is the primary key');
@@ -84,6 +84,13 @@ select results_eq(
   'new-user trigger function is kept in private schema'
 );
 
+select has_function('public', 'update_player_profile', array['text', 'text'],
+  'update_player_profile function exists');
+
+select function_privs_are('public', 'update_player_profile', array['text', 'text'],
+  'authenticated', array['EXECUTE'],
+  'authenticated users can update their own profile through the RPC');
+
 insert into auth.users (
   id,
   instance_id,
@@ -128,6 +135,18 @@ select results_eq(
   $$,
   array['profile_user'::text],
   'new-user trigger normalizes usernames'
+);
+
+select set_config('request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+
+select results_eq(
+  $$
+    select display_name || ':' || coalesce(username, '')
+    from public.update_player_profile('Updated Player', 'Updated_User')
+  $$,
+  array['Updated Player:updated_user'::text],
+  'update_player_profile updates and normalizes the current user profile'
 );
 
 select * from finish();

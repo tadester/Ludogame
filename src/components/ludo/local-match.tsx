@@ -182,7 +182,7 @@ export function LocalMatch() {
     setRolling(true);
     const values = Array.from({ length: diceCount }, () => rollDie());
     for (let i = 0; i < 9; i += 1) {
-      setDieFaces(Array.from({ length: diceCount }, () => rollDie()));
+      setDieFaces([]);
       await sleep(55);
     }
     setDieFaces(values);

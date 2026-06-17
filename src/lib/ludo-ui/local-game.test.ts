@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   applyAction,
@@ -10,10 +10,15 @@ import type { MatchState } from "@/lib/ludo";
 import {
   dieOrderOptions,
   legalMovesByToken,
+  rollDie,
   rollAction,
   rollActionFor,
   setupLocalMatch,
 } from "./local-game";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 function progressOfMove(
   state: MatchState,
@@ -30,6 +35,22 @@ function progressOfMove(
 }
 
 describe("local-game helpers", () => {
+  it("rolls local dice with browser crypto instead of Math.random", () => {
+    vi.spyOn(Math, "random").mockImplementation(() => {
+      throw new Error("Math.random must not drive dice rolls");
+    });
+    vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation(
+      <T extends ArrayBufferView | null>(array: T): T => {
+        if (array instanceof Uint32Array) {
+          array[0] = 0;
+        }
+        return array;
+      },
+    );
+
+    expect(rollDie()).toBe(1);
+  });
+
   it("seats players in play order and starts the match", () => {
     const state = setupLocalMatch([{ name: "Ada" }, { name: "Ben" }]);
     expect(state.status).toBe("active");

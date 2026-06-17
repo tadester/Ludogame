@@ -1,6 +1,70 @@
 .boardWrap {
   width: min(92vw, 34rem);
   margin-inline: auto;
+  border-radius: 1.35rem;
+  padding: 0.35rem;
+  background: transparent;
+}
+
+.boardWrap[data-background-skin="aurora"] {
+  background:
+    radial-gradient(circle at 20% 15%, rgb(46 211 183 / 34%), transparent 38%),
+    radial-gradient(circle at 80% 5%, rgb(99 102 241 / 28%), transparent 35%),
+    linear-gradient(145deg, #07111f, #111827);
+}
+
+.boardWrap[data-background-skin="sunset"] {
+  background:
+    radial-gradient(circle at 50% 0%, rgb(251 146 60 / 36%), transparent 45%),
+    linear-gradient(145deg, #2a1020, #07111f);
+}
+
+.boardWrap[data-background-skin="sakura"] {
+  background:
+    radial-gradient(circle at 12% 18%, rgb(255 182 213 / 35%), transparent 34%),
+    linear-gradient(145deg, #301528, #07111f);
+}
+
+.boardWrap[data-background-skin="shonen_dawn"] {
+  background:
+    radial-gradient(circle at 50% 0, rgb(255 214 102 / 38%), transparent 42%),
+    linear-gradient(145deg, #331a08, #07111f);
+}
+
+.boardWrap[data-background-skin="night_city"] {
+  background:
+    linear-gradient(90deg, rgb(80 220 255 / 13%) 1px, transparent 1px) 0 0 / 1.1rem 1.1rem,
+    linear-gradient(rgb(244 114 182 / 10%) 1px, transparent 1px) 0 0 / 1.1rem 1.1rem,
+    linear-gradient(145deg, #080a18, #07111f);
+}
+
+.boardWrap[data-background-skin="celestial"] {
+  background:
+    radial-gradient(circle at 24% 24%, rgb(255 255 255 / 80%) 0 0.07rem, transparent 0.08rem),
+    radial-gradient(circle at 78% 18%, rgb(190 210 255 / 70%) 0 0.06rem, transparent 0.07rem),
+    linear-gradient(145deg, #10183a, #050816);
+}
+
+.boardWrap[data-background-skin="hidden_leaf"] {
+  background:
+    radial-gradient(circle at 50% 0, rgb(255 168 76 / 36%), transparent 46%),
+    linear-gradient(145deg, #2f4a22, #07111f);
+}
+
+.boardWrap[data-background-skin="grand_line"] {
+  background:
+    radial-gradient(circle at 50% 0, rgb(255 193 87 / 35%), transparent 36%),
+    linear-gradient(145deg, #0b4960, #07111f);
+}
+
+.boardWrap[data-background-skin="elite_classroom"] {
+  background: linear-gradient(145deg, #1f2c47, #07111f);
+}
+
+.boardWrap[data-background-skin="cel_shaded"] {
+  background:
+    radial-gradient(circle at 24% 18%, rgb(255 255 255 / 32%), transparent 30%),
+    linear-gradient(145deg, #3f7dd9, #07111f);
 }
 
 .board {
@@ -248,11 +312,14 @@
 }
 
 [data-token-skin="gem"] .disc {
+  background: radial-gradient(circle at 34% 28%, #f2fbff, #6b8fb4);
   clip-path: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%);
   box-shadow:
+    inset 0 0 0 0.18rem var(--team-tint),
     inset 0 0 0 0.06rem rgb(255 255 255 / 55%),
     inset 0 -0.12rem 0.22rem rgb(0 0 0 / 40%),
-    0 0.1rem 0.3rem rgb(0 0 0 / 45%);
+    0 0.1rem 0.3rem rgb(0 0 0 / 45%),
+    0 0 0.55rem color-mix(in srgb, var(--team-tint), transparent 35%);
 }
 
 [data-token-skin="gem"] .disc::after {
@@ -288,12 +355,16 @@
 
 /* --- Anime token packs ------------------------------------------------- */
 [data-token-skin="star"] .disc {
+  background: radial-gradient(circle at 42% 30%, #fff2a8, #d18b16);
   clip-path: polygon(
     50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%,
     50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%
   );
   border: none;
-  box-shadow: 0 0.12rem 0.28rem rgb(0 0 0 / 45%);
+  box-shadow:
+    inset 0 0 0 0.2rem var(--team-tint),
+    0 0.12rem 0.28rem rgb(0 0 0 / 45%),
+    0 0 0.55rem color-mix(in srgb, var(--team-tint), transparent 35%);
 }
 
 [data-token-skin="star"] .disc::after {
@@ -301,11 +372,14 @@
 }
 
 [data-token-skin="crystal"] .disc {
+  background: radial-gradient(circle at 35% 20%, #e0f7ff, #5e88d8);
   clip-path: polygon(50% 0, 100% 30%, 82% 100%, 18% 100%, 0 30%);
   border: 0.08rem solid rgb(255 255 255 / 80%);
   box-shadow:
+    inset 0 0 0 0.18rem color-mix(in srgb, var(--team-tint), transparent 8%),
     inset 0 0 0.2rem rgb(255 255 255 / 80%),
-    0 0.1rem 0.3rem rgb(0 0 0 / 45%);
+    0 0.1rem 0.3rem rgb(0 0 0 / 45%),
+    0 0 0.55rem color-mix(in srgb, var(--team-tint), transparent 35%);
   filter: brightness(1.15) saturate(1.2);
 }
 
@@ -369,7 +443,12 @@
 
 /* --- Anime-inspired token packs (player color preserved) --------------- */
 [data-token-skin="ninja"] .disc {
+  background: radial-gradient(circle at 34% 28%, #68707c, #111827);
   border-color: rgb(20 20 20 / 85%);
+  box-shadow:
+    inset 0 0 0 0.18rem var(--team-tint),
+    0 0.28rem 0.42rem rgb(0 0 0 / 38%),
+    0 0 0.55rem color-mix(in srgb, var(--team-tint), transparent 35%);
 }
 [data-token-skin="ninja"] .disc::before {
   content: "";
@@ -392,16 +471,27 @@
   border-radius: 50%;
   background: linear-gradient(
     transparent 40%,
-    rgb(229 72 77 / 92%) 40% 60%,
+    color-mix(in srgb, var(--team-tint), white 8%) 40% 60%,
     transparent 60%
   );
 }
 
+[data-token-skin="straw_hat"] .disc {
+  background: radial-gradient(circle at 36% 26%, #ffe7a3, #b98534);
+  box-shadow:
+    inset 0 0 0 0.18rem var(--team-tint),
+    0 0.28rem 0.42rem rgb(0 0 0 / 38%),
+    0 0 0.55rem color-mix(in srgb, var(--team-tint), transparent 35%);
+}
+
 [data-token-skin="class_point"] .disc {
+  background: radial-gradient(circle at 35% 25%, #f8fafc, #94a3b8);
   border: 0.14rem solid #ffffff;
   box-shadow:
+    inset 0 0 0 0.18rem var(--team-tint),
     0 0.18rem 0.3rem rgb(0 0 0 / 35%),
-    inset 0 0 0 0.04rem rgb(0 0 0 / 25%);
+    inset 0 0 0 0.04rem rgb(0 0 0 / 25%),
+    0 0 0.55rem color-mix(in srgb, var(--team-tint), transparent 35%);
 }
 [data-token-skin="class_point"] .disc::after {
   display: none;
@@ -435,6 +525,22 @@
 @keyframes dramaticPulse {
   0%, 100% { transform: translate(-50%, -60%) scale(1); }
   50% { transform: translate(-50%, -64%) scale(1.18); }
+}
+
+.disc[data-team-color="red"] {
+  --team-tint: var(--red);
+}
+
+.disc[data-team-color="green"] {
+  --team-tint: var(--green);
+}
+
+.disc[data-team-color="yellow"] {
+  --team-tint: var(--yellow);
+}
+
+.disc[data-team-color="blue"] {
+  --team-tint: var(--blue);
 }
 
 /* Larger invisible tap target for movable tokens on touch devices. */

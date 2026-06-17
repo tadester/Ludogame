@@ -130,5 +130,16 @@ export function legalMovesByToken(
 }
 
 export function rollDie(): number {
-  return 1 + Math.floor(Math.random() * 6);
+  const crypto = globalThis.crypto;
+  if (!crypto?.getRandomValues) {
+    throw new Error("Secure browser crypto is required to roll dice.");
+  }
+
+  const max = Math.floor(0x100000000 / 6) * 6;
+  const buffer = new Uint32Array(1);
+  do {
+    crypto.getRandomValues(buffer);
+  } while (buffer[0] >= max);
+
+  return (buffer[0] % 6) + 1;
 }
