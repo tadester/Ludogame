@@ -129,8 +129,34 @@ universal African ruleset.
   other token can legally use the remaining die.
 - The first player to make all four tokens won wins.
 
-Special Effect Mode is planned as a separate future mode and is not part of the
-first release.
+### Peaceful Ludo
+
+- Classic rules with a single die, but **no capturing** — landing on an
+  opponent never sends them home. A relaxed race to get all four tokens home.
+
+### Blitz Ludo
+
+- Classic single-die rules, but the **first token home wins** — a fast,
+  high-tension sprint.
+
+### Extreme Ludo
+
+A fun-but-fair sandbox built on Classic single-die rules with collectible
+power-ups (cosmetics and gameplay are kept separate; these are real
+mechanics, only in this mode):
+
+- **Power tiles** sit on four ring squares; landing on one banks a power
+  (inventory capped at three). Tiles refill once the board is cleared.
+- **Shield** — protect one of your tokens from the next capture.
+- **Dash** — your chosen token's next move advances double the roll.
+- **Last Stand** — when you are down to a single piece with none home yet,
+  that lone token automatically moves double, a comeback boost for whoever is
+  furthest behind.
+- Boosts never stack (a move at most doubles), and exact-roll home entry still
+  applies, so the mode stays balanced.
+
+Further Extreme ideas (character ultimates with range, map events, a bigger
+board, a strategy book) are planned as future increments.
 
 ## Architecture
 
