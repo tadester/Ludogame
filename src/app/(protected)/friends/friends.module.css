@@ -121,3 +121,27 @@
   margin: 0;
   color: var(--muted);
 }
+
+.handle {
+  margin: 0;
+  padding: 0.7rem 0.95rem;
+  border: 1px dashed var(--panel-border);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--panel), transparent 14%);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.handle p {
+  margin: 0;
+}
+
+.handle strong {
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.handle a {
+  color: var(--accent);
+  font-weight: 600;
+}

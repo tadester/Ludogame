@@ -38,6 +38,7 @@ export function OnlineMatch({
 }: OnlineMatchProps) {
   const [snapshot, setSnapshot] = useState<MatchState>(initial);
   const [busy, setBusy] = useState(false);
+  const [rolling, setRolling] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const resync = useCallback(async () => {
@@ -78,6 +79,7 @@ export function OnlineMatch({
   const send = useCallback(
     async (intent: ServerIntent) => {
       setBusy(true);
+      if (intent.kind === "roll") setRolling(true);
       setMessage(null);
       try {
         const res = await fetch(`/api/matches/${matchId}/intent`, {
@@ -108,6 +110,7 @@ export function OnlineMatch({
         setMessage("Network error. Try again.");
       } finally {
         setBusy(false);
+        setRolling(false);
       }
     },
     [matchId, resync],
@@ -177,7 +180,7 @@ export function OnlineMatch({
           {view.canRoll ? (
             <Dice
               value={pendingDice[0]?.value ?? null}
-              rolling={false}
+              rolling={rolling}
               ready={!busy}
               disabled={busy}
               skin={diceSkin}
