@@ -108,19 +108,30 @@ export function dashTokensOf(state: MatchState): readonly string[] {
   return state.powerUps?.dashTokenIds ?? [];
 }
 
+function wonCount(state: MatchState, playerId: string): number {
+  return state.tokens.filter(
+    (entry) => entry.playerId === playerId && entry.status === "won",
+  ).length;
+}
+
+/** True when some opponent of `playerId` holds a significant lead — at least
+ *  two tokens already home. Last Stand only kicks in against such a lead. */
+function opponentHasBigLead(state: MatchState, playerId: string): boolean {
+  return state.players.some(
+    (player) => player.id !== playerId && wonCount(state, player.id) >= 2,
+  );
+}
+
 /**
  * Last Stand: in Extreme, a player down to a single piece on the board with
- * none home yet fights harder — that lone token's moves advance double, a fair
- * comeback boost for whoever is furthest behind.
+ * none home yet — and facing an opponent with a significant lead — fights
+ * harder, so that lone token's moves advance double. A fair comeback boost.
  */
 export function isLastStandToken(state: MatchState, tokenId: string): boolean {
   if (state.ruleset !== "extreme") return false;
   const token = state.tokens.find((entry) => entry.id === tokenId);
   if (!token || token.status !== "active") return false;
-  const mine = state.tokens.filter((entry) => entry.playerId === token.playerId);
-  const active = mine.filter((entry) => entry.status === "active").length;
-  const won = mine.filter((entry) => entry.status === "won").length;
-  return active === 1 && won === 0;
+  return isLastStandActive(state, token.playerId);
 }
 
 /** Whether the given player currently benefits from the Last Stand boost. */
@@ -129,7 +140,7 @@ export function isLastStandActive(state: MatchState, playerId: string): boolean 
   const mine = state.tokens.filter((entry) => entry.playerId === playerId);
   const active = mine.filter((entry) => entry.status === "active").length;
   const won = mine.filter((entry) => entry.status === "won").length;
-  return active === 1 && won === 0;
+  return active === 1 && won === 0 && opponentHasBigLead(state, playerId);
 }
 
 /** Spend a held power. v1: shield one of your own active tokens from the next

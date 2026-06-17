@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { applyAction, getLegalActions } from "@/lib/ludo";
 import type { MatchState } from "@/lib/ludo";
+import { WON_PROGRESS } from "@/lib/ludo/constants";
 import {
   legalMovesByToken,
   rollActionFor,
@@ -136,20 +137,30 @@ describe("use-power", () => {
 });
 
 describe("last stand boost", () => {
-  function withActiveCount(activeCount: 1 | 2): MatchState {
+  // A lone surviving token only fights harder against a clearly-leading
+  // opponent, so by default give the opponent two tokens already home.
+  function withActiveCount(
+    activeCount: 1 | 2,
+    opponentLead = true,
+  ): MatchState {
     const base = extremeMatch();
     const ids = ["p1-token-1", "p1-token-2"];
+    const leaders = ["p2-token-1", "p2-token-2"];
     return {
       ...base,
-      tokens: base.tokens.map((t) =>
-        ids.slice(0, activeCount).includes(t.id)
-          ? { ...t, status: "active" as const, progress: 2 }
-          : t,
-      ),
+      tokens: base.tokens.map((t) => {
+        if (ids.slice(0, activeCount).includes(t.id)) {
+          return { ...t, status: "active" as const, progress: 2 };
+        }
+        if (opponentLead && leaders.includes(t.id)) {
+          return { ...t, status: "won" as const, progress: WON_PROGRESS };
+        }
+        return t;
+      }),
     };
   }
 
-  it("doubles a lone surviving token's move", () => {
+  it("doubles a lone surviving token's move against a leading opponent", () => {
     const lone = withActiveCount(1);
     const rolled = applyAction(lone, rollActionFor(lone, [3])).state;
     const move = legalMovesByToken(rolled, getLegalActions(rolled)).get(
@@ -157,6 +168,16 @@ describe("last stand boost", () => {
     )!;
     const next = applyAction(rolled, move).state;
     expect(next.tokens.find((t) => t.id === "p1-token-1")?.progress).toBe(8);
+  });
+
+  it("does not boost a lone token when no opponent has a big lead", () => {
+    const lone = withActiveCount(1, false);
+    const rolled = applyAction(lone, rollActionFor(lone, [3])).state;
+    const move = legalMovesByToken(rolled, getLegalActions(rolled)).get(
+      "p1-token-1",
+    )!;
+    const next = applyAction(rolled, move).state;
+    expect(next.tokens.find((t) => t.id === "p1-token-1")?.progress).toBe(5);
   });
 
   it("does not boost when more than one piece is in play", () => {
