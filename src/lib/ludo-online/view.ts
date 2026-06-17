@@ -1,5 +1,6 @@
 import { getLegalActions } from "@/lib/ludo";
 import type { MatchState, TurnPhase } from "@/lib/ludo";
+import { seatOwner } from "@/lib/ludo-online/authority";
 import { dieOrderOptions, legalMovesByToken } from "@/lib/ludo-ui/local-game";
 
 export interface DieOrderOption {
@@ -21,7 +22,7 @@ export interface OnlineView {
 export function onlineViewModel(state: MatchState, userId: string): OnlineView {
   const active = state.players[state.activePlayerIndex];
   const isMyTurn =
-    state.status === "active" && !!active && active.id === userId;
+    state.status === "active" && !!active && seatOwner(active.id) === userId;
 
   const winnerName = state.winnerPlayerId
     ? (state.players.find((p) => p.id === state.winnerPlayerId)?.displayName ??

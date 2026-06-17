@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { assertMatchInvariants } from "@/lib/ludo";
 
-import { buildStartedMatch, resolveIntent } from "./authority";
+import { buildStartedMatch, resolveIntent, seatOwner } from "./authority";
 import type { OnlineSeat } from "./authority";
 import {
-  forfeitPlayer,
+  forfeitUser,
   resolveTurnTimeout,
-  setConnection,
+  setConnectionForUser,
 } from "./match-automation";
 
 const SEATS: OnlineSeat[] = [
@@ -24,7 +24,8 @@ describe("resolveTurnTimeout", () => {
     expect(events.some((e) => e.type === "dice-rolled")).toBe(true);
     expect(events.some((e) => e.type === "turn-timed-out")).toBe(true);
     expect(
-      next.players.find((p) => p.id === "user-a")?.consecutiveTimeouts,
+      next.players.find((p) => seatOwner(p.id) === "user-a")
+        ?.consecutiveTimeouts,
     ).toBe(1);
     assertMatchInvariants(next);
   });
@@ -47,7 +48,7 @@ describe("resolveTurnTimeout", () => {
       rng: () => 3, // no six, all tokens in yard -> turn advances, no move
     });
     expect(events.some((e) => e.type === "turn-advanced")).toBe(true);
-    expect(next.players[next.activePlayerIndex].id).toBe("user-b");
+    expect(seatOwner(next.players[next.activePlayerIndex].id)).toBe("user-b");
     assertMatchInvariants(next);
   });
 
@@ -60,7 +61,7 @@ describe("resolveTurnTimeout", () => {
       let guard = 0;
       while (
         state.status === "active" &&
-        state.players[state.activePlayerIndex].id !== "user-a" &&
+        seatOwner(state.players[state.activePlayerIndex].id) !== "user-a" &&
         guard < 50
       ) {
         guard += 1;
@@ -68,29 +69,48 @@ describe("resolveTurnTimeout", () => {
       }
       if (
         state.status === "active" &&
-        state.players[state.activePlayerIndex].id === "user-a"
+        seatOwner(state.players[state.activePlayerIndex].id) === "user-a"
       ) {
         state = resolveTurnTimeout(state, { rng: () => 6 }).state;
       }
     }
-    const ada = state.players.find((p) => p.id === "user-a");
+    const ada = state.players.find((p) => seatOwner(p.id) === "user-a");
     expect(ada?.forfeited).toBe(true);
     assertMatchInvariants(state);
   });
 });
 
 describe("connection and forfeit wrappers", () => {
-  it("marks a player disconnected and reconnected", () => {
+  it("marks all of a user's seats disconnected and reconnected", () => {
     const state = buildStartedMatch("m", SEATS, "classic");
-    const off = setConnection(state, "user-b", false).state;
-    expect(off.players.find((p) => p.id === "user-b")?.connected).toBe(false);
-    const on = setConnection(off, "user-b", true).state;
-    expect(on.players.find((p) => p.id === "user-b")?.connected).toBe(true);
+    const off = setConnectionForUser(state, "user-b", false).state;
+    expect(
+      off.players.find((p) => seatOwner(p.id) === "user-b")?.connected,
+    ).toBe(false);
+    const on = setConnectionForUser(off, "user-b", true).state;
+    expect(
+      on.players.find((p) => seatOwner(p.id) === "user-b")?.connected,
+    ).toBe(true);
   });
 
-  it("forfeits a player", () => {
+  it("disconnects every seat a multi-seat user owns", () => {
+    const seats: OnlineSeat[] = [
+      { userId: "a", displayName: "A", seat: 1 },
+      { userId: "solo", displayName: "Solo", seat: 2 },
+      { userId: "solo", displayName: "Solo", seat: 3 },
+    ];
+    const state = buildStartedMatch("m", seats, "classic");
+    const off = setConnectionForUser(state, "solo", false).state;
+    const soloSeats = off.players.filter((p) => seatOwner(p.id) === "solo");
+    expect(soloSeats).toHaveLength(2);
+    expect(soloSeats.every((p) => !p.connected)).toBe(true);
+  });
+
+  it("forfeits a user", () => {
     const state = buildStartedMatch("m", SEATS, "classic");
-    const next = forfeitPlayer(state, "user-b").state;
-    expect(next.players.find((p) => p.id === "user-b")?.forfeited).toBe(true);
+    const next = forfeitUser(state, "user-b").state;
+    expect(
+      next.players.find((p) => seatOwner(p.id) === "user-b")?.forfeited,
+    ).toBe(true);
   });
 });

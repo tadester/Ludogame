@@ -36,39 +36,53 @@ export function buildStartedMatch(
     throw new Error("An online match needs two to four players.");
   }
 
-  const colored = ordered.map((seat, index) => ({
-    ...seat,
-    color: PLAY_ORDER[index],
-  }));
+  // A user may hold several seats; each seat becomes its own colored player,
+  // and the owner is encoded in the player id so we can authorize moves.
+  const owners = new Map<string, number>();
+  const colored = ordered.map((seat, index) => {
+    const color = PLAY_ORDER[index];
+    const seatCount = (owners.get(seat.userId) ?? 0) + 1;
+    owners.set(seat.userId, seatCount);
+    const ownsMany = ordered.filter((s) => s.userId === seat.userId).length > 1;
+    return {
+      id: `${seat.userId}${SEAT_SEPARATOR}${color}`,
+      color,
+      displayName: ownsMany
+        ? `${seat.displayName} (${color})`
+        : seat.displayName,
+    };
+  });
 
   let state = createMatch({
     id: matchId,
     ruleset,
     maxPlayers: colored.length as 2 | 3 | 4,
-    host: {
-      id: colored[0].userId,
-      displayName: colored[0].displayName,
-      color: colored[0].color,
-    },
+    host: colored[0],
   });
 
-  for (const seat of colored.slice(1)) {
+  for (const player of colored.slice(1)) {
     state = applyAction(state, {
       type: "join-seat",
       expectedVersion: state.version,
-      player: {
-        id: seat.userId,
-        displayName: seat.displayName,
-        color: seat.color,
-      },
+      player,
     }).state;
   }
 
   return applyAction(state, {
     type: "start-match",
     expectedVersion: state.version,
-    playerId: colored[0].userId,
+    playerId: colored[0].id,
   }).state;
+}
+
+/** Separator between a seat's owner id and its color in a player id. uuids
+ *  never contain it, so the owner is always recoverable. */
+export const SEAT_SEPARATOR = "#";
+
+/** The user id that owns a given engine player id (seat). */
+export function seatOwner(playerId: string): string {
+  const index = playerId.indexOf(SEAT_SEPARATOR);
+  return index === -1 ? playerId : playerId.slice(0, index);
 }
 
 /** Generate dice with deterministic, replay-stable ids for the current roll. */
@@ -151,21 +165,21 @@ export function resolveIntent(
     throw new Error("The match is not in progress.");
   }
   const active = state.players[state.activePlayerIndex];
-  if (!active || active.id !== userId) {
+  if (!active || seatOwner(active.id) !== userId) {
     throw new NotYourTurnError();
   }
 
-  const action = buildAction(state, userId, intent, rng);
+  const action = buildAction(state, active.id, intent, rng);
   return applyAction(state, action);
 }
 
 function buildAction(
   state: MatchState,
-  userId: string,
+  playerId: string,
   intent: ServerIntent,
   rng: DiceRng,
 ): MatchAction {
-  const base = { expectedVersion: state.version, playerId: userId } as const;
+  const base = { expectedVersion: state.version, playerId } as const;
   switch (intent.kind) {
     case "roll":
       return { type: "roll-dice", ...base, dice: serverRoll(state, rng) };
