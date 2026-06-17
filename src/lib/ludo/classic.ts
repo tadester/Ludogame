@@ -1,6 +1,7 @@
 import { progressToRingIndex } from "./board";
 import {
   CLASSIC_SAFE_RING_INDEXES,
+  EXTREME_POWER_TILES,
   RING_PROGRESS_MAX,
   WON_PROGRESS,
 } from "./constants";
@@ -109,7 +110,23 @@ function applyClassicRoll(
   const events: DomainEvent[] = [
     { type: "dice-rolled", playerId: action.playerId, dice: action.dice },
   ];
-  const rolled: MatchState = { ...state, rollNumber: state.rollNumber + 1 };
+  let rolled: MatchState = { ...state, rollNumber: state.rollNumber + 1 };
+  // Extreme: when the board has been cleared of power tiles, refill them at the
+  // start of a turn so powers keep flowing.
+  if (
+    rolled.ruleset === "extreme" &&
+    rolled.powerUps &&
+    rolled.powerUps.tiles.length === 0
+  ) {
+    rolled = {
+      ...rolled,
+      powerUps: {
+        ...rolled.powerUps,
+        tiles: EXTREME_POWER_TILES.map((tile) => ({ ...tile })),
+      },
+    };
+    events.push({ type: "power-tiles-refilled" });
+  }
   const { releases, moves } = dieUses(rolled, die);
 
   if (releases.length === 0 && moves.length === 0) {

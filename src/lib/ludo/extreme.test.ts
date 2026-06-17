@@ -135,6 +135,34 @@ describe("use-power", () => {
   });
 });
 
+describe("power tile respawn", () => {
+  it("refills the tiles at the start of a turn once the board is empty", () => {
+    const base = extremeMatch();
+    const empty: MatchState = {
+      ...base,
+      tokens: base.tokens.map((t) =>
+        t.id === "p1-token-1" ? { ...t, status: "active" as const, progress: 2 } : t,
+      ),
+      powerUps: { ...base.powerUps!, tiles: [] },
+    };
+    const { state: next, events } = applyAction(empty, rollActionFor(empty, [3]));
+    expect(next.powerUps?.tiles.length).toBe(4);
+    expect(events.some((e) => e.type === "power-tiles-refilled")).toBe(true);
+  });
+
+  it("does not refill while tiles remain", () => {
+    const base = extremeMatch();
+    const state: MatchState = {
+      ...base,
+      tokens: base.tokens.map((t) =>
+        t.id === "p1-token-1" ? { ...t, status: "active" as const, progress: 2 } : t,
+      ),
+    };
+    const { events } = applyAction(state, rollActionFor(state, [3]));
+    expect(events.some((e) => e.type === "power-tiles-refilled")).toBe(false);
+  });
+});
+
 describe("dash power", () => {
   function withDash(progress: number, dashed: boolean): MatchState {
     const base = extremeMatch();

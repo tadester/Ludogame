@@ -250,7 +250,8 @@ export type DomainEvent =
       readonly playerId: string;
       readonly tokenId: string;
       readonly ringIndex: number;
-    };
+    }
+  | { readonly type: "power-tiles-refilled" };
 
 export interface ApplyActionResult {
   readonly state: MatchState;
