@@ -88,7 +88,9 @@
   height: 100%;
   border-radius: 0.6rem;
   overflow: hidden;
-  background: #f7f9fc;
+  /* Transparent so the board surface (and the equipped background skin behind
+     it) shows through instead of a flat white sheet. */
+  background: transparent;
 }
 
 /* --- yards ------------------------------------------------------------- */
@@ -227,11 +229,12 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 0.12rem solid rgb(255 255 255 / 85%);
+  border: 0.14rem solid rgb(255 255 255 / 92%);
   box-shadow:
-    0 0.28rem 0.42rem rgb(0 0 0 / 38%),
-    inset 0 -0.18rem 0.28rem rgb(0 0 0 / 28%),
-    inset 0 0.16rem 0.22rem rgb(255 255 255 / 45%);
+    0 0 0 0.12rem rgb(8 12 20 / 60%),
+    0 0.3rem 0.45rem rgb(0 0 0 / 45%),
+    inset 0 -0.2rem 0.3rem rgb(0 0 0 / 34%),
+    inset 0 0.16rem 0.22rem rgb(255 255 255 / 50%);
 }
 
 .disc::after {
@@ -246,16 +249,16 @@
 }
 
 .discRed {
-  background: radial-gradient(circle at 34% 28%, #ff8a8d, var(--red));
+  background: radial-gradient(circle at 36% 30%, #ff6b6f 0%, var(--red) 58%, #a30e17 100%);
 }
 .discGreen {
-  background: radial-gradient(circle at 34% 28%, #79e2ab, var(--green));
+  background: radial-gradient(circle at 36% 30%, #4cd089 0%, var(--green) 58%, #0a6b30 100%);
 }
 .discYellow {
-  background: radial-gradient(circle at 34% 28%, #ffd576, var(--yellow));
+  background: radial-gradient(circle at 36% 30%, #ffdf66 0%, var(--yellow) 58%, #b88a00 100%);
 }
 .discBlue {
-  background: radial-gradient(circle at 34% 28%, #93bdff, var(--blue));
+  background: radial-gradient(circle at 36% 30%, #6aa8ff 0%, var(--blue) 58%, #0f4fa8 100%);
 }
 
 .clickable {
