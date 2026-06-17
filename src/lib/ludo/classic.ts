@@ -5,7 +5,7 @@ import {
   RING_PROGRESS_MAX,
   WON_PROGRESS,
 } from "./constants";
-import { resolveExtremeLanding } from "./extreme";
+import { isLastStandToken, resolveExtremeLanding } from "./extreme";
 import { sortLegalActions } from "./legal-actions";
 import {
   activePlayer,
@@ -29,11 +29,13 @@ import type {
 
 const CLASSIC_SAFE = new Set<number>(CLASSIC_SAFE_RING_INDEXES);
 
-/** A token's step for a die, doubled when the token is dash-armed (Extreme). */
+/** A token's step for a die, doubled when the token is dash-armed or fighting
+ *  a Last Stand (Extreme). Boosts never stack — the step at most doubles. */
 function stepFor(state: MatchState, tokenId: string, die: Die): number {
-  return state.powerUps?.dashTokenIds.includes(tokenId)
-    ? die.value * 2
-    : die.value;
+  const boosted =
+    (state.powerUps?.dashTokenIds.includes(tokenId) ?? false) ||
+    isLastStandToken(state, tokenId);
+  return boosted ? die.value * 2 : die.value;
 }
 
 function dieUses(

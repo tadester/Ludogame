@@ -425,11 +425,20 @@ export function LocalMatch() {
                   (t) =>
                     t.playerId === activePlayer.id && t.status === "active",
                 );
+                const myWon = match.tokens.filter(
+                  (t) => t.playerId === activePlayer.id && t.status === "won",
+                ).length;
+                const lastStand = myActive.length === 1 && myWon === 0;
                 return (
                   <div className={styles.dieOrders}>
                     <p className={styles.message}>
                       Shields: {shields} · Dashes: {dashes}
                     </p>
+                    {lastStand ? (
+                      <p className={styles.message}>
+                        ⚔️ Last stand — your lone piece moves double!
+                      </p>
+                    ) : null}
                     {canUse && shields > 0
                       ? myActive
                           .filter(

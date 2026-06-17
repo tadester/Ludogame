@@ -135,6 +135,41 @@ describe("use-power", () => {
   });
 });
 
+describe("last stand boost", () => {
+  function withActiveCount(activeCount: 1 | 2): MatchState {
+    const base = extremeMatch();
+    const ids = ["p1-token-1", "p1-token-2"];
+    return {
+      ...base,
+      tokens: base.tokens.map((t) =>
+        ids.slice(0, activeCount).includes(t.id)
+          ? { ...t, status: "active" as const, progress: 2 }
+          : t,
+      ),
+    };
+  }
+
+  it("doubles a lone surviving token's move", () => {
+    const lone = withActiveCount(1);
+    const rolled = applyAction(lone, rollActionFor(lone, [3])).state;
+    const move = legalMovesByToken(rolled, getLegalActions(rolled)).get(
+      "p1-token-1",
+    )!;
+    const next = applyAction(rolled, move).state;
+    expect(next.tokens.find((t) => t.id === "p1-token-1")?.progress).toBe(8);
+  });
+
+  it("does not boost when more than one piece is in play", () => {
+    const pair = withActiveCount(2);
+    const rolled = applyAction(pair, rollActionFor(pair, [3])).state;
+    const move = legalMovesByToken(rolled, getLegalActions(rolled)).get(
+      "p1-token-1",
+    )!;
+    const next = applyAction(rolled, move).state;
+    expect(next.tokens.find((t) => t.id === "p1-token-1")?.progress).toBe(5);
+  });
+});
+
 describe("power tile respawn", () => {
   it("refills the tiles at the start of a turn once the board is empty", () => {
     const base = extremeMatch();
@@ -171,7 +206,11 @@ describe("dash power", () => {
       tokens: base.tokens.map((t) =>
         t.id === "p1-token-1"
           ? { ...t, status: "active" as const, progress }
-          : t,
+          : // A second active token keeps the player out of Last Stand so this
+            // test isolates the dash boost.
+            t.id === "p1-token-2"
+            ? { ...t, status: "active" as const, progress: 1 }
+            : t,
       ),
       powerUps: {
         ...base.powerUps!,

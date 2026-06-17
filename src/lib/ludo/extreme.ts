@@ -108,6 +108,30 @@ export function dashTokensOf(state: MatchState): readonly string[] {
   return state.powerUps?.dashTokenIds ?? [];
 }
 
+/**
+ * Last Stand: in Extreme, a player down to a single piece on the board with
+ * none home yet fights harder — that lone token's moves advance double, a fair
+ * comeback boost for whoever is furthest behind.
+ */
+export function isLastStandToken(state: MatchState, tokenId: string): boolean {
+  if (state.ruleset !== "extreme") return false;
+  const token = state.tokens.find((entry) => entry.id === tokenId);
+  if (!token || token.status !== "active") return false;
+  const mine = state.tokens.filter((entry) => entry.playerId === token.playerId);
+  const active = mine.filter((entry) => entry.status === "active").length;
+  const won = mine.filter((entry) => entry.status === "won").length;
+  return active === 1 && won === 0;
+}
+
+/** Whether the given player currently benefits from the Last Stand boost. */
+export function isLastStandActive(state: MatchState, playerId: string): boolean {
+  if (state.ruleset !== "extreme") return false;
+  const mine = state.tokens.filter((entry) => entry.playerId === playerId);
+  const active = mine.filter((entry) => entry.status === "active").length;
+  const won = mine.filter((entry) => entry.status === "won").length;
+  return active === 1 && won === 0;
+}
+
 /** Spend a held power. v1: shield one of your own active tokens from the next
  *  capture. Allowed on your turn before you roll. */
 export function applyUsePower(
