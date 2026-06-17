@@ -33,7 +33,11 @@ describe("onlineViewModel", () => {
 
   it("reports the winner name when the match completes", () => {
     const state = buildStartedMatch("m", SEATS, "classic");
-    const completed = { ...state, status: "completed" as const, winnerPlayerId: "user-b" };
+    const completed = {
+      ...state,
+      status: "completed" as const,
+      winnerPlayerId: "user-b#green",
+    };
     const view = onlineViewModel(completed, "user-a");
     expect(view.winnerName).toBe("Ben");
     expect(view.isMyTurn).toBe(false);

@@ -13,6 +13,9 @@ export interface Room {
   readonly board_skin: string;
   readonly turn_timer_seconds: number | null;
   readonly status: RoomStatus;
+  readonly is_ranked: boolean;
+  readonly entry_fee: number;
+  readonly pot: number;
   readonly created_at: string;
   readonly updated_at: string;
 }
@@ -35,6 +38,8 @@ export interface RoomSettings {
   readonly maxPlayers: number;
   readonly boardSkin: string;
   readonly turnTimerSeconds: TurnTimer;
+  readonly isRanked: boolean;
+  readonly entryFee: number;
 }
 
 /** Normalize and validate the invite code typed into the join form. */
@@ -79,9 +84,18 @@ export function validateRoomSettings(
 
   const boardSkin = String(data.get("boardSkin") ?? "").trim() || "classic";
 
+  const isRanked = data.get("isRanked") === "on";
+  let entryFee = 0;
+  if (isRanked) {
+    entryFee = Math.trunc(Number(data.get("entryFee")));
+    if (!Number.isFinite(entryFee) || entryFee <= 0) {
+      return { ok: false, message: "Ranked rooms need a positive entry fee." };
+    }
+  }
+
   return {
     ok: true,
-    value: { ruleset, maxPlayers, boardSkin, turnTimerSeconds },
+    value: { ruleset, maxPlayers, boardSkin, turnTimerSeconds, isRanked, entryFee },
   };
 }
 

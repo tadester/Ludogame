@@ -64,11 +64,17 @@ export async function createRoom(formData: FormData) {
       p_max_players: result.value.maxPlayers,
       p_board_skin: result.value.boardSkin,
       p_turn_timer_seconds: result.value.turnTimerSeconds,
+      p_is_ranked: result.value.isRanked,
+      p_entry_fee: result.value.entryFee,
     })
     .single<{ id: string }>();
 
   if (error || !data) {
-    roomsRedirect("Unable to create a room right now. Try again.");
+    roomsRedirect(
+      error?.code === "23514" && result.value.isRanked
+        ? "You don't have enough coins for that entry fee."
+        : "Unable to create a room right now. Try again.",
+    );
   }
 
   redirect(`/rooms/${data.id}`);
@@ -99,6 +105,43 @@ export async function leaveRoom(formData: FormData) {
     await supabase.rpc("leave_room", { p_room_id: roomId });
   }
   roomsRedirect("You left the room.");
+}
+
+export async function claimSeat(formData: FormData) {
+  const roomId = String(formData.get("roomId") ?? "");
+  if (!roomId) roomsRedirect("That room is no longer available.");
+
+  const supabase = await requireClient();
+  const { error } = await supabase.rpc("claim_seat", { p_room_id: roomId });
+  if (error) {
+    lobbyRedirect(
+      roomId,
+      error.code === "23514"
+        ? "No room — the seats are full or you can't afford the entry fee."
+        : "Unable to take another seat. Try again.",
+    );
+  }
+  revalidatePath(`/rooms/${roomId}`);
+  lobbyRedirect(roomId, "Seat claimed.");
+}
+
+export async function releaseSeat(formData: FormData) {
+  const roomId = String(formData.get("roomId") ?? "");
+  const seat = Number(formData.get("seat"));
+  if (!roomId || !Number.isInteger(seat)) {
+    lobbyRedirect(roomId, "That seat is no longer available.");
+  }
+
+  const supabase = await requireClient();
+  const { error } = await supabase.rpc("release_seat", {
+    p_room_id: roomId,
+    p_seat: seat,
+  });
+  if (error) {
+    lobbyRedirect(roomId, "Unable to release that seat. Try again.");
+  }
+  revalidatePath(`/rooms/${roomId}`);
+  lobbyRedirect(roomId, "Seat released.");
 }
 
 function friendlyInviteError(message: string): string {

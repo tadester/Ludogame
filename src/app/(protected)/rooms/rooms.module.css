@@ -151,3 +151,39 @@
   margin: 0;
   color: var(--muted);
 }
+
+/* Ranked lobby styling. */
+.rankedBanner {
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--accent), transparent 86%);
+  color: var(--text);
+  font-weight: 600;
+  text-align: center;
+}
+
+.rankedBadge {
+  align-self: flex-start;
+  margin: 0.15rem 0;
+  padding: 0.1rem 0.45rem;
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, var(--accent), transparent 80%);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rankedToggle {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem !important;
+  grid-column: 1 / -1;
+}
+
+.rankedToggle input {
+  width: auto;
+}

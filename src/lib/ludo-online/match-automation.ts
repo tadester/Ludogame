@@ -1,7 +1,7 @@
 import { applyAction, enumerateLegalTurnSequences } from "@/lib/ludo";
 import type { ApplyActionResult, DomainEvent, MatchState } from "@/lib/ludo";
 
-import { serverRoll } from "./authority";
+import { seatOwner, serverRoll } from "./authority";
 import type { DiceRng } from "./authority";
 
 export interface TimeoutOptions {
@@ -78,28 +78,45 @@ export function resolveTurnTimeout(
   return { state: resolved.state, events: [...events, ...resolved.events] };
 }
 
-/** Mark a player connected or disconnected. */
-export function setConnection(
+/** Apply an action to every seat a user owns, threading version + events.
+ *  A user may hold more than one seat (e.g. controlling two colors). */
+function forEachSeat(
   state: MatchState,
-  playerId: string,
-  connected: boolean,
+  userId: string,
+  build: (playerId: string, version: number) => Parameters<typeof applyAction>[1],
 ): ApplyActionResult {
-  return applyAction(state, {
-    type: "set-connection",
-    expectedVersion: state.version,
-    playerId,
-    connected,
-  });
+  let working = state;
+  const events: DomainEvent[] = [];
+  for (const player of state.players.filter((p) => seatOwner(p.id) === userId)) {
+    const result = applyAction(working, build(player.id, working.version));
+    working = result.state;
+    events.push(...result.events);
+  }
+  return { state: working, events };
 }
 
-/** Forfeit a player (e.g. after the reconnect window closes). */
-export function forfeitPlayer(
+/** Mark every seat a user owns connected or disconnected. */
+export function setConnectionForUser(
   state: MatchState,
-  playerId: string,
+  userId: string,
+  connected: boolean,
 ): ApplyActionResult {
-  return applyAction(state, {
-    type: "forfeit-player",
-    expectedVersion: state.version,
+  return forEachSeat(state, userId, (playerId, version) => ({
+    type: "set-connection",
+    expectedVersion: version,
     playerId,
-  });
+    connected,
+  }));
+}
+
+/** Forfeit every seat a user owns (e.g. after the reconnect window closes). */
+export function forfeitUser(
+  state: MatchState,
+  userId: string,
+): ApplyActionResult {
+  return forEachSeat(state, userId, (playerId, version) => ({
+    type: "forfeit-player",
+    expectedVersion: version,
+    playerId,
+  }));
 }

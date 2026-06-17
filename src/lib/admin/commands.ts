@@ -30,6 +30,10 @@ export const COMMANDS: readonly CommandSpec[] = [
     description: "Give coins to a player (use a negative amount to take).",
   },
   { usage: "/take <user> <amount>", description: "Take coins from a player." },
+  {
+    usage: "/setcoins <user> <amount>",
+    description: "Set a player's coin balance to an exact value.",
+  },
   { usage: "/giveall <amount>", description: "Give coins to every player." },
   { usage: "/ban <user>", description: "Ban a player from the app." },
   { usage: "/unban <user>", description: "Lift a player's ban." },
@@ -40,6 +44,7 @@ export const COMMANDS: readonly CommandSpec[] = [
   { usage: "/promote <user>", description: "Give a player the admin role." },
   { usage: "/demote <user>", description: "Remove a player's admin role." },
   { usage: "/whois <user>", description: "Show a player's account details." },
+  { usage: "/find <query>", description: "Search players by name or username." },
   { usage: "/users [query]", description: "List or search players." },
   { usage: "/stats", description: "Show server-wide totals." },
   { usage: "/clear", description: "Clear the terminal output." },

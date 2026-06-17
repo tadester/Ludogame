@@ -78,8 +78,8 @@ describe("startMatch", () => {
     const match = await startMatch(startOpts(store));
     expect(match.snapshot.status).toBe("active");
     expect(match.snapshot.players.map((p) => p.id)).toEqual([
-      "user-a",
-      "user-b",
+      "user-a#red",
+      "user-b#green",
     ]);
   });
 

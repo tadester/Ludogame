@@ -9,6 +9,7 @@ import {
   NotYourTurnError,
   parseServerIntent,
   resolveIntent,
+  seatOwner,
   serverRoll,
 } from "./authority";
 import type { OnlineSeat } from "./authority";
@@ -28,7 +29,10 @@ describe("buildStartedMatch", () => {
     const state = buildStartedMatch("match-1", SEATS, "classic");
     expect(state.id).toBe("match-1");
     expect(state.status).toBe("active");
-    expect(state.players.map((p) => p.id)).toEqual(["user-a", "user-b"]);
+    expect(state.players.map((p) => p.id)).toEqual([
+      "user-a#red",
+      "user-b#green",
+    ]);
     expect(state.players.map((p) => p.color)).toEqual(["red", "green"]);
     assertMatchInvariants(state);
   });
@@ -39,7 +43,21 @@ describe("buildStartedMatch", () => {
       { userId: "user-a", displayName: "Ada", seat: 1 },
     ];
     const state = buildStartedMatch("m", shuffled, "classic");
-    expect(state.players.map((p) => p.id)).toEqual(["user-a", "user-b"]);
+    expect(state.players.map((p) => p.id)).toEqual([
+      "user-a#red",
+      "user-b#green",
+    ]);
+  });
+
+  it("lets one user hold multiple seats, each its own color", () => {
+    const seats: OnlineSeat[] = [
+      { userId: "solo", displayName: "Solo", seat: 1 },
+      { userId: "solo", displayName: "Solo", seat: 2 },
+    ];
+    const state = buildStartedMatch("m", seats, "classic");
+    expect(state.players.map((p) => p.id)).toEqual(["solo#red", "solo#green"]);
+    // The owner controls both colors, whichever is active.
+    expect(state.players.map((p) => seatOwner(p.id))).toEqual(["solo", "solo"]);
   });
 
   it("rejects fewer than two or more than four players", () => {
@@ -136,7 +154,7 @@ describe("resolveIntent", () => {
     let guard = 0;
     while (state.status !== "completed" && guard < 100000) {
       guard += 1;
-      const active = state.players[state.activePlayerIndex].id;
+      const active = seatOwner(state.players[state.activePlayerIndex].id);
       if (state.phase === "awaiting-roll") {
         state = resolveIntent(state, active, { kind: "roll" }, rng).state;
       } else {

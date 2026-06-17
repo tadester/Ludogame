@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { commitSystemAction } from "@/lib/ludo-online/match-service";
-import { setConnection } from "@/lib/ludo-online/match-automation";
+import { setConnectionForUser } from "@/lib/ludo-online/match-automation";
 import { createSupabaseMatchStore } from "@/lib/ludo-online/supabase-store";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -29,7 +29,7 @@ export async function POST(
   const store = createSupabaseMatchStore(createServiceClient());
   try {
     const result = await commitSystemAction(store, matchId, (snapshot) =>
-      setConnection(snapshot, userId, body.connected as boolean),
+      setConnectionForUser(snapshot, userId, body.connected as boolean),
     );
     return NextResponse.json({ version: result.version });
   } catch {

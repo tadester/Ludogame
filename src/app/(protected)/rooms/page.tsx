@@ -72,7 +72,7 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
       <div className={styles.columns}>
         <form action={createRoom} className={styles.panel}>
           <h2>Create a room</h2>
-          <RoomSettingsFields />
+          <RoomSettingsFields showRanked />
           <button className="primary-button" type="submit">
             Create room
           </button>
@@ -142,6 +142,11 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
               <li className={styles.row} key={room.id}>
                 <span className={styles.name}>
                   {RULESET_LABELS[room.ruleset] ?? room.ruleset} room
+                  {room.is_ranked ? (
+                    <span className={styles.rankedBadge}>
+                      Ranked · pot ◎{room.pot}
+                    </span>
+                  ) : null}
                   <small>
                     Code {room.invite_code} · up to {room.max_players} players ·{" "}
                     {describeTimer(room.turn_timer_seconds)}

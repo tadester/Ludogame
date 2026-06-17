@@ -51,8 +51,23 @@ describe("validateRoomSettings", () => {
         maxPlayers: 3,
         boardSkin: "classic",
         turnTimerSeconds: 60,
+        isRanked: false,
+        entryFee: 0,
       },
     });
+  });
+
+  it("requires a positive entry fee for ranked rooms", () => {
+    const ranked = validateRoomSettings(
+      settingsForm({ isRanked: "on", entryFee: "250" }),
+    );
+    expect(ranked.ok && ranked.value).toMatchObject({
+      isRanked: true,
+      entryFee: 250,
+    });
+    expect(
+      validateRoomSettings(settingsForm({ isRanked: "on", entryFee: "0" })).ok,
+    ).toBe(false);
   });
 
   it("treats 'none' as no timer", () => {
