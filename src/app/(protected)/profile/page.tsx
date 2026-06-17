@@ -18,15 +18,16 @@ export default async function ProfilePage({
     redirect("/login");
   }
 
-  const { data: profile, error } = await supabase
+  const { data: profile } = await supabase
     .from("profiles")
     .select("display_name, username")
     .eq("id", userId)
-    .single();
+    .maybeSingle<{ display_name: string | null; username: string | null }>();
 
-  if (error) {
-    throw new Error("Unable to load the player profile.");
-  }
+  // A profile row should always exist (created on sign-up), but if it is
+  // missing we render sensible defaults rather than failing the whole page;
+  // saving will create or repair the row.
+  const resolved = profile ?? { display_name: "", username: null };
 
   const { message } = await searchParams;
 
@@ -44,7 +45,7 @@ export default async function ProfilePage({
         <label>
           <span>Display name</span>
           <input
-            defaultValue={profile.display_name}
+            defaultValue={resolved.display_name ?? ""}
             maxLength={40}
             name="displayName"
             required
@@ -54,7 +55,7 @@ export default async function ProfilePage({
           <span>Username (optional)</span>
           <input
             autoCapitalize="none"
-            defaultValue={profile.username ?? ""}
+            defaultValue={resolved.username ?? ""}
             maxLength={24}
             minLength={3}
             name="username"

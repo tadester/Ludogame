@@ -19,6 +19,16 @@ export interface StoreItem {
   readonly owned: boolean;
 }
 
+export interface PowerStoreItem {
+  readonly id: string;
+  readonly code: string;
+  readonly name: string;
+  readonly description: string;
+  readonly price: number;
+  readonly is_default: boolean;
+  readonly owned: boolean;
+}
+
 export interface AdminUser {
   readonly id: string;
   readonly username: string | null;
