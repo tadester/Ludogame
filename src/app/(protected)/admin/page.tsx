@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { grantCoins, setBan } from "@/app/(protected)/admin/actions";
@@ -37,7 +38,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       <div>
         <p className="eyebrow">Admin</p>
         <h1>Moderation</h1>
-        <p>Manage players, balances, and bans.</p>
+        <p>
+          Manage players, balances, and bans — or use the{" "}
+          <Link href="/admin/terminal">command console</Link>.
+        </p>
       </div>
 
       {message ? (
