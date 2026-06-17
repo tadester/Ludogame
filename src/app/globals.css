@@ -15,10 +15,13 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
   background: var(--background);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -29,10 +32,24 @@ body {
     var(--background);
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
 }
 
 button {
   font: inherit;
+}
+
+/* Comfortable touch targets and no iOS zoom-on-focus on phones. */
+button,
+a[class],
+[role="button"] {
+  touch-action: manipulation;
+}
+
+input,
+select,
+textarea {
+  font-size: max(16px, 1rem);
 }
 
 .app-shell {
@@ -40,6 +57,10 @@ button {
   min-height: 100dvh;
   margin: 0 auto;
   padding: 1rem;
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
 .app-header {
@@ -112,6 +133,8 @@ button {
 .account-nav a,
 .account-nav button {
   display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   padding: 0.55rem 0.7rem;
   border: 0;
   border-radius: 0.5rem;
@@ -198,6 +221,15 @@ button {
   border-radius: 0.65rem;
   background: transparent;
   color: var(--muted);
+}
+
+.play-card .primary-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.9rem;
+  text-align: center;
 }
 
 .auth-layout {
@@ -524,4 +556,15 @@ button {
     radial-gradient(3rem 1.8rem at 30% 30%, #ffffff 60%, transparent 62%),
     radial-gradient(2.2rem 1.4rem at 74% 18%, #eaf4ff 60%, transparent 62%),
     linear-gradient(180deg, #3aa0ff, #1f6fd6 60%, #14538f);
+}
+
+/* Tighten vertical rhythm on small phones. */
+@media (max-width: 30rem) {
+  .app-content {
+    padding-top: 1.25rem;
+  }
+
+  .account-nav {
+    padding: 0.6rem;
+  }
 }
