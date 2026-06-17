@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { grantCoins, setBan } from "@/app/(protected)/admin/actions";
-import { formatCoins } from "@/lib/economy/economy";
+import { formatCoins, isDevEmail } from "@/lib/economy/economy";
 import type { AdminUser, PlayerWallet } from "@/lib/economy/economy";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,18 +19,20 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     redirect("/login");
   }
 
+  const email = (claims.claims as { email?: string }).email;
   const { data: wallet } = await supabase
     .rpc("get_player_wallet")
     .maybeSingle<PlayerWallet>();
-  if (wallet?.role !== "admin") {
+  if (wallet?.role !== "admin" && !isDevEmail(email)) {
     redirect("/");
   }
 
+  // Moderation RPCs enforce the database admin role. If the role backfill has
+  // not run yet they return an authorization error; degrade to an empty list
+  // with a setup notice rather than crashing the page.
   const { data, error } = await supabase.rpc("admin_list_users");
-  if (error) {
-    throw new Error("Unable to load users.");
-  }
   const users = (data ?? []) as AdminUser[];
+  const setupPending = !!error;
   const { message } = await searchParams;
 
   return (
@@ -47,6 +49,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       {message ? (
         <p className={styles.banner} role="status">
           {message}
+        </p>
+      ) : null}
+
+      {setupPending ? (
+        <p className={styles.banner} role="status">
+          Admin database role isn’t active yet. Apply the latest migrations to
+          enable moderation actions.
         </p>
       ) : null}
 

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { AccountNav } from "@/components/account-nav";
 import { AppShell } from "@/components/app-shell";
 import { loadPlayerTheme } from "@/lib/cosmetics/theme";
+import { isDevEmail } from "@/lib/economy/economy";
 import { loadPlayerWallet } from "@/lib/economy/wallet";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,10 +22,16 @@ export default async function ProtectedLayout({
     redirect("/login");
   }
 
+  const email = (data.claims as { email?: string }).email;
+
   const [theme, wallet] = await Promise.all([
     loadPlayerTheme(),
     loadPlayerWallet(),
   ]);
+
+  // Treat the configured developer account as an admin even if the database
+  // role backfill has not run yet, so the admin panel is always reachable.
+  const isAdmin = wallet.role === "admin" || isDevEmail(email);
 
   if (wallet.banned) {
     return (
@@ -48,7 +55,7 @@ export default async function ProtectedLayout({
 
   return (
     <AppShell background={theme.background} reducedMotion={theme.reducedMotion}>
-      <AccountNav coins={wallet.coins} isAdmin={wallet.role === "admin"} />
+      <AccountNav coins={wallet.coins} isAdmin={isAdmin} />
       {children}
     </AppShell>
   );

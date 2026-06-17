@@ -2,6 +2,14 @@ import type { CosmeticKind } from "@/lib/cosmetics/cosmetics";
 
 export type AppRole = "player" | "admin";
 
+/** Developer accounts that are always treated as admins, even before the
+ *  database role backfill has run. Keep in sync with the SQL bootstrap. */
+export const DEV_EMAILS: readonly string[] = ["obasantade@gmail.com"];
+
+export function isDevEmail(email: string | null | undefined): boolean {
+  return !!email && DEV_EMAILS.includes(email.trim().toLowerCase());
+}
+
 export interface PlayerWallet {
   readonly coins: number;
   readonly role: AppRole;
