@@ -10,7 +10,7 @@ import {
   advanceTurn,
   completeMatch,
   grantBonusRoll,
-  hasWonAllTokens,
+  hasWonMatch,
   playerTokens,
   requireActivePlayer,
   validateDice,
@@ -167,7 +167,7 @@ function finishClassicDie(
 ): ApplyActionResult {
   const moverId = activePlayer(state).id;
   const resolved: MatchState = { ...state, pendingRoll: null };
-  if (hasWonAllTokens(resolved, moverId)) {
+  if (hasWonMatch(resolved, moverId)) {
     const completed = completeMatch(resolved, moverId);
     return {
       state: completed.state,
@@ -245,7 +245,7 @@ function applyClassicMove(
     },
   ];
 
-  if (toProgress <= RING_PROGRESS_MAX) {
+  if (toProgress <= RING_PROGRESS_MAX && state.ruleset !== "peaceful") {
     const ringIndex = progressToRingIndex(token.color, toProgress);
     const captured = captureOnRing(next, action.playerId, ringIndex);
     next = { ...next, tokens: captured.tokens };

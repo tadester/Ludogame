@@ -126,3 +126,15 @@ export function hasWonAllTokens(state: MatchState, playerId: string): boolean {
     tokens.every((token) => token.status === "won")
   );
 }
+
+/** Whether a player has met the match win condition for the active ruleset.
+ *  Blitz ends the moment a single token reaches home; every other mode needs
+ *  all four. */
+export function hasWonMatch(state: MatchState, playerId: string): boolean {
+  if (state.ruleset === "blitz") {
+    return playerTokens(state, playerId).some(
+      (token) => token.status === "won",
+    );
+  }
+  return hasWonAllTokens(state, playerId);
+}

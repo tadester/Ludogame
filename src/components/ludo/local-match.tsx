@@ -32,6 +32,8 @@ const SETUP_COLORS: PlayerColor[] = ["red", "green", "yellow", "blue"];
 const RULESETS: { id: Ruleset; label: string }[] = [
   { id: "classic", label: "Classic" },
   { id: "nigerian", label: "Nigerian" },
+  { id: "peaceful", label: "Peaceful" },
+  { id: "blitz", label: "Blitz" },
 ];
 const STEP_MS = 165;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

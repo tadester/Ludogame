@@ -48,8 +48,8 @@ export function getLegalActions(state: MatchState): LegalAction[] {
   if (state.status === "completed") {
     return [];
   }
-  if (state.ruleset === "classic") {
-    return getClassicLegalActions(state);
+  if (state.ruleset === "nigerian") {
+    return getNigerianLegalActions(state);
   }
-  return getNigerianLegalActions(state);
+  return getClassicLegalActions(state);
 }

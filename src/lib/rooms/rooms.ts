@@ -29,7 +29,12 @@ export interface RoomMember {
   readonly joined_at: string;
 }
 
-export const RULESETS: readonly Ruleset[] = ["classic", "nigerian"];
+export const RULESETS: readonly Ruleset[] = [
+  "classic",
+  "nigerian",
+  "peaceful",
+  "blitz",
+];
 export const TURN_TIMER_OPTIONS: readonly TurnTimer[] = [null, 30, 60, 90];
 const inviteCodePattern = /^[A-Z0-9]{6}$/;
 
@@ -67,9 +72,9 @@ function parseTimer(value: FormDataEntryValue | null): TurnTimer | undefined {
 export function validateRoomSettings(
   data: FormData,
 ): ValidationResult<RoomSettings> {
-  const ruleset = String(data.get("ruleset") ?? "");
-  if (ruleset !== "classic" && ruleset !== "nigerian") {
-    return { ok: false, message: "Choose Classic or Nigerian rules." };
+  const ruleset = String(data.get("ruleset") ?? "") as Ruleset;
+  if (!RULESETS.includes(ruleset)) {
+    return { ok: false, message: "Choose a valid game mode." };
   }
 
   const maxPlayers = Number(data.get("maxPlayers"));

@@ -79,10 +79,10 @@ function assertTokens(state: MatchState): void {
 }
 
 function assertPendingRoll(state: MatchState, roll: PendingRoll): void {
-  const expectedDice = state.ruleset === "classic" ? 1 : 2;
+  const expectedDice = state.ruleset === "nigerian" ? 2 : 1;
   if (roll.dice.length !== expectedDice) {
     fail(
-      `${state.ruleset === "classic" ? "Classic" : "Nigerian"} pending rolls must contain exactly ${expectedDice === 1 ? "one die" : "two dice"}`,
+      `${state.ruleset === "nigerian" ? "Nigerian" : "Single-die"} pending rolls must contain exactly ${expectedDice === 1 ? "one die" : "two dice"}`,
     );
   }
   if (roll.dice.some((die) => die.id === "")) {
@@ -159,8 +159,15 @@ function assertStatusAndPhase(state: MatchState): void {
     const wonTokens = state.tokens.filter(
       (token) => token.playerId === winner.id && token.status === "won",
     ).length;
-    if (wonTokens !== TOKENS_PER_PLAYER) {
-      fail("A gameplay winner must have four won tokens");
+    // Blitz ends on the first token home, so one is enough; the others
+    // require all four.
+    const required = state.ruleset === "blitz" ? 1 : TOKENS_PER_PLAYER;
+    if (state.ruleset === "blitz" ? wonTokens < required : wonTokens !== required) {
+      fail(
+        state.ruleset === "blitz"
+          ? "A Blitz winner must have at least one won token"
+          : "A gameplay winner must have four won tokens",
+      );
     }
   }
 }
