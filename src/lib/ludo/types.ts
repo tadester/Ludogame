@@ -43,7 +43,17 @@ export interface PendingRoll {
 }
 
 /** Collectible powers in Extreme mode. Kept deliberately small and fair. */
-export type PowerKind = "shield" | "dash";
+export type PowerKind = "shield" | "dash" | "warp" | "snipe" | "swap";
+
+/** Every power that exists, in catalog order. The strategy book equips up to
+ *  five of these and each power tile grants a random one from the equipped set. */
+export const ALL_POWERS: readonly PowerKind[] = [
+  "shield",
+  "dash",
+  "warp",
+  "snipe",
+  "swap",
+];
 
 export interface PowerTile {
   readonly ringIndex: number;
@@ -58,6 +68,10 @@ export interface ExtremePowerState {
   readonly shieldedTokenIds: readonly string[];
   /** Tokens whose next move advances double the roll (dash power). */
   readonly dashTokenIds: readonly string[];
+  /** Strategy-book loadouts: the powers each player has equipped. When a player
+   *  has a non-empty loadout, a power tile grants a random power drawn from it
+   *  (deterministically, for replay safety) instead of the tile's own power. */
+  readonly loadouts?: Readonly<Record<string, readonly PowerKind[]>>;
 }
 
 export interface MatchState {
@@ -157,6 +171,8 @@ export type MatchAction =
       readonly playerId: string;
       readonly power: PowerKind;
       readonly tokenId: string;
+      /** A second token the power acts on (snipe/swap target an opponent). */
+      readonly targetTokenId?: string;
     };
 
 export type LegalAction = MatchAction;
@@ -250,6 +266,19 @@ export type DomainEvent =
       readonly playerId: string;
       readonly tokenId: string;
       readonly ringIndex: number;
+    }
+  | {
+      readonly type: "token-warped";
+      readonly playerId: string;
+      readonly tokenId: string;
+      readonly fromProgress: number;
+      readonly toProgress: number;
+    }
+  | {
+      readonly type: "tokens-swapped";
+      readonly playerId: string;
+      readonly tokenId: string;
+      readonly targetTokenId: string;
     }
   | { readonly type: "power-tiles-refilled" };
 

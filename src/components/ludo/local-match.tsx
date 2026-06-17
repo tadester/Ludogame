@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { applyAction, getLegalActions } from "@/lib/ludo";
-import type { DomainEvent, MatchState, Ruleset } from "@/lib/ludo";
+import type {
+  DomainEvent,
+  MatchState,
+  PowerKind,
+  Ruleset,
+} from "@/lib/ludo";
 import { moveWaypoints } from "@/lib/ludo-ui/geometry";
 import type { Cell, PlayerColor } from "@/lib/ludo-ui/geometry";
 import {
@@ -39,6 +44,33 @@ const RULESETS: { id: Ruleset; label: string }[] = [
 const STEP_MS = 165;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const POWER_LABEL: Record<PowerKind, string> = {
+  shield: "Shield",
+  dash: "Dash",
+  warp: "Warp",
+  snipe: "Snipe",
+  swap: "Swap",
+};
+
+const POWER_FEEDBACK: Record<PowerKind, string> = {
+  shield: "Shield raised. ",
+  dash: "Dash armed. ",
+  warp: "Warped to safety. ",
+  snipe: "Snipe fired. ",
+  swap: "Positions swapped. ",
+};
+
+const POWER_ORDER: readonly PowerKind[] = [
+  "shield",
+  "dash",
+  "warp",
+  "snipe",
+  "swap",
+];
+
+const tokenLabel = (token: { color: PlayerColor; id: string }) =>
+  `${token.color} #${token.id.split("-").at(-1)}`;
+
 const COLOR_CLASS: Record<PlayerColor, string> = {
   red: styles.colorRed,
   green: styles.colorGreen,
@@ -65,6 +97,12 @@ export function LocalMatch() {
   const [winner, setWinner] = useState<string | null>(null);
   const [handoffTo, setHandoffTo] = useState<Seat | null>(null);
   const [savedMatch, setSavedMatch] = useState<MatchState | null>(null);
+  // A two-step power (swap) tracks which of your tokens is the source while you
+  // pick the opponent token to act on.
+  const [powerTarget, setPowerTarget] = useState<{
+    power: PowerKind;
+    sourceId: string;
+  } | null>(null);
 
   const movesByToken = useMemo(() => {
     if (!match || match.phase !== "awaiting-move" || busy) {
@@ -239,7 +277,7 @@ export function LocalMatch() {
   );
 
   const handleUsePower = useCallback(
-    (power: "shield" | "dash", tokenId: string) => {
+    (power: PowerKind, tokenId: string, targetTokenId?: string) => {
       if (!match || busy || match.phase !== "awaiting-roll") return;
       const result = applyAction(match, {
         type: "use-power",
@@ -247,13 +285,11 @@ export function LocalMatch() {
         playerId: match.players[match.activePlayerIndex].id,
         power,
         tokenId,
+        ...(targetTokenId ? { targetTokenId } : {}),
       });
+      setPowerTarget(null);
       setMatch(result.state);
-      resolve(
-        result.state,
-        result.events,
-        power === "shield" ? "Shield raised. " : "Dash armed. ",
-      );
+      resolve(result.state, result.events, POWER_FEEDBACK[power]);
     },
     [match, busy, resolve],
   );
@@ -417,60 +453,145 @@ export function LocalMatch() {
 
           {match.ruleset === "extreme" && activePlayer
             ? (() => {
-                const held = match.powerUps?.inventory[activePlayer.id] ?? [];
-                const shields = held.filter((p) => p === "shield").length;
-                const dashes = held.filter((p) => p === "dash").length;
+                const power = match.powerUps;
+                const held = power?.inventory[activePlayer.id] ?? [];
                 const canUse = !busy && match.phase === "awaiting-roll";
                 const myActive = match.tokens.filter(
                   (t) =>
                     t.playerId === activePlayer.id && t.status === "active",
                 );
+                const enemyActive = match.tokens.filter(
+                  (t) =>
+                    t.playerId !== activePlayer.id && t.status === "active",
+                );
                 const myWon = match.tokens.filter(
                   (t) => t.playerId === activePlayer.id && t.status === "won",
                 ).length;
-                const lastStand = myActive.length === 1 && myWon === 0;
+                const opponentBigLead = match.players.some(
+                  (p) =>
+                    p.id !== activePlayer.id &&
+                    match.tokens.filter(
+                      (t) => t.playerId === p.id && t.status === "won",
+                    ).length >= 2,
+                );
+                const lastStand =
+                  myActive.length === 1 && myWon === 0 && opponentBigLead;
+                const counts = POWER_ORDER.map((kind) => ({
+                  kind,
+                  count: held.filter((p) => p === kind).length,
+                })).filter((entry) => entry.count > 0);
                 return (
                   <div className={styles.dieOrders}>
                     <p className={styles.message}>
-                      Shields: {shields} · Dashes: {dashes}
+                      {counts.length === 0
+                        ? "No powers yet — land on ✦ tiles."
+                        : counts
+                            .map((c) => `${POWER_LABEL[c.kind]}: ${c.count}`)
+                            .join(" · ")}
                     </p>
                     {lastStand ? (
                       <p className={styles.message}>
                         ⚔️ Last stand — your lone piece moves double!
                       </p>
                     ) : null}
-                    {canUse && shields > 0
-                      ? myActive
-                          .filter(
-                            (t) =>
-                              !match.powerUps?.shieldedTokenIds.includes(t.id),
-                          )
-                          .map((t) => (
-                            <button
-                              key={`shield-${t.id}`}
-                              type="button"
-                              className={styles.segmentButton}
-                              onClick={() => handleUsePower("shield", t.id)}
-                            >
-                              Shield {t.color} #{t.id.split("-").at(-1)}
-                            </button>
-                          ))
+                    {canUse && powerTarget?.power === "swap"
+                      ? (() => {
+                          const source = match.tokens.find(
+                            (t) => t.id === powerTarget.sourceId,
+                          );
+                          return (
+                            <>
+                              <p className={styles.message}>
+                                Swap{" "}
+                                {source ? tokenLabel(source) : "your token"} with…
+                              </p>
+                              {enemyActive.map((t) => (
+                                <button
+                                  key={`swap-target-${t.id}`}
+                                  type="button"
+                                  className={styles.segmentButton}
+                                  onClick={() =>
+                                    handleUsePower(
+                                      "swap",
+                                      powerTarget.sourceId,
+                                      t.id,
+                                    )
+                                  }
+                                >
+                                  {tokenLabel(t)}
+                                </button>
+                              ))}
+                              <button
+                                type="button"
+                                className={styles.segmentButton}
+                                onClick={() => setPowerTarget(null)}
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          );
+                        })()
                       : null}
-                    {canUse && dashes > 0
-                      ? myActive
-                          .filter(
-                            (t) => !match.powerUps?.dashTokenIds.includes(t.id),
-                          )
-                          .map((t) => (
+                    {canUse && !powerTarget
+                      ? counts.flatMap(({ kind }) => {
+                          if (kind === "shield" || kind === "dash") {
+                            const armed =
+                              kind === "shield"
+                                ? power?.shieldedTokenIds
+                                : power?.dashTokenIds;
+                            return myActive
+                              .filter((t) => !armed?.includes(t.id))
+                              .map((t) => (
+                                <button
+                                  key={`${kind}-${t.id}`}
+                                  type="button"
+                                  className={styles.segmentButton}
+                                  onClick={() => handleUsePower(kind, t.id)}
+                                >
+                                  {POWER_LABEL[kind]} {tokenLabel(t)}
+                                </button>
+                              ));
+                          }
+                          if (kind === "warp") {
+                            return myActive.map((t) => (
+                              <button
+                                key={`warp-${t.id}`}
+                                type="button"
+                                className={styles.segmentButton}
+                                onClick={() => handleUsePower("warp", t.id)}
+                              >
+                                Warp {tokenLabel(t)}
+                              </button>
+                            ));
+                          }
+                          if (kind === "snipe") {
+                            return enemyActive.map((t) => (
+                              <button
+                                key={`snipe-${t.id}`}
+                                type="button"
+                                className={styles.segmentButton}
+                                onClick={() =>
+                                  handleUsePower("snipe", t.id, t.id)
+                                }
+                              >
+                                Snipe {tokenLabel(t)}
+                              </button>
+                            ));
+                          }
+                          // swap: first pick which of your tokens to move.
+                          return myActive.map((t) => (
                             <button
-                              key={`dash-${t.id}`}
+                              key={`swap-${t.id}`}
                               type="button"
                               className={styles.segmentButton}
-                              onClick={() => handleUsePower("dash", t.id)}
+                              onClick={() =>
+                                setPowerTarget({ power: "swap", sourceId: t.id })
+                              }
                             >
-                              Dash {t.color} #{t.id.split("-").at(-1)}
+                              Swap {tokenLabel(t)}…
                             </button>
-                          ))
+                          ));
+                        })
                       : null}
                   </div>
                 );

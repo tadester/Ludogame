@@ -191,6 +191,155 @@ describe("last stand boost", () => {
   });
 });
 
+describe("strategy-book loadouts", () => {
+  it("grants a power drawn from the player's loadout, not the tile's", () => {
+    const base = extremeMatch();
+    // The ring-5 tile is a shield, but p1's book only equips dash.
+    const state: MatchState = {
+      ...base,
+      powerUps: { ...base.powerUps!, loadouts: { p1: ["dash"] } },
+    };
+    const landing = resolveExtremeLanding(state, "p1", 5);
+    expect(landing.powerUps.inventory["p1"]).toEqual(["dash"]);
+  });
+
+  it("falls back to the tile's own power when no loadout is equipped", () => {
+    const landing = resolveExtremeLanding(extremeMatch(), "p1", 5);
+    expect(landing.powerUps.inventory["p1"]).toEqual(["shield"]);
+  });
+});
+
+describe("warp power", () => {
+  function readyToWarp(): MatchState {
+    const base = extremeMatch();
+    return {
+      ...base,
+      tokens: base.tokens.map((t) =>
+        t.id === "p1-token-1"
+          ? { ...t, status: "active" as const, progress: 2 }
+          : t,
+      ),
+      powerUps: {
+        ...base.powerUps!,
+        inventory: { ...base.powerUps!.inventory, p1: ["warp"] },
+      },
+    };
+  }
+
+  it("jumps a token forward to the next safe square", () => {
+    const state = readyToWarp();
+    const { state: next, events } = applyAction(state, {
+      type: "use-power",
+      expectedVersion: state.version,
+      playerId: "p1",
+      power: "warp",
+      tokenId: "p1-token-1",
+    });
+    // Red progress maps to ring index directly; 8 is the next safe square.
+    expect(next.tokens.find((t) => t.id === "p1-token-1")?.progress).toBe(8);
+    expect(events.some((e) => e.type === "token-warped")).toBe(true);
+    expect(powersOf(next, "p1")).toEqual([]);
+  });
+});
+
+describe("snipe power", () => {
+  // Green progress 44 sits on ring index 5, a non-safe square.
+  function readyToSnipe(targetProgress: number, shielded = false): MatchState {
+    const base = extremeMatch();
+    return {
+      ...base,
+      tokens: base.tokens.map((t) =>
+        t.id === "p2-token-1"
+          ? { ...t, status: "active" as const, progress: targetProgress }
+          : t,
+      ),
+      powerUps: {
+        ...base.powerUps!,
+        inventory: { ...base.powerUps!.inventory, p1: ["snipe"] },
+        shieldedTokenIds: shielded ? ["p2-token-1"] : [],
+      },
+    };
+  }
+
+  it("sends an opponent's token on a non-safe square back to the yard", () => {
+    const state = readyToSnipe(GREEN_PROGRESS_ON_RING_5);
+    const { state: next, events } = applyAction(state, {
+      type: "use-power",
+      expectedVersion: state.version,
+      playerId: "p1",
+      power: "snipe",
+      tokenId: "p1-token-1",
+      targetTokenId: "p2-token-1",
+    });
+    const victim = next.tokens.find((t) => t.id === "p2-token-1");
+    expect(victim?.status).toBe("yard");
+    expect(events.some((e) => e.type === "token-captured")).toBe(true);
+  });
+
+  it("is absorbed by a shield rather than sending the token home", () => {
+    const state = readyToSnipe(GREEN_PROGRESS_ON_RING_5, true);
+    const { state: next, events } = applyAction(state, {
+      type: "use-power",
+      expectedVersion: state.version,
+      playerId: "p1",
+      power: "snipe",
+      tokenId: "p1-token-1",
+      targetTokenId: "p2-token-1",
+    });
+    expect(next.tokens.find((t) => t.id === "p2-token-1")?.status).toBe(
+      "active",
+    );
+    expect(isShielded(next, "p2-token-1")).toBe(false);
+    expect(events.some((e) => e.type === "capture-blocked")).toBe(true);
+  });
+
+  it("rejects sniping a token on a safe square", () => {
+    // Green progress 0 sits on its opening, a safe square.
+    const state = readyToSnipe(0);
+    expect(() =>
+      applyAction(state, {
+        type: "use-power",
+        expectedVersion: state.version,
+        playerId: "p1",
+        power: "snipe",
+        tokenId: "p1-token-1",
+        targetTokenId: "p2-token-1",
+      }),
+    ).toThrow();
+  });
+});
+
+describe("swap power", () => {
+  it("exchanges the positions of your token and an opponent's", () => {
+    const base = extremeMatch();
+    const state: MatchState = {
+      ...base,
+      tokens: base.tokens.map((t) => {
+        if (t.id === "p1-token-1")
+          return { ...t, status: "active" as const, progress: 5 };
+        if (t.id === "p2-token-1")
+          return { ...t, status: "active" as const, progress: 40 };
+        return t;
+      }),
+      powerUps: {
+        ...base.powerUps!,
+        inventory: { ...base.powerUps!.inventory, p1: ["swap"] },
+      },
+    };
+    const { state: next, events } = applyAction(state, {
+      type: "use-power",
+      expectedVersion: state.version,
+      playerId: "p1",
+      power: "swap",
+      tokenId: "p1-token-1",
+      targetTokenId: "p2-token-1",
+    });
+    expect(next.tokens.find((t) => t.id === "p1-token-1")?.progress).toBe(40);
+    expect(next.tokens.find((t) => t.id === "p2-token-1")?.progress).toBe(5);
+    expect(events.some((e) => e.type === "tokens-swapped")).toBe(true);
+  });
+});
+
 describe("power tile respawn", () => {
   it("refills the tiles at the start of a turn once the board is empty", () => {
     const base = extremeMatch();

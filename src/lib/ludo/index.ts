@@ -19,6 +19,7 @@ export type {
   MatchAction,
   MatchState,
   PlayableTurnAction,
+  PowerKind,
   ReplayEntry,
   Ruleset,
   TurnPhase,

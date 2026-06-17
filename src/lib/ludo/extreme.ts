@@ -18,6 +18,29 @@ import type {
 
 const CLASSIC_SAFE = new Set<number>(CLASSIC_SAFE_RING_INDEXES);
 
+/** A player's equipped strategy-book loadout (empty when none is configured). */
+function loadoutOf(state: MatchState, playerId: string): readonly PowerKind[] {
+  return state.powerUps?.loadouts?.[playerId] ?? [];
+}
+
+/**
+ * Which power a tile grants `moverId`. With a strategy-book loadout the tile
+ * yields a power drawn from it; the draw is a deterministic function of the
+ * match position (turn, roll, square) so replays stay identical. Without a
+ * loadout the tile keeps its own power.
+ */
+function pickPowerForTile(
+  state: MatchState,
+  moverId: string,
+  ringIndex: number,
+  tilePower: PowerKind,
+): PowerKind {
+  const loadout = loadoutOf(state, moverId);
+  if (loadout.length === 0) return tilePower;
+  const seed = state.turnNumber * 31 + state.rollNumber * 17 + ringIndex;
+  return loadout[((seed % loadout.length) + loadout.length) % loadout.length];
+}
+
 /** Powers a player currently holds (empty when they hold none). */
 export function powersOf(
   state: MatchState,
@@ -85,12 +108,13 @@ export function resolveExtremeLanding(
   if (tile) {
     const held = inventory[moverId] ?? [];
     if (held.length < POWER_INVENTORY_CAP) {
+      const granted = pickPowerForTile(state, moverId, ringIndex, tile.power);
       tiles = tiles.filter((entry) => entry.ringIndex !== ringIndex);
-      inventory = { ...inventory, [moverId]: [...held, tile.power] };
+      inventory = { ...inventory, [moverId]: [...held, granted] };
       events.push({
         type: "power-collected",
         playerId: moverId,
-        power: tile.power,
+        power: granted,
         ringIndex,
       });
     }
@@ -143,8 +167,67 @@ export function isLastStandActive(state: MatchState, playerId: string): boolean 
   return active === 1 && won === 0 && opponentHasBigLead(state, playerId);
 }
 
-/** Spend a held power. v1: shield one of your own active tokens from the next
- *  capture. Allowed on your turn before you roll. */
+const KNOWN_POWERS = new Set<PowerKind>([
+  "shield",
+  "dash",
+  "warp",
+  "snipe",
+  "swap",
+]);
+
+/** The progress of the next safe ring square strictly ahead of `progress` for
+ *  a token of `color`, or null when none lies ahead before the home lane. */
+function nextSafeProgressAhead(
+  color: TokenState["color"],
+  progress: number,
+): number | null {
+  for (let p = progress + 1; p <= RING_PROGRESS_MAX; p += 1) {
+    if (CLASSIC_SAFE.has(progressToRingIndex(color, p))) return p;
+  }
+  return null;
+}
+
+function requireOwnActiveToken(
+  state: MatchState,
+  playerId: string,
+  tokenId: string,
+): TokenState {
+  const token = state.tokens.find((entry) => entry.id === tokenId);
+  if (!token || token.playerId !== playerId) {
+    throw new LudoRuleError("INVALID_ACTION", "That is not your token");
+  }
+  if (token.status !== "active") {
+    throw new LudoRuleError(
+      "INVALID_ACTION",
+      "Powers can only target active tokens",
+    );
+  }
+  return token;
+}
+
+function requireOpponentActiveToken(
+  state: MatchState,
+  playerId: string,
+  tokenId: string | undefined,
+): TokenState {
+  if (!tokenId) {
+    throw new LudoRuleError("INVALID_ACTION", "Choose an opponent's token");
+  }
+  const token = state.tokens.find((entry) => entry.id === tokenId);
+  if (!token || token.playerId === playerId) {
+    throw new LudoRuleError(
+      "INVALID_ACTION",
+      "That target must be an opponent's token",
+    );
+  }
+  if (token.status !== "active" || token.progress === null) {
+    throw new LudoRuleError("INVALID_ACTION", "That target is not in play");
+  }
+  return token;
+}
+
+/** Spend a held power on your turn, before you roll. Shield and dash arm a
+ *  token for the upcoming move; warp, snipe and swap take effect immediately. */
 export function applyUsePower(
   state: MatchState,
   action: Extract<MatchAction, { type: "use-power" }>,
@@ -157,7 +240,7 @@ export function applyUsePower(
   if (state.phase !== "awaiting-roll") {
     throw new LudoRuleError("INVALID_ACTION", "Use powers before rolling");
   }
-  if (action.power !== "shield" && action.power !== "dash") {
+  if (!KNOWN_POWERS.has(action.power)) {
     throw new LudoRuleError("INVALID_ACTION", `Unknown power ${action.power}`);
   }
 
@@ -170,50 +253,202 @@ export function applyUsePower(
     );
   }
 
-  const token = state.tokens.find((entry) => entry.id === action.tokenId);
-  if (!token || token.playerId !== action.playerId) {
-    throw new LudoRuleError("INVALID_ACTION", "That is not your token");
-  }
-  if (token.status !== "active") {
-    throw new LudoRuleError(
-      "INVALID_ACTION",
-      "Powers can only target active tokens",
-    );
-  }
+  const remaining = [...held.slice(0, index), ...held.slice(index + 1)];
+  const spent: ExtremePowerState = {
+    ...state.powerUps,
+    inventory: { ...state.powerUps.inventory, [action.playerId]: remaining },
+  };
+  const used: DomainEvent = {
+    type: "power-used",
+    playerId: action.playerId,
+    power: action.power,
+    tokenId: action.tokenId,
+  };
 
+  switch (action.power) {
+    case "shield":
+    case "dash":
+      return armToken(state, action, spent, used);
+    case "warp":
+      return applyWarp(state, action, spent, used);
+    case "snipe":
+      return applySnipe(state, action, spent, used);
+    case "swap":
+      return applySwap(state, action, spent, used);
+  }
+}
+
+function armToken(
+  state: MatchState,
+  action: Extract<MatchAction, { type: "use-power" }>,
+  spent: ExtremePowerState,
+  used: DomainEvent,
+): ApplyActionResult {
+  const token = requireOwnActiveToken(state, action.playerId, action.tokenId);
   const list =
-    action.power === "shield"
-      ? state.powerUps.shieldedTokenIds
-      : state.powerUps.dashTokenIds;
+    action.power === "shield" ? spent.shieldedTokenIds : spent.dashTokenIds;
   if (list.includes(token.id)) {
     throw new LudoRuleError(
       "INVALID_ACTION",
       `That token already has ${action.power}`,
     );
   }
-
-  const remaining = [...held.slice(0, index), ...held.slice(index + 1)];
   const powerUps: ExtremePowerState = {
-    ...state.powerUps,
-    inventory: { ...state.powerUps.inventory, [action.playerId]: remaining },
+    ...spent,
     shieldedTokenIds:
       action.power === "shield"
-        ? [...state.powerUps.shieldedTokenIds, token.id]
-        : state.powerUps.shieldedTokenIds,
+        ? [...spent.shieldedTokenIds, token.id]
+        : spent.shieldedTokenIds,
     dashTokenIds:
       action.power === "dash"
-        ? [...state.powerUps.dashTokenIds, token.id]
-        : state.powerUps.dashTokenIds,
+        ? [...spent.dashTokenIds, token.id]
+        : spent.dashTokenIds,
   };
+  return { state: { ...state, powerUps }, events: [used] };
+}
 
+/** Warp: jump one of your active tokens forward to the next safe square. */
+function applyWarp(
+  state: MatchState,
+  action: Extract<MatchAction, { type: "use-power" }>,
+  spent: ExtremePowerState,
+  used: DomainEvent,
+): ApplyActionResult {
+  const token = requireOwnActiveToken(state, action.playerId, action.tokenId);
+  if (token.progress === null || token.progress > RING_PROGRESS_MAX) {
+    throw new LudoRuleError(
+      "INVALID_ACTION",
+      "That token is too close to home to warp",
+    );
+  }
+  const toProgress = nextSafeProgressAhead(token.color, token.progress);
+  if (toProgress === null) {
+    throw new LudoRuleError(
+      "INVALID_ACTION",
+      "No safe square ahead to warp to",
+    );
+  }
+  const fromProgress = token.progress;
   return {
-    state: { ...state, powerUps },
+    state: {
+      ...state,
+      powerUps: spent,
+      tokens: state.tokens.map((entry) =>
+        entry.id === token.id ? { ...entry, progress: toProgress } : entry,
+      ),
+    },
     events: [
+      used,
       {
-        type: "power-used",
+        type: "token-warped",
         playerId: action.playerId,
-        power: action.power,
         tokenId: token.id,
+        fromProgress,
+        toProgress,
+      },
+    ],
+  };
+}
+
+/** Snipe: send an opponent's active token back to its yard from range. Safe
+ *  squares block it, and a shield absorbs it (and is spent doing so). */
+function applySnipe(
+  state: MatchState,
+  action: Extract<MatchAction, { type: "use-power" }>,
+  spent: ExtremePowerState,
+  used: DomainEvent,
+): ApplyActionResult {
+  const target = requireOpponentActiveToken(
+    state,
+    action.playerId,
+    action.targetTokenId,
+  );
+  const ringIndex =
+    target.progress! <= RING_PROGRESS_MAX
+      ? progressToRingIndex(target.color, target.progress!)
+      : -1;
+  if (ringIndex !== -1 && CLASSIC_SAFE.has(ringIndex)) {
+    throw new LudoRuleError(
+      "INVALID_ACTION",
+      "That token is on a safe square",
+    );
+  }
+  if (spent.shieldedTokenIds.includes(target.id)) {
+    return {
+      state: {
+        ...state,
+        powerUps: {
+          ...spent,
+          shieldedTokenIds: spent.shieldedTokenIds.filter(
+            (id) => id !== target.id,
+          ),
+        },
+      },
+      events: [
+        used,
+        {
+          type: "capture-blocked",
+          playerId: target.playerId,
+          tokenId: target.id,
+          ringIndex: ringIndex === -1 ? 0 : ringIndex,
+        },
+      ],
+    };
+  }
+  return {
+    state: {
+      ...state,
+      powerUps: spent,
+      tokens: state.tokens.map((entry) =>
+        entry.id === target.id
+          ? { ...entry, status: "yard" as const, progress: null }
+          : entry,
+      ),
+    },
+    events: [
+      used,
+      {
+        type: "token-captured",
+        playerId: action.playerId,
+        tokenId: target.id,
+        capturedTokenId: target.id,
+        ringIndex: ringIndex === -1 ? 0 : ringIndex,
+      },
+    ],
+  };
+}
+
+/** Swap: exchange the board position of one of your active tokens with an
+ *  opponent's active token. */
+function applySwap(
+  state: MatchState,
+  action: Extract<MatchAction, { type: "use-power" }>,
+  spent: ExtremePowerState,
+  used: DomainEvent,
+): ApplyActionResult {
+  const mine = requireOwnActiveToken(state, action.playerId, action.tokenId);
+  const target = requireOpponentActiveToken(
+    state,
+    action.playerId,
+    action.targetTokenId,
+  );
+  return {
+    state: {
+      ...state,
+      powerUps: spent,
+      tokens: state.tokens.map((entry) => {
+        if (entry.id === mine.id) return { ...entry, progress: target.progress };
+        if (entry.id === target.id) return { ...entry, progress: mine.progress };
+        return entry;
+      }),
+    },
+    events: [
+      used,
+      {
+        type: "tokens-swapped",
+        playerId: action.playerId,
+        tokenId: mine.id,
+        targetTokenId: target.id,
       },
     ],
   };
