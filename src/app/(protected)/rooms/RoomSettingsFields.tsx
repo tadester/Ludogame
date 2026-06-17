@@ -9,6 +9,7 @@ interface RoomSettingsFieldsProps {
   readonly maxPlayers?: number;
   readonly boardSkin?: string;
   readonly turnTimer?: TurnTimer;
+  readonly showRanked?: boolean;
 }
 
 const RULESET_LABELS: Record<Ruleset, string> = {
@@ -29,6 +30,7 @@ export function RoomSettingsFields({
   maxPlayers = 4,
   boardSkin = "classic",
   turnTimer = null,
+  showRanked = false,
 }: RoomSettingsFieldsProps) {
   return (
     <div className={styles.fields}>
@@ -68,6 +70,24 @@ export function RoomSettingsFields({
           <option value="classic">Classic</option>
         </select>
       </label>
+      {showRanked ? (
+        <>
+          <label className={styles.rankedToggle}>
+            <input name="isRanked" type="checkbox" />
+            <span>Ranked (winner takes the pot)</span>
+          </label>
+          <label>
+            <span>Entry fee (coins)</span>
+            <input
+              defaultValue={100}
+              min={1}
+              name="entryFee"
+              step={10}
+              type="number"
+            />
+          </label>
+        </>
+      ) : null}
     </div>
   );
 }

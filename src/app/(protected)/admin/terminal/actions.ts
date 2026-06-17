@@ -91,6 +91,21 @@ export async function runAdminCommand(line: string): Promise<CommandResult> {
       };
     }
 
+    case "setcoins": {
+      const { user, error } = await resolveUser(cmd.args[0]);
+      if (!user) return { ok: false, lines: error ?? [] };
+      const amount = Math.trunc(Number(cmd.args[1]));
+      if (!Number.isFinite(amount) || amount < 0) {
+        return { ok: false, lines: ["Usage: /setcoins <user> <amount>"] };
+      }
+      const { error: rpcError } = await supabase.rpc("admin_set_coins", {
+        p_user_id: user.id,
+        p_amount: amount,
+      });
+      if (rpcError) return { ok: false, lines: ["Failed to set coins."] };
+      return { ok: true, lines: [`Set ${label(user)} to ◎${amount}.`] };
+    }
+
     case "giveall": {
       const amount = Math.trunc(Number(cmd.args[0]));
       if (!Number.isFinite(amount) || amount === 0) {
@@ -162,6 +177,23 @@ export async function runAdminCommand(line: string): Promise<CommandResult> {
       const { user, error } = await resolveUser(cmd.args[0]);
       if (!user) return { ok: false, lines: error ?? [] };
       return { ok: true, lines: [describe(user)] };
+    }
+
+    case "find": {
+      const query = normalizeUserArg(cmd.args[0]);
+      if (!query) return { ok: false, lines: ["Usage: /find <query>"] };
+      const { data, error } = await supabase.rpc("admin_find_user", {
+        p_query: query,
+      });
+      if (error) return { ok: false, lines: ["Failed."] };
+      const found = (data ?? []) as AdminUser[];
+      if (found.length === 0) {
+        return { ok: true, lines: [`No matches for "${query}".`] };
+      }
+      return {
+        ok: true,
+        lines: [`${found.length} match(es):`, ...found.map((u) => "  " + describe(u))],
+      };
     }
 
     case "users": {

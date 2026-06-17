@@ -2,8 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import {
+  claimSeat,
   inviteFriendToRoom,
   leaveRoom,
+  releaseSeat,
   updateRoomSettings,
 } from "@/app/(protected)/rooms/actions";
 import { RoomSettingsFields } from "@/app/(protected)/rooms/RoomSettingsFields";
@@ -87,6 +89,12 @@ export default async function RoomLobbyPage({
         </p>
       ) : null}
 
+      {room.is_ranked ? (
+        <p className={styles.rankedBanner}>
+          Ranked · entry ◎{room.entry_fee} · pot ◎{room.pot} · winner takes all
+        </p>
+      ) : null}
+
       <div className={styles.group}>
         <h2>
           Seats ({members.length}/{room.max_players})
@@ -95,20 +103,39 @@ export default async function RoomLobbyPage({
           {Array.from({ length: room.max_players }, (_, index) => {
             const seat = index + 1;
             const member = members.find((m) => m.seat === seat);
+            const mine = member?.user_id === userId;
             return (
               <li className={styles.row} key={seat}>
                 <span className={styles.name}>
                   Seat {seat}
                   <small>
                     {member
-                      ? `${member.display_name}${member.is_host ? " · host" : ""}`
+                      ? `${member.display_name}${member.is_host ? " · host" : ""}${mine ? " · you" : ""}`
                       : "Open"}
                   </small>
                 </span>
+                {mine && !matchRow ? (
+                  <form action={releaseSeat}>
+                    <input name="roomId" type="hidden" value={room.id} />
+                    <input name="seat" type="hidden" value={seat} />
+                    <button className={styles.ghost} type="submit">
+                      Release
+                    </button>
+                  </form>
+                ) : null}
               </li>
             );
           })}
         </ul>
+        {!roomFull && !matchRow ? (
+          <form action={claimSeat}>
+            <input name="roomId" type="hidden" value={room.id} />
+            <button className={styles.ghost} type="submit">
+              Take another seat
+              {room.is_ranked ? ` (◎${room.entry_fee})` : ""}
+            </button>
+          </form>
+        ) : null}
       </div>
 
       <div className={styles.group}>
