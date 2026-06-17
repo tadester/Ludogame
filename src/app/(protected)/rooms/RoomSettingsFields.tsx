@@ -1,5 +1,6 @@
 import { RULESETS, TURN_TIMER_OPTIONS } from "@/lib/rooms/rooms";
 import type { Ruleset } from "@/lib/ludo";
+import type { BoardSkinOption } from "@/lib/cosmetics/theme";
 import type { TurnTimer } from "@/lib/rooms/rooms";
 
 import styles from "./rooms.module.css";
@@ -8,6 +9,7 @@ interface RoomSettingsFieldsProps {
   readonly ruleset?: Ruleset;
   readonly maxPlayers?: number;
   readonly boardSkin?: string;
+  readonly boardSkins?: readonly BoardSkinOption[];
   readonly turnTimer?: TurnTimer;
   readonly showRanked?: boolean;
 }
@@ -32,6 +34,7 @@ export function RoomSettingsFields({
   ruleset = "classic",
   maxPlayers = 4,
   boardSkin = "classic",
+  boardSkins = [{ code: "classic", name: "Classic" }],
   turnTimer = null,
   showRanked = false,
 }: RoomSettingsFieldsProps) {
@@ -70,8 +73,15 @@ export function RoomSettingsFields({
       <label>
         <span>Board skin</span>
         <select defaultValue={boardSkin} name="boardSkin">
-          <option value="classic">Classic</option>
+          {boardSkins.map((skin) => (
+            <option key={skin.code} value={skin.code}>
+              {skin.name}
+            </option>
+          ))}
         </select>
+        <small className={styles.hint}>
+          Owned board skins only — unlock more in the Store.
+        </small>
       </label>
       {showRanked ? (
         <>

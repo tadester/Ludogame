@@ -12,6 +12,7 @@ import { RoomSettingsFields } from "@/app/(protected)/rooms/RoomSettingsFields";
 import { StartMatchButton } from "@/app/(protected)/rooms/StartMatchButton";
 import { groupFriends } from "@/lib/friends/friends";
 import type { FriendRow } from "@/lib/friends/friends";
+import { loadOwnedBoardSkins } from "@/lib/cosmetics/theme";
 import { describeTimer, isHost } from "@/lib/rooms/rooms";
 import type { Room, RoomMember, TurnTimer } from "@/lib/rooms/rooms";
 import { createClient } from "@/lib/supabase/server";
@@ -70,6 +71,7 @@ export default async function RoomLobbyPage({
 
   const host = isHost(room, userId);
   const canStart = host && !matchRow && members.length >= 2;
+  const boardSkins = host ? await loadOwnedBoardSkins() : [];
   const { message } = await searchParams;
 
   return (
@@ -186,6 +188,7 @@ export default async function RoomLobbyPage({
           <input name="roomId" type="hidden" value={room.id} />
           <RoomSettingsFields
             boardSkin={room.board_skin}
+            boardSkins={boardSkins}
             maxPlayers={room.max_players}
             ruleset={room.ruleset}
             turnTimer={room.turn_timer_seconds as TurnTimer}
@@ -200,7 +203,7 @@ export default async function RoomLobbyPage({
           <p className={styles.empty}>
             {RULESET_LABELS[room.ruleset] ?? room.ruleset} ·{" "}
             {describeTimer(room.turn_timer_seconds)} · up to {room.max_players}{" "}
-            players
+            players · {room.board_skin} board
           </p>
         </div>
       )}

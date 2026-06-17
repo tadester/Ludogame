@@ -187,3 +187,10 @@
 .rankedToggle input {
   width: auto;
 }
+
+.hint {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}

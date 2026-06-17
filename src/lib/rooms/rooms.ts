@@ -37,6 +37,19 @@ export const RULESETS: readonly Ruleset[] = [
   "extreme",
 ];
 export const TURN_TIMER_OPTIONS: readonly TurnTimer[] = [null, 30, 60, 90];
+/** Board skins the renderer knows how to draw. Selection is further limited to
+ *  what a player owns in the UI; this guards against arbitrary values. */
+export const KNOWN_BOARD_SKINS: readonly string[] = [
+  "classic",
+  "emerald",
+  "sakura_grove",
+  "neon_grid",
+  "sumi_ink",
+  "leaf_village",
+  "pirate_seas",
+  "advanced_class",
+  "manga_panel",
+];
 const inviteCodePattern = /^[A-Z0-9]{6}$/;
 
 export interface RoomSettings {
@@ -88,7 +101,10 @@ export function validateRoomSettings(
     return { ok: false, message: "Turn timer must be off, 30, 60, or 90 seconds." };
   }
 
-  const boardSkin = String(data.get("boardSkin") ?? "").trim() || "classic";
+  const requestedSkin = String(data.get("boardSkin") ?? "").trim() || "classic";
+  const boardSkin = KNOWN_BOARD_SKINS.includes(requestedSkin)
+    ? requestedSkin
+    : "classic";
 
   const isRanked = data.get("isRanked") === "on";
   let entryFee = 0;

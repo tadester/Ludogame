@@ -7,6 +7,7 @@ import {
   respondToRoomInvite,
 } from "@/app/(protected)/rooms/actions";
 import { RoomSettingsFields } from "@/app/(protected)/rooms/RoomSettingsFields";
+import { loadOwnedBoardSkins } from "@/lib/cosmetics/theme";
 import { describeTimer } from "@/lib/rooms/rooms";
 import type { Room } from "@/lib/rooms/rooms";
 import { createClient } from "@/lib/supabase/server";
@@ -53,6 +54,8 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
   const { data: inviteData } = await supabase.rpc("list_room_invites");
   const invites = (inviteData ?? []) as RoomInvite[];
 
+  const boardSkins = await loadOwnedBoardSkins();
+
   const { message } = await searchParams;
 
   return (
@@ -72,7 +75,7 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
       <div className={styles.columns}>
         <form action={createRoom} className={styles.panel}>
           <h2>Create a room</h2>
-          <RoomSettingsFields showRanked />
+          <RoomSettingsFields boardSkins={boardSkins} showRanked />
           <button className="primary-button" type="submit">
             Create room
           </button>
