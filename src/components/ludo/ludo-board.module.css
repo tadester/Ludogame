@@ -436,3 +436,13 @@
   0%, 100% { transform: translate(-50%, -60%) scale(1); }
   50% { transform: translate(-50%, -64%) scale(1.18); }
 }
+
+/* Larger invisible tap target for movable tokens on touch devices. */
+@media (pointer: coarse) {
+  .clickable::before {
+    content: "";
+    position: absolute;
+    inset: -70%;
+    border-radius: 50%;
+  }
+}
