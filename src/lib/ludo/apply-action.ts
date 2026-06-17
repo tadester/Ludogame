@@ -242,10 +242,11 @@ function applyRulesetAction(
   state: MatchState,
   action: MatchAction,
 ): ApplyActionResult {
-  if (state.ruleset === "classic") {
-    return applyClassicAction(state, action);
+  if (state.ruleset === "nigerian") {
+    return applyNigerianAction(state, action);
   }
-  return applyNigerianAction(state, action);
+  // Classic-family modes (classic, peaceful, blitz) share single-die mechanics.
+  return applyClassicAction(state, action);
 }
 
 function dispatchAction(

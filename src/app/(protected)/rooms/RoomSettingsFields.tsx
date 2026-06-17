@@ -15,6 +15,8 @@ interface RoomSettingsFieldsProps {
 const RULESET_LABELS: Record<Ruleset, string> = {
   classic: "Classic",
   nigerian: "Nigerian",
+  peaceful: "Peaceful",
+  blitz: "Blitz",
 };
 
 function timerValue(timer: TurnTimer): string {

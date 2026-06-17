@@ -1,5 +1,5 @@
 export type PlayerColor = "red" | "green" | "yellow" | "blue";
-export type Ruleset = "classic" | "nigerian";
+export type Ruleset = "classic" | "nigerian" | "peaceful" | "blitz";
 export type MatchStatus = "lobby" | "active" | "completed";
 export type TurnPhase =
   | "awaiting-roll"
