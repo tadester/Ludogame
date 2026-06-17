@@ -86,6 +86,29 @@ button {
   gap: 0.35rem;
 }
 
+.account-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.coin-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent), transparent 86%);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.coin-pill span {
+  color: var(--accent);
+}
+
 .account-nav a,
 .account-nav button {
   display: inline-flex;

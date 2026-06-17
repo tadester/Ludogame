@@ -1,0 +1,137 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: min(100%, 48rem);
+  margin: 0 auto;
+  padding: 1.5rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--panel), transparent 8%);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.wallet {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent), transparent 86%);
+  font-weight: 700;
+}
+
+.coin {
+  color: var(--accent);
+}
+
+.banner {
+  margin: 0;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--accent), transparent 88%);
+  color: var(--text);
+}
+
+.note {
+  margin: 0;
+  color: var(--muted);
+}
+
+.note a {
+  color: var(--accent);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.group h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--panel), transparent 12%);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.price {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--accent);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.desc {
+  margin: 0;
+  flex: 1;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.buy {
+  align-self: flex-start;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.55rem;
+  background: var(--accent);
+  color: #07111f;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.buy:disabled {
+  border-color: var(--panel-border);
+  background: transparent;
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.owned {
+  align-self: flex-start;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}

@@ -1,0 +1,96 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: min(100%, 48rem);
+  margin: 0 auto;
+  padding: 1.5rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--panel), transparent 8%);
+}
+
+.banner {
+  margin: 0;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--accent), transparent 88%);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--panel), transparent 12%);
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1 1 12rem;
+}
+
+.who small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.balance {
+  color: var(--accent);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.coinForm {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.amount {
+  width: 5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--panel), transparent 4%);
+  color: var(--text);
+}
+
+.actions button {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.ban {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.unban {
+  border-color: var(--green);
+  color: var(--green);
+}
