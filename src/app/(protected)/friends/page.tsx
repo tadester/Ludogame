@@ -26,7 +26,14 @@ export default async function FriendsPage({ searchParams }: FriendsPageProps) {
     redirect("/login");
   }
 
-  const { data, error } = await supabase.rpc("list_friends");
+  const [{ data, error }, { data: me }] = await Promise.all([
+    supabase.rpc("list_friends"),
+    supabase
+      .from("profiles")
+      .select("username, display_name")
+      .eq("id", claimsData.claims.sub)
+      .maybeSingle<{ username: string | null; display_name: string }>(),
+  ]);
   if (error) {
     throw new Error("Unable to load your friends.");
   }
@@ -42,6 +49,20 @@ export default async function FriendsPage({ searchParams }: FriendsPageProps) {
         <p className="eyebrow">Friends</p>
         <h1>Your circle</h1>
         <p>Add players by username, then invite them into private rooms.</p>
+      </div>
+
+      <div className={styles.handle}>
+        {me?.username ? (
+          <p>
+            Your handle: <strong>@{me.username}</strong>
+            <span> — share it so friends can add you.</span>
+          </p>
+        ) : (
+          <p>
+            You don’t have a username yet, so others can’t add you.{" "}
+            <a href="/profile">Set one on your profile.</a>
+          </p>
+        )}
       </div>
 
       {message ? (

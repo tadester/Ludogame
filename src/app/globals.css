@@ -169,6 +169,16 @@ button {
   border: 1px solid var(--panel-border);
   border-radius: 1rem;
   background: color-mix(in srgb, var(--panel), transparent 8%);
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.play-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent), transparent 45%);
+  box-shadow: 0 0.9rem 2rem rgb(0 0 0 / 35%);
 }
 
 .play-card h2 {
@@ -254,11 +264,40 @@ button {
 
 .primary-button {
   padding: 0.85rem 1rem;
-  border: 1px solid var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent), white 8%);
   border-radius: 0.65rem;
-  background: var(--accent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent), white 12%),
+    var(--accent)
+  );
   color: #07111f;
   font-weight: 800;
+  cursor: pointer;
+  box-shadow:
+    0 0.5rem 1rem color-mix(in srgb, var(--accent), transparent 78%),
+    inset 0 1px 0 rgb(255 255 255 / 35%);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+
+.primary-button:hover {
+  filter: brightness(1.05);
+  box-shadow:
+    0 0.7rem 1.4rem color-mix(in srgb, var(--accent), transparent 70%),
+    inset 0 1px 0 rgb(255 255 255 / 35%);
+}
+
+.primary-button:active {
+  transform: translateY(1px);
+}
+
+.primary-button:disabled {
+  filter: grayscale(0.5) brightness(0.8);
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .auth-footer {
