@@ -74,6 +74,24 @@ describe("local-game helpers", () => {
     ]);
   });
 
+  it("seeds every seat's strategy book in Extreme mode", () => {
+    const state = setupLocalMatch(
+      [{ name: "Ada" }, { name: "Ben" }],
+      "extreme",
+      ["dash", "snipe"],
+    );
+    expect(state.powerUps?.loadouts).toEqual({
+      p1: ["dash", "snipe"],
+      p2: ["dash", "snipe"],
+    });
+    assertMatchInvariants(state);
+  });
+
+  it("leaves loadouts unset when none is chosen", () => {
+    const state = setupLocalMatch([{ name: "Ada" }, { name: "Ben" }], "extreme");
+    expect(state.powerUps?.loadouts).toBeUndefined();
+  });
+
   it("builds a roll action the engine accepts", () => {
     const state = setupLocalMatch([{ name: "Ada" }, { name: "Ben" }]);
     const result = applyAction(state, rollAction(state, 6));

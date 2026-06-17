@@ -45,4 +45,32 @@ describe("local-storage", () => {
     localStorage.setItem("ludo:prefs:v1", JSON.stringify({ count: 2 }));
     expect(loadPreferences()).toBeNull();
   });
+
+  it("round-trips the Extreme ruleset and strategy-book loadout", () => {
+    savePreferences({
+      count: 2,
+      ruleset: "extreme",
+      names: ["A", "B"],
+      loadout: ["dash", "snipe"],
+    });
+    expect(loadPreferences()).toEqual({
+      count: 2,
+      ruleset: "extreme",
+      names: ["A", "B"],
+      loadout: ["dash", "snipe"],
+    });
+  });
+
+  it("drops unknown powers from a saved loadout", () => {
+    localStorage.setItem(
+      "ludo:prefs:v1",
+      JSON.stringify({
+        count: 2,
+        ruleset: "blitz",
+        names: ["A", "B"],
+        loadout: ["dash", "bogus"],
+      }),
+    );
+    expect(loadPreferences()?.loadout).toEqual(["dash"]);
+  });
 });

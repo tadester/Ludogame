@@ -170,6 +170,38 @@
   color: #07111f;
 }
 
+.hint {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.bookRow {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.6rem;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.bookName {
+  font-weight: 800;
+}
+
+.bookDesc {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.bookRow.segmentActive .bookDesc {
+  color: #07111f;
+}
+
 .nameRow {
   display: flex;
   align-items: center;

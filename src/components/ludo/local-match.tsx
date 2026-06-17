@@ -68,6 +68,17 @@ const POWER_ORDER: readonly PowerKind[] = [
   "swap",
 ];
 
+/** Most powers a player may equip in their strategy book. */
+const STRATEGY_BOOK_CAP = 5;
+
+const POWER_DESC: Record<PowerKind, string> = {
+  shield: "Block the next capture on a token.",
+  dash: "Your token's next move advances double.",
+  warp: "Jump a token to the next safe square.",
+  snipe: "Send an exposed enemy token home from range.",
+  swap: "Swap one of your tokens with an enemy's.",
+};
+
 const tokenLabel = (token: { color: PlayerColor; id: string }) =>
   `${token.color} #${token.id.split("-").at(-1)}`;
 
@@ -103,6 +114,9 @@ export function LocalMatch() {
     power: PowerKind;
     sourceId: string;
   } | null>(null);
+  // The Extreme strategy book: which powers tiles can grant. Empty means tiles
+  // keep their own power.
+  const [loadout, setLoadout] = useState<PowerKind[]>([]);
 
   const movesByToken = useMemo(() => {
     if (!match || match.phase !== "awaiting-move" || busy) {
@@ -126,10 +140,11 @@ export function LocalMatch() {
   const activePlayer = match ? match.players[match.activePlayerIndex] : null;
 
   const start = useCallback(() => {
-    savePreferences({ count, ruleset, names });
+    savePreferences({ count, ruleset, names, loadout });
     const next = setupLocalMatch(
       Array.from({ length: count }, (_, i) => ({ name: names[i] ?? "" })),
       ruleset,
+      ruleset === "extreme" ? loadout : [],
     );
     setMatch(next);
     setWinner(null);
@@ -138,7 +153,17 @@ export function LocalMatch() {
     setCaptured(new Set());
     setHandoffTo(null);
     setMessage(`${next.players[next.activePlayerIndex].displayName} to roll.`);
-  }, [count, ruleset, names]);
+  }, [count, ruleset, names, loadout]);
+
+  const toggleLoadout = useCallback((power: PowerKind) => {
+    setLoadout((prev) =>
+      prev.includes(power)
+        ? prev.filter((p) => p !== power)
+        : prev.length >= STRATEGY_BOOK_CAP
+          ? prev
+          : [...prev, power],
+    );
+  }, []);
 
   const newGame = useCallback(() => {
     clearMatch();
@@ -304,6 +329,7 @@ export function LocalMatch() {
       setCount(prefs.count);
       setRuleset(prefs.ruleset);
       setNames([0, 1, 2, 3].map((i) => prefs.names[i] ?? ""));
+      if (prefs.loadout) setLoadout([...prefs.loadout]);
     }
     setSavedMatch(loadMatch());
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -336,6 +362,35 @@ export function LocalMatch() {
             ))}
           </div>
         </div>
+        {ruleset === "extreme" ? (
+          <div className={styles.field}>
+            <span className={styles.fieldLabel}>
+              Strategy book ({loadout.length}/{STRATEGY_BOOK_CAP})
+            </span>
+            <p className={styles.hint}>
+              Equip powers your ✦ tiles can grant. Leave empty to use each
+              tile&apos;s own power.
+            </p>
+            {POWER_ORDER.map((power) => {
+              const equipped = loadout.includes(power);
+              return (
+                <button
+                  key={power}
+                  type="button"
+                  className={`${styles.bookRow} ${equipped ? styles.segmentActive : ""}`}
+                  aria-pressed={equipped}
+                  onClick={() => toggleLoadout(power)}
+                >
+                  <span className={styles.bookName}>
+                    {equipped ? "✓ " : ""}
+                    {POWER_LABEL[power]}
+                  </span>
+                  <span className={styles.bookDesc}>{POWER_DESC[power]}</span>
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
         <div className={styles.field}>
           <span className={styles.fieldLabel}>Players</span>
           <div className={styles.segment}>

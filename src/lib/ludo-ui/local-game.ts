@@ -1,5 +1,11 @@
 import { applyAction, createMatch } from "@/lib/ludo";
-import type { LegalAction, MatchAction, MatchState, Ruleset } from "@/lib/ludo";
+import type {
+  LegalAction,
+  MatchAction,
+  MatchState,
+  PowerKind,
+  Ruleset,
+} from "@/lib/ludo";
 
 import { PLAY_ORDER } from "./geometry";
 import type { PlayerColor } from "./geometry";
@@ -14,10 +20,13 @@ export interface LocalSeat {
   readonly displayName: string;
 }
 
-/** Builds a started pass-the-phone match with 2-4 seated human players. */
+/** Builds a started pass-the-phone match with 2-4 seated human players. In
+ *  Extreme mode an optional strategy-book loadout decides which powers the
+ *  tiles can grant; it is shared by every seat so local play stays fair. */
 export function setupLocalMatch(
   players: readonly LocalPlayerSetup[],
   ruleset: Ruleset = "classic",
+  loadout: readonly PowerKind[] = [],
 ): MatchState {
   const seats = players.map<LocalSeat>((player, index) => ({
     id: `p${index + 1}`,
@@ -40,11 +49,20 @@ export function setupLocalMatch(
     }).state;
   }
 
-  return applyAction(state, {
+  state = applyAction(state, {
     type: "start-match",
     expectedVersion: state.version,
     playerId: seats[0].id,
   }).state;
+
+  if (ruleset === "extreme" && state.powerUps && loadout.length > 0) {
+    const loadouts = Object.fromEntries(
+      seats.map((seat) => [seat.id, [...loadout]]),
+    );
+    state = { ...state, powerUps: { ...state.powerUps, loadouts } };
+  }
+
+  return state;
 }
 
 export function defaultName(color: PlayerColor): string {
