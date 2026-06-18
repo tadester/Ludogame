@@ -81,6 +81,25 @@ export function OnlineMatch({
     };
   }, [matchId]);
 
+  // Realtime can miss updates (RLS/socket auth, backgrounded tabs), so also
+  // poll for the authoritative snapshot and resync when the tab regains focus,
+  // so opponents' moves always appear without a manual refresh.
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      if (!busy) void resync();
+    }, 3000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && !busy) void resync();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [busy, resync]);
+
   const send = useCallback(
     async (intent: ServerIntent) => {
       setBusy(true);
@@ -132,6 +151,32 @@ export function OnlineMatch({
     },
     [matchId, resync, snapshot.ruleset],
   );
+
+  // With exactly one legal move on your turn, play it automatically.
+  useEffect(() => {
+    if (busy) return;
+    const vm = onlineViewModel(snapshot, userId);
+    if (!vm.isMyTurn || snapshot.phase !== "awaiting-move") return;
+    const moves = legalMovesByToken(snapshot, getLegalActions(snapshot));
+    if (moves.size !== 1) return;
+    const [action] = [...moves.values()];
+    const timer = window.setTimeout(() => {
+      if (action.type === "release-token") {
+        void send({
+          kind: "release-token",
+          tokenId: action.tokenId,
+          dieId: action.dieId,
+        });
+      } else if (action.type === "move-token") {
+        void send({
+          kind: "move-token",
+          tokenId: action.tokenId,
+          dieIds: action.dieIds,
+        });
+      }
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [snapshot, userId, busy, send]);
 
   const view = onlineViewModel(snapshot, userId);
   const movable = new Set(view.movableTokenIds);
