@@ -125,6 +125,18 @@ describe("board and dice skins", () => {
         container.querySelectorAll(`[data-token-seat-fill="${color}"]`),
       ).toHaveLength(4);
     }
+    const redToken = container.querySelector<HTMLElement>(
+      '[data-token-seat-fill="red"]',
+    );
+    const greenToken = container.querySelector<HTMLElement>(
+      '[data-token-seat-fill="green"]',
+    );
+    expect(redToken?.style.getPropertyValue("--token-seat-color")).toBe(
+      "#ef233c",
+    );
+    expect(greenToken?.style.getPropertyValue("--token-seat-color")).toBe(
+      "#16a34a",
+    );
     expect(container.querySelectorAll("[data-token-color-plate]")).toHaveLength(
       match.tokens.length,
     );

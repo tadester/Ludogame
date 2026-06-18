@@ -248,9 +248,9 @@
   border: 0.18rem solid rgb(255 255 255 / 96%);
   background:
     linear-gradient(135deg,
-      color-mix(in srgb, var(--team-tint), white 28%) 0 18%,
-      var(--team-tint) 19% 72%,
-      color-mix(in srgb, var(--team-tint), black 26%) 100%
+      color-mix(in srgb, var(--token-seat-color, var(--team-tint)), white 28%) 0 18%,
+      var(--token-seat-color, var(--team-tint)) 19% 72%,
+      color-mix(in srgb, var(--token-seat-color, var(--team-tint)), black 26%) 100%
     );
   box-shadow:
     0 0 0 0.14rem rgb(8 12 20 / 82%),
@@ -272,12 +272,12 @@
 
 .skinMark {
   position: absolute;
-  z-index: 7;
+  z-index: 12;
   inset: 18%;
   display: grid;
   place-items: center;
   border-radius: 28% / 40%;
-  background: color-mix(in srgb, var(--team-tint), white 18%);
+  background: color-mix(in srgb, var(--token-seat-color, var(--team-tint)), black 8%);
   color: #fff;
   font-size: clamp(0.48rem, 1.8vw, 0.92rem);
   font-weight: 1000;
@@ -294,23 +294,23 @@
 
 .seatColorPlate {
   position: absolute;
-  z-index: 3;
+  z-index: 10;
   inset: 0;
   border-radius: inherit;
   background:
     linear-gradient(135deg,
-      color-mix(in srgb, var(--team-tint), white 18%),
-      var(--team-tint) 54%,
-      color-mix(in srgb, var(--team-tint), black 18%)
+      color-mix(in srgb, var(--token-seat-color, var(--team-tint)), white 12%),
+      var(--token-seat-color, var(--team-tint)) 54%,
+      color-mix(in srgb, var(--token-seat-color, var(--team-tint)), black 22%)
     );
-  opacity: 0.98;
+  opacity: 0.86;
   mix-blend-mode: normal;
   pointer-events: none;
 }
 
 .seatContrastRing {
   position: absolute;
-  z-index: 8;
+  z-index: 13;
   inset: -0.04rem;
   border-radius: inherit;
   border: clamp(0.09rem, 0.45vw, 0.16rem) solid rgb(255 255 255 / 96%);
@@ -916,9 +916,9 @@
 [data-token-form="flat"] .disc[data-token-seat-fill] {
   background:
     linear-gradient(135deg,
-      color-mix(in srgb, var(--team-tint), white 22%) 0 18%,
-      var(--team-tint) 19% 74%,
-      color-mix(in srgb, var(--team-tint), black 34%) 100%
+      color-mix(in srgb, var(--token-seat-color, var(--team-tint)), white 22%) 0 18%,
+      var(--token-seat-color, var(--team-tint)) 19% 74%,
+      color-mix(in srgb, var(--token-seat-color, var(--team-tint)), black 34%) 100%
     );
 }
 
@@ -936,9 +936,9 @@
 [data-token-form="flat"]:not([data-token-detail="headband"]) .teamOverlay {
   background:
     linear-gradient(135deg,
-      color-mix(in srgb, var(--team-tint), white 24%),
-      var(--team-tint) 50%,
-      color-mix(in srgb, var(--team-tint), black 24%)
+      color-mix(in srgb, var(--token-seat-color, var(--team-tint)), white 24%),
+      var(--token-seat-color, var(--team-tint)) 50%,
+      color-mix(in srgb, var(--token-seat-color, var(--team-tint)), black 24%)
     );
   opacity: 0.46;
   mix-blend-mode: normal;
@@ -947,9 +947,9 @@
 [data-token-detail="headband"] .disc[data-token-seat-fill] {
   background:
     linear-gradient(90deg,
-      color-mix(in srgb, var(--team-tint), black 18%) 0 24%,
-      color-mix(in srgb, var(--team-tint), white 20%) 24% 76%,
-      color-mix(in srgb, var(--team-tint), black 18%) 76% 100%
+      color-mix(in srgb, var(--token-seat-color, var(--team-tint)), black 18%) 0 24%,
+      color-mix(in srgb, var(--token-seat-color, var(--team-tint)), white 20%) 24% 76%,
+      color-mix(in srgb, var(--token-seat-color, var(--team-tint)), black 18%) 76% 100%
     );
 }
 

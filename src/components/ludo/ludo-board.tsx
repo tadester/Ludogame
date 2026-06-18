@@ -44,6 +44,12 @@ const TRI: Record<PlayerColor, string> = {
   yellow: styles.triYellow,
   blue: styles.triBlue,
 };
+const TOKEN_SEAT_COLOR: Record<PlayerColor, string> = {
+  red: "#ef233c",
+  green: "#16a34a",
+  yellow: "#facc15",
+  blue: "#1683e7",
+};
 
 const TOKEN_SKIN_MARK: Record<string, string> = {
   gem: "◆",
@@ -214,6 +220,13 @@ export function LudoBoard({
                     className={discClasses}
                     data-team-color={token.color}
                     data-token-seat-fill={token.color}
+                    style={
+                      {
+                        "--team-tint": TOKEN_SEAT_COLOR[token.color],
+                        "--token-seat-color": TOKEN_SEAT_COLOR[token.color],
+                        background: TOKEN_SEAT_COLOR[token.color],
+                      } as CSSProperties
+                    }
                   >
                     {TOKEN_SKIN_MARK[tokenSkin] ? (
                       <>
