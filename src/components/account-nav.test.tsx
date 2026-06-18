@@ -42,4 +42,12 @@ describe("AccountNav", () => {
       "/admin",
     );
   });
+
+  it("surfaces pending room invites in the account links", () => {
+    render(<AccountNav roomInviteCount={2} />);
+
+    expect(
+      screen.getByRole("link", { name: "Room invites 2" }),
+    ).toHaveAttribute("href", "/rooms");
+  });
 });
