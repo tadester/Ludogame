@@ -1,10 +1,10 @@
 import { progressToRingIndex } from "./board";
+import { boardSpec } from "./board-spec";
 import {
   CLASSIC_SAFE_RING_INDEXES,
   EARTHQUAKE_SETBACK,
   MAP_EVENT_INTERVAL,
   POWER_INVENTORY_CAP,
-  RING_PROGRESS_MAX,
 } from "./constants";
 import type {
   DomainEvent,
@@ -14,7 +14,8 @@ import type {
   TokenState,
 } from "./types";
 
-const SAFE = new Set<number>(CLASSIC_SAFE_RING_INDEXES);
+const CLASSIC_SAFE = new Set<number>(CLASSIC_SAFE_RING_INDEXES);
+const SPEC = boardSpec("extreme");
 
 export type MapEventKind = "earthquake" | "power-surge";
 
@@ -34,13 +35,16 @@ export function mapEventDueAt(turnNumber: number): MapEventKind | null {
 
 /** Earthquake: every exposed token (active, on a non-safe ring square) slides
  *  back, never below its start. Safe squares and the home lane shield a token. */
-function applyEarthquake(tokens: readonly TokenState[]): readonly TokenState[] {
+function applyEarthquake(
+  tokens: readonly TokenState[],
+  safe: ReadonlySet<number>,
+): readonly TokenState[] {
   return tokens.map((token) => {
     if (
       token.status !== "active" ||
       token.progress === null ||
-      token.progress > RING_PROGRESS_MAX ||
-      SAFE.has(progressToRingIndex(token.color, token.progress))
+      token.progress > SPEC.ringProgressMax ||
+      safe.has(progressToRingIndex(token.color, token.progress, SPEC))
     ) {
       return token;
     }
@@ -92,9 +96,12 @@ export function applyMapEvent(
   const kind = mapEventDueAt(state.turnNumber);
   if (kind === null) return null;
 
+  const safe = state.powerUps.safeRingIndexes
+    ? new Set(state.powerUps.safeRingIndexes)
+    : CLASSIC_SAFE;
   const next: MatchState =
     kind === "earthquake"
-      ? { ...state, tokens: applyEarthquake(state.tokens) }
+      ? { ...state, tokens: applyEarthquake(state.tokens, safe) }
       : { ...state, powerUps: applyPowerSurge(state) };
 
   return {

@@ -1,17 +1,17 @@
 "use client";
 
 import { useMemo } from "react";
+import type { CSSProperties } from "react";
 
 import type { MatchState } from "@/lib/ludo";
+import type { BoardLayout } from "@/lib/ludo-ui/board-layout";
 import {
-  HOME_LANE,
   PLAY_ORDER,
-  RING_INDEX_TO_COLOR,
-  RING_PATH,
   SAFE_RING_INDEXES,
-  YARD_ORIGIN,
-  cellForProgress,
-  cellToPercent,
+  cellForProgressOn,
+  cellToPercentOn,
+  getBoardLayout,
+  ringIndexToColor,
   tokenSlotIndex,
 } from "@/lib/ludo-ui/geometry";
 import type { Cell, PlayerColor } from "@/lib/ludo-ui/geometry";
@@ -78,10 +78,12 @@ export function LudoBoard({
   powerTileRingIndexes = NO_POWER_TILES,
   safeRingIndexes,
 }: LudoBoardProps) {
+  const layout = getBoardLayout(match.ruleset);
+  const openingColors = useMemo(() => ringIndexToColor(layout), [layout]);
+  const mid = (layout.size - 1) / 2;
   const placed = useMemo(
-    () =>
-      placeTokens(match.tokens, animatingTokenId, animatingCell),
-    [match.tokens, animatingTokenId, animatingCell],
+    () => placeTokens(layout, match.tokens, animatingTokenId, animatingCell),
+    [layout, match.tokens, animatingTokenId, animatingCell],
   );
 
   return (
@@ -91,16 +93,22 @@ export function LudoBoard({
       data-extreme={match.ruleset === "extreme" ? "true" : undefined}
     >
       <div className={styles.board} data-board-skin={boardSkin}>
-        <div className={styles.grid}>
+        <div
+          className={styles.grid}
+          style={{
+            gridTemplateColumns: `repeat(${layout.size}, 1fr)`,
+            gridTemplateRows: `repeat(${layout.size}, 1fr)`,
+          }}
+        >
           {PLAY_ORDER.map((color) => (
-            <Yard key={color} color={color} />
+            <Yard key={color} color={color} layout={layout} />
           ))}
 
-          {RING_PATH.map((cell, ringIndex) => (
+          {layout.ringPath.map((cell, ringIndex) => (
             <PathCell
               key={`ring-${ringIndex}`}
               cell={cell}
-              ringIndex={ringIndex}
+              openingColor={openingColors[ringIndex]}
               isPowerTile={powerTileRingIndexes.has(ringIndex)}
               isSafe={
                 safeRingIndexes
@@ -111,7 +119,7 @@ export function LudoBoard({
           ))}
 
           {PLAY_ORDER.flatMap((color) =>
-            HOME_LANE[color].map((cell, i) => (
+            layout.homeLane[color].map((cell, i) => (
               <div
                 key={`lane-${color}-${i}`}
                 className={`${styles.cell} ${FILL[color]}`}
@@ -122,7 +130,10 @@ export function LudoBoard({
 
           <div
             className={`${styles.cell} ${styles.center}`}
-            style={{ gridRow: "7 / 10", gridColumn: "7 / 10" }}
+            style={{
+              gridRow: `${mid} / ${mid + 3}`,
+              gridColumn: `${mid} / ${mid + 3}`,
+            }}
           >
             {PLAY_ORDER.map((color) => (
               <span
@@ -138,6 +149,11 @@ export function LudoBoard({
             className={styles.tokenInner}
             data-token-skin={tokenSkin}
             data-animation={animationSkin}
+            style={
+              {
+                "--token-size": `${(100 / layout.size) * 0.82}%`,
+              } as CSSProperties
+            }
           >
             {placed.map(({ token, left, top }) => {
               const movable = movableTokenIds.has(token.id);
@@ -176,18 +192,24 @@ export function LudoBoard({
   );
 }
 
-function Yard({ color }: { color: PlayerColor }) {
-  const [row, col] = YARD_ORIGIN[color];
+function Yard({ color, layout }: { color: PlayerColor; layout: BoardLayout }) {
+  const [row, col] = layout.yardOrigin[color];
+  const block = (layout.size - 1) / 2 - 1;
+  const slots = layout.yardSlots[color].length;
   return (
     <div
       className={`${styles.yard} ${FILL[color]}`}
       style={{
-        gridRow: `${row + 1} / ${row + 7}`,
-        gridColumn: `${col + 1} / ${col + 7}`,
+        gridRow: `${row + 1} / ${row + 1 + block}`,
+        gridColumn: `${col + 1} / ${col + 1 + block}`,
+        gridTemplateColumns: `repeat(${slots <= 4 ? 2 : 3}, 1fr)`,
       }}
     >
-      <div className={styles.yardInner}>
-        {[0, 1, 2, 3].map((slot) => (
+      <div
+        className={styles.yardInner}
+        style={{ gridTemplateColumns: `repeat(${slots <= 4 ? 2 : 3}, 1fr)` }}
+      >
+        {Array.from({ length: slots }, (_, slot) => (
           <span key={slot} className={styles.homeSlot} />
         ))}
       </div>
@@ -197,16 +219,15 @@ function Yard({ color }: { color: PlayerColor }) {
 
 function PathCell({
   cell,
-  ringIndex,
+  openingColor,
   isPowerTile,
   isSafe,
 }: {
   cell: Cell;
-  ringIndex: number;
+  openingColor: PlayerColor | undefined;
   isPowerTile: boolean;
   isSafe: boolean;
 }) {
-  const openingColor = RING_INDEX_TO_COLOR[ringIndex];
   const classes = [styles.cell, styles.pathCell];
   if (openingColor) {
     classes.push(SOFT[openingColor]);
@@ -237,6 +258,7 @@ interface PlacedToken {
 
 /** Resolves every token to a board percentage, fanning out shared cells. */
 function placeTokens(
+  layout: BoardLayout,
   tokens: readonly Token[],
   animatingTokenId: string | null,
   animatingCell: Cell | null,
@@ -245,7 +267,8 @@ function placeTokens(
     const cell =
       token.id === animatingTokenId && animatingCell
         ? animatingCell
-        : cellForProgress(
+        : cellForProgressOn(
+            layout,
             token.color,
             token.progress,
             tokenSlotIndex(token.id),
@@ -262,7 +285,7 @@ function placeTokens(
   }
 
   return resolved.map(({ token, cell }) => {
-    const base = cellToPercent(cell);
+    const base = cellToPercentOn(layout, cell);
     if (token.id === animatingTokenId) {
       return { token, left: base.left, top: base.top };
     }

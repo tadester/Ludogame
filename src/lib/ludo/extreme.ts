@@ -1,8 +1,8 @@
 import { progressToRingIndex } from "./board";
+import { boardSpec } from "./board-spec";
 import {
   CLASSIC_SAFE_RING_INDEXES,
   POWER_INVENTORY_CAP,
-  RING_PROGRESS_MAX,
   ULTIMATE_CHARGE_PER_CAPTURE,
   ULTIMATE_CHARGE_PER_POWER,
 } from "./constants";
@@ -20,6 +20,10 @@ import type {
 } from "./types";
 
 const CLASSIC_SAFE = new Set<number>(CLASSIC_SAFE_RING_INDEXES);
+
+// Extreme runs on the larger board, so all ring maths use its spec.
+const SPEC = boardSpec("extreme");
+const RING_PROGRESS_MAX = SPEC.ringProgressMax;
 
 /** The ring squares currently safe from capture. In Extreme these are random
  *  and respawn over time; otherwise they are the classic safe squares. */
@@ -92,7 +96,7 @@ export function resolveExtremeLanding(
         token.status === "active" &&
         token.progress !== null &&
         token.progress <= RING_PROGRESS_MAX &&
-        progressToRingIndex(token.color, token.progress) === ringIndex;
+        progressToRingIndex(token.color, token.progress, SPEC) === ringIndex;
       if (!opposing) return token;
       if (shieldedTokenIds.includes(token.id)) {
         shieldedTokenIds = shieldedTokenIds.filter((id) => id !== token.id);
@@ -212,7 +216,7 @@ function nextSafeProgressAhead(
   safe: ReadonlySet<number>,
 ): number | null {
   for (let p = progress + 1; p <= RING_PROGRESS_MAX; p += 1) {
-    if (safe.has(progressToRingIndex(color, p))) return p;
+    if (safe.has(progressToRingIndex(color, p, SPEC))) return p;
   }
   return null;
 }
@@ -403,7 +407,7 @@ function applySnipe(
   );
   const ringIndex =
     target.progress! <= RING_PROGRESS_MAX
-      ? progressToRingIndex(target.color, target.progress!)
+      ? progressToRingIndex(target.color, target.progress!, SPEC)
       : -1;
   if (ringIndex !== -1 && safeRingSet(state).has(ringIndex)) {
     throw new LudoRuleError(
@@ -477,7 +481,7 @@ function applySummon(
       "Summon only releases a token from the yard",
     );
   }
-  const ringIndex = progressToRingIndex(token.color, 0);
+  const ringIndex = progressToRingIndex(token.color, 0, SPEC);
   return {
     state: {
       ...state,
@@ -516,7 +520,7 @@ function applyBolt(
   );
   if (
     target.progress! <= RING_PROGRESS_MAX &&
-    safeRingSet(state).has(progressToRingIndex(target.color, target.progress!))
+    safeRingSet(state).has(progressToRingIndex(target.color, target.progress!, SPEC))
   ) {
     throw new LudoRuleError("INVALID_ACTION", "That token is on a safe square");
   }
@@ -540,6 +544,7 @@ function applyBolt(
           ringIndex: progressToRingIndex(
             target.color,
             Math.min(target.progress!, RING_PROGRESS_MAX),
+            SPEC,
           ),
         },
       ],

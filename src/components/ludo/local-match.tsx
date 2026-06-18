@@ -19,7 +19,7 @@ import type {
   Ruleset,
   UltimateKind,
 } from "@/lib/ludo";
-import { moveWaypoints } from "@/lib/ludo-ui/geometry";
+import { getBoardLayout, moveWaypointsOn } from "@/lib/ludo-ui/geometry";
 import type { Cell, PlayerColor } from "@/lib/ludo-ui/geometry";
 import {
   actionDestination,
@@ -386,7 +386,8 @@ export function LocalMatch({
 
       setBusy(true);
       const token = match.tokens.find((t) => t.id === tokenId)!;
-      for (const cell of moveWaypoints(token.color, dest.from, dest.to)) {
+      const layout = getBoardLayout(match.ruleset);
+      for (const cell of moveWaypointsOn(layout, token.color, dest.from, dest.to)) {
         setOverride({ tokenId, cell });
         await sleep(STEP_MS);
       }

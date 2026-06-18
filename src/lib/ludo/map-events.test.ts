@@ -1,13 +1,25 @@
 import { describe, expect, it } from "vitest";
 
-import { EARTHQUAKE_SETBACK, MAP_EVENT_INTERVAL } from "./constants";
+import {
+  CLASSIC_SAFE_RING_INDEXES,
+  EARTHQUAKE_SETBACK,
+  MAP_EVENT_INTERVAL,
+} from "./constants";
 import { applyMapEvent, mapEventDueAt } from "./map-events";
 import type { MatchState } from "./types";
 import { setupLocalMatch } from "@/lib/ludo-ui/local-game";
 
+// Pin the safe squares so ring 8 is safe and ring 5 is exposed for assertions.
 function extremeAtTurn(turnNumber: number): MatchState {
   const base = setupLocalMatch([{ name: "Red" }, { name: "Green" }], "extreme");
-  return { ...base, turnNumber };
+  return {
+    ...base,
+    turnNumber,
+    powerUps: {
+      ...base.powerUps!,
+      safeRingIndexes: [...CLASSIC_SAFE_RING_INDEXES],
+    },
+  };
 }
 
 describe("map event scheduling", () => {

@@ -1,4 +1,5 @@
-import { EXTREME_RESPAWN_INTERVAL, TOKENS_PER_PLAYER } from "./constants";
+import { boardSpec } from "./board-spec";
+import { EXTREME_RESPAWN_INTERVAL } from "./constants";
 import { extremeLayout, respawnEpoch } from "./extreme-spawn";
 import { applyMapEvent } from "./map-events";
 import { chargeIncomingPlayer } from "./ultimate";
@@ -156,7 +157,7 @@ export function completeMatch(
 export function hasWonAllTokens(state: MatchState, playerId: string): boolean {
   const tokens = playerTokens(state, playerId);
   return (
-    tokens.length === TOKENS_PER_PLAYER &&
+    tokens.length === boardSpec(state.ruleset).tokensPerPlayer &&
     tokens.every((token) => token.status === "won")
   );
 }

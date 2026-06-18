@@ -145,8 +145,11 @@ A fun-but-fair sandbox built on Classic single-die rules with collectible
 power-ups (cosmetics and gameplay are kept separate; these are real
 mechanics, only in this mode):
 
-- **Power tiles** sit on four ring squares; landing on one banks a power
-  (inventory capped at three). Tiles refill once the board is cleared.
+- **Bigger board** — Extreme plays on a roughly doubled 100-square track with
+  **six tokens** per player, so the journey home is longer and wilder.
+- **Power tiles** sit on ring squares (one per quadrant); landing on one banks
+  a power (inventory capped at three). Safe squares and tiles are scattered at
+  random within each quadrant and respawn at fresh spots on a fixed cadence.
 - **Strategy book** — before a match each player equips up to five powers.
   A power tile then grants a random power drawn from the equipped set
   (deterministically, so replays match); with no book equipped it grants the

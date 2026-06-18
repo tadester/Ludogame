@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import { applyAction, getLegalActions } from "@/lib/ludo";
 import type { MatchState } from "@/lib/ludo";
-import {
-  CLASSIC_SAFE_RING_INDEXES,
-  WON_PROGRESS,
-} from "@/lib/ludo/constants";
+import { CLASSIC_SAFE_RING_INDEXES } from "@/lib/ludo/constants";
+
+// Extreme's home progress on the larger 100-cell ring (ring 100 + 11 home lane).
+const EXTREME_WON_PROGRESS = 111;
 import {
   legalMovesByToken,
   rollActionFor,
@@ -19,9 +19,10 @@ import {
   resolveExtremeLanding,
 } from "./extreme";
 
-// Green opening is ring 13, so green progress 44 sits on ring index 5
-// ((13 + 44) % 52 === 5), a non-safe square that also holds a power tile.
-const GREEN_PROGRESS_ON_RING_5 = 44;
+// Extreme's green opening is ring 25 on the 100-cell ring, so green progress 80
+// sits on ring index 5 ((25 + 80) % 100 === 5) — a non-safe square that also
+// holds a pinned power tile.
+const GREEN_PROGRESS_ON_RING_5 = 80;
 
 // Extreme now randomizes safe squares and power tiles per match, so pin a known
 // layout (the classic safe squares + fixed tiles) for deterministic assertions.
@@ -171,7 +172,11 @@ describe("last stand boost", () => {
           return { ...t, status: "active" as const, progress: 2 };
         }
         if (opponentLead && leaders.includes(t.id)) {
-          return { ...t, status: "won" as const, progress: WON_PROGRESS };
+          return {
+            ...t,
+            status: "won" as const,
+            progress: EXTREME_WON_PROGRESS,
+          };
         }
         return t;
       }),
@@ -312,8 +317,8 @@ describe("snipe power", () => {
   });
 
   it("rejects sniping a token on a safe square", () => {
-    // Green progress 0 sits on its opening, a safe square.
-    const state = readyToSnipe(0);
+    // Green progress 1 maps to ring 26 ((25 + 1) % 100), a pinned safe square.
+    const state = readyToSnipe(1);
     expect(() =>
       applyAction(state, {
         type: "use-power",
@@ -426,13 +431,14 @@ describe("dash power", () => {
   });
 
   it("makes an otherwise-legal move illegal when it would overshoot home", () => {
-    // At progress 50 a 6 normally reaches 56 (legal); doubled it overshoots 57.
-    const dashed = applyAction(withDash(50, true), rollActionFor(withDash(50, true), [6])).state;
+    // Extreme home is progress 111. At 104 a 6 reaches 110 (legal); doubled it
+    // overshoots to 116.
+    const dashed = applyAction(withDash(104, true), rollActionFor(withDash(104, true), [6])).state;
     expect(
       legalMovesByToken(dashed, getLegalActions(dashed)).has("p1-token-1"),
     ).toBe(false);
 
-    const plain = applyAction(withDash(50, false), rollActionFor(withDash(50, false), [6])).state;
+    const plain = applyAction(withDash(104, false), rollActionFor(withDash(104, false), [6])).state;
     expect(
       legalMovesByToken(plain, getLegalActions(plain)).has("p1-token-1"),
     ).toBe(true);

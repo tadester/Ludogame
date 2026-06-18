@@ -1,9 +1,10 @@
 import { EXTREME_TILE_FALLBACK_POWERS } from "./constants";
 import type { PowerKind, PowerTile } from "./types";
 
-/** The four ring quadrants. Each quadrant starts at a colour opening. */
-const QUADRANT_STARTS = [0, 13, 26, 39] as const;
-const QUADRANT_SIZE = 13;
+/** The four ring quadrants of the larger Extreme ring (100 squares). Each
+ *  quadrant starts at a colour opening. */
+const QUADRANT_STARTS = [0, 25, 50, 75] as const;
+const QUADRANT_SIZE = 25;
 
 export interface ExtremeLayout {
   readonly safeRingIndexes: number[];

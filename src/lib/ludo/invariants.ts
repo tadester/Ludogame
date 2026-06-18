@@ -1,8 +1,4 @@
-import {
-  HOME_LANE_PROGRESS_MAX,
-  TOKENS_PER_PLAYER,
-  WON_PROGRESS,
-} from "./constants";
+import { boardSpec } from "./board-spec";
 import { LudoRuleError } from "./types";
 import type { MatchState, PendingRoll } from "./types";
 
@@ -38,6 +34,7 @@ function assertTokens(state: MatchState): void {
       state.tokens.length) {
     fail("Token IDs must be unique");
   }
+  const spec = boardSpec(state.ruleset);
   const playersById = new Map(
     state.players.map((player) => [player.id, player]),
   );
@@ -57,12 +54,12 @@ function assertTokens(state: MatchState): void {
       (token.progress === null ||
         !Number.isInteger(token.progress) ||
         token.progress < 0 ||
-        token.progress > HOME_LANE_PROGRESS_MAX)
+        token.progress > spec.homeLaneMax)
     ) {
-      fail(`Active token ${token.id} must have progress 0 through 56`);
+      fail(`Active token ${token.id} has progress out of range`);
     }
-    if (token.status === "won" && token.progress !== WON_PROGRESS) {
-      fail(`Won token ${token.id} must have progress 57`);
+    if (token.status === "won" && token.progress !== spec.wonProgress) {
+      fail(`Won token ${token.id} must have the won progress`);
     }
   }
   for (const player of state.players) {
@@ -72,8 +69,8 @@ function assertTokens(state: MatchState): void {
     if (player.forfeited && owned !== 0) {
       fail(`Forfeited player ${player.id} must own no tokens`);
     }
-    if (!player.forfeited && owned !== TOKENS_PER_PLAYER) {
-      fail(`Player ${player.id} must own exactly four tokens`);
+    if (!player.forfeited && owned !== spec.tokensPerPlayer) {
+      fail(`Player ${player.id} must own exactly ${spec.tokensPerPlayer} tokens`);
     }
   }
 }
@@ -160,13 +157,14 @@ function assertStatusAndPhase(state: MatchState): void {
       (token) => token.playerId === winner.id && token.status === "won",
     ).length;
     // Blitz ends on the first token home, so one is enough; the others
-    // require all four.
-    const required = state.ruleset === "blitz" ? 1 : TOKENS_PER_PLAYER;
+    // require every token home.
+    const required =
+      state.ruleset === "blitz" ? 1 : boardSpec(state.ruleset).tokensPerPlayer;
     if (state.ruleset === "blitz" ? wonTokens < required : wonTokens !== required) {
       fail(
         state.ruleset === "blitz"
           ? "A Blitz winner must have at least one won token"
-          : "A gameplay winner must have four won tokens",
+          : "A gameplay winner must have every token home",
       );
     }
   }

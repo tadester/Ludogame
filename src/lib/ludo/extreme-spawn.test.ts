@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { extremeLayout, respawnEpoch } from "./extreme-spawn";
 
-const QUADRANTS = [0, 13, 26, 39];
-const quadrantOf = (ring: number) => Math.floor(ring / 13);
+const QUADRANTS = [0, 25, 50, 75];
+const quadrantOf = (ring: number) => Math.floor(ring / 25);
 
 describe("extremeLayout", () => {
   it("is deterministic for the same match id and epoch", () => {
@@ -43,7 +43,7 @@ describe("extremeLayout", () => {
       const safe = new Set(safeRingIndexes);
       for (const tile of tiles) {
         expect(tile.ringIndex).toBeGreaterThanOrEqual(0);
-        expect(tile.ringIndex).toBeLessThanOrEqual(51);
+        expect(tile.ringIndex).toBeLessThanOrEqual(99);
         expect(safe.has(tile.ringIndex)).toBe(false);
       }
     }

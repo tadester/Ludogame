@@ -1,17 +1,23 @@
-import { OPENING_RING_INDEX, RING_PROGRESS_MAX } from "./constants";
+import { boardSpec, ringIndexFor } from "./board-spec";
+import type { BoardSpec } from "./board-spec";
 import type { PlayerColor } from "./types";
+
+const CLASSIC = boardSpec("classic");
 
 export function progressToRingIndex(
   color: PlayerColor,
   progress: number,
+  spec: BoardSpec = CLASSIC,
 ): number {
   if (
     !Number.isInteger(progress) ||
     progress < 0 ||
-    progress > RING_PROGRESS_MAX
+    progress > spec.ringProgressMax
   ) {
-    throw new Error("Progress 0 through 51 is required for the shared ring");
+    throw new Error(
+      `Progress 0 through ${spec.ringProgressMax} is required for the shared ring`,
+    );
   }
 
-  return (OPENING_RING_INDEX[color] + progress) % 52;
+  return ringIndexFor(spec, color, progress);
 }

@@ -1,9 +1,8 @@
 import { progressToRingIndex } from "./board";
+import { boardSpec } from "./board-spec";
 import {
   CLASSIC_SAFE_RING_INDEXES,
   EXTREME_RESPAWN_INTERVAL,
-  RING_PROGRESS_MAX,
-  WON_PROGRESS,
 } from "./constants";
 import { isLastStandToken, resolveExtremeLanding } from "./extreme";
 import { extremeLayout, respawnEpoch } from "./extreme-spawn";
@@ -44,6 +43,7 @@ function dieUses(
   die: Die,
 ): { releases: TokenState[]; moves: TokenState[] } {
   const tokens = playerTokens(state, activePlayer(state).id);
+  const wonProgress = boardSpec(state.ruleset).wonProgress;
   return {
     releases:
       die.value === 6 ? tokens.filter((token) => token.status === "yard") : [],
@@ -51,7 +51,7 @@ function dieUses(
       (token) =>
         token.status === "active" &&
         token.progress !== null &&
-        token.progress + stepFor(state, token.id, die) <= WON_PROGRESS,
+        token.progress + stepFor(state, token.id, die) <= wonProgress,
     ),
   };
 }
@@ -166,14 +166,15 @@ function captureOnRing(
   if (CLASSIC_SAFE.has(ringIndex)) {
     return { tokens: state.tokens, events: [] };
   }
+  const spec = boardSpec(state.ruleset);
   const events: DomainEvent[] = [];
   const tokens = state.tokens.map((token) => {
     const isOpposingRingToken =
       token.playerId !== moverId &&
       token.status === "active" &&
       token.progress !== null &&
-      token.progress <= RING_PROGRESS_MAX &&
-      progressToRingIndex(token.color, token.progress) === ringIndex;
+      token.progress <= spec.ringProgressMax &&
+      progressToRingIndex(token.color, token.progress, spec) === ringIndex;
     if (!isOpposingRingToken) {
       return token;
     }
@@ -217,7 +218,7 @@ function applyClassicRelease(
 ): ApplyActionResult {
   const die = state.pendingRoll!.dice[0];
   const token = state.tokens.find((entry) => entry.id === action.tokenId)!;
-  const ringIndex = progressToRingIndex(token.color, 0);
+  const ringIndex = progressToRingIndex(token.color, 0, boardSpec(state.ruleset));
   const moved: MatchState = {
     ...state,
     tokens: state.tokens.map((entry) =>
@@ -244,6 +245,7 @@ function applyClassicMove(
   action: Extract<LegalAction, { type: "move-token" }>,
 ): ApplyActionResult {
   const die = state.pendingRoll!.dice[0];
+  const spec = boardSpec(state.ruleset);
   const token = state.tokens.find((entry) => entry.id === action.tokenId)!;
   const fromProgress = token.progress!;
   const toProgress = fromProgress + stepFor(state, action.tokenId, die);
@@ -267,7 +269,7 @@ function applyClassicMove(
         ? {
             ...entry,
             status:
-              toProgress === WON_PROGRESS
+              toProgress === spec.wonProgress
                 ? ("won" as const)
                 : ("active" as const),
             progress: toProgress,
@@ -286,8 +288,8 @@ function applyClassicMove(
     },
   ];
 
-  if (toProgress <= RING_PROGRESS_MAX) {
-    const ringIndex = progressToRingIndex(token.color, toProgress);
+  if (toProgress <= spec.ringProgressMax) {
+    const ringIndex = progressToRingIndex(token.color, toProgress, spec);
     if (state.ruleset === "extreme") {
       const landing = resolveExtremeLanding(next, action.playerId, ringIndex);
       next = { ...next, tokens: landing.tokens, powerUps: landing.powerUps };
@@ -297,7 +299,7 @@ function applyClassicMove(
       next = { ...next, tokens: captured.tokens };
       events.push(...captured.events);
     }
-  } else if (toProgress === WON_PROGRESS) {
+  } else if (toProgress === spec.wonProgress) {
     events.push(
       {
         type: "token-entered-home",

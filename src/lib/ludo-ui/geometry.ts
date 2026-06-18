@@ -3,7 +3,10 @@ import {
   OPENING_RING_INDEX,
   progressToRingIndex,
 } from "@/lib/ludo";
-import type { MatchState } from "@/lib/ludo";
+import type { MatchState, Ruleset } from "@/lib/ludo";
+
+import { buildBoardLayout } from "./board-layout";
+import type { BoardLayout } from "./board-layout";
 
 export type PlayerColor = MatchState["tokens"][number]["color"];
 export type Cell = readonly [row: number, col: number];
@@ -123,5 +126,88 @@ export function cellToPercent(cell: Cell): { left: number; top: number } {
   return {
     left: ((col + 0.5) / BOARD_SIZE) * 100,
     top: ((row + 0.5) / BOARD_SIZE) * 100,
+  };
+}
+
+// --- Variable-size board support (Extreme uses a larger generated board) ---
+
+const LAYOUT_CACHE = new Map<Ruleset, BoardLayout>();
+
+/** The board layout for a ruleset. Classic family + Nigerian use the standard
+ *  52-cell board; Extreme uses a roughly doubled 100-cell board with 6 tokens. */
+export function getBoardLayout(ruleset: Ruleset): BoardLayout {
+  let layout = LAYOUT_CACHE.get(ruleset);
+  if (!layout) {
+    layout =
+      ruleset === "extreme" ? buildBoardLayout(11, 6) : buildBoardLayout(5, 4);
+    LAYOUT_CACHE.set(ruleset, layout);
+  }
+  return layout;
+}
+
+function ringIndexOn(
+  layout: BoardLayout,
+  color: PlayerColor,
+  progress: number,
+): number {
+  return (layout.openings[color] + progress) % layout.ringLength;
+}
+
+/** Opening ring index → owning color, for a layout. */
+export function ringIndexToColor(
+  layout: BoardLayout,
+): Readonly<Record<number, PlayerColor>> {
+  const map: Record<number, PlayerColor> = {};
+  for (const color of PLAY_ORDER) map[layout.openings[color]] = color;
+  return map;
+}
+
+/** The cell a token occupies at a given progress, on a specific layout. */
+export function cellForProgressOn(
+  layout: BoardLayout,
+  color: PlayerColor,
+  progress: number | null,
+  slotIndex: number,
+): Cell {
+  if (progress === null) {
+    return layout.yardSlots[color][slotIndex] ?? layout.yardSlots[color][0];
+  }
+  const homeMax = layout.ringLength + layout.homeLane[color].length - 1;
+  if (progress <= layout.ringLength - 1) {
+    return layout.ringPath[ringIndexOn(layout, color, progress)];
+  }
+  if (progress <= homeMax) {
+    return layout.homeLane[color][progress - layout.ringLength];
+  }
+  return layout.center;
+}
+
+/** The cells a token visibly steps through from `from` to `to`, on a layout. */
+export function moveWaypointsOn(
+  layout: BoardLayout,
+  color: PlayerColor,
+  from: number | null,
+  to: number,
+): Cell[] {
+  const start = from === null ? 0 : from + 1;
+  const cells: Cell[] = [];
+  for (let progress = start; progress <= to; progress += 1) {
+    cells.push(cellForProgressOn(layout, color, progress, 0));
+  }
+  if (cells.length === 0) {
+    cells.push(cellForProgressOn(layout, color, to, 0));
+  }
+  return cells;
+}
+
+/** Percentage offsets to a cell center for a layout of the given size. */
+export function cellToPercentOn(
+  layout: BoardLayout,
+  cell: Cell,
+): { left: number; top: number } {
+  const [row, col] = cell;
+  return {
+    left: ((col + 0.5) / layout.size) * 100,
+    top: ((row + 0.5) / layout.size) * 100,
   };
 }

@@ -220,7 +220,7 @@
 
 .token {
   position: absolute;
-  width: 5.2%;
+  width: var(--token-size, 5.2%);
   aspect-ratio: 1;
   transform: translate(-50%, -60%);
   transition:

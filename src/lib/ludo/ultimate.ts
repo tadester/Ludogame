@@ -1,4 +1,5 @@
 import { progressToRingIndex } from "./board";
+import { boardSpec } from "./board-spec";
 import {
   ULTIMATE_CHARGE_PER_TURN,
   ULTIMATE_MAX,
@@ -191,8 +192,11 @@ function castMeteor(
   if (target.status !== "active" || target.progress === null) {
     throw new LudoRuleError("INVALID_ACTION", "That target is not in play");
   }
+  const spec = boardSpec(state.ruleset);
   const ringIndex =
-    target.progress <= 51 ? progressToRingIndex(target.color, target.progress) : 0;
+    target.progress <= spec.ringProgressMax
+      ? progressToRingIndex(target.color, target.progress, spec)
+      : 0;
 
   if (drained.shieldedTokenIds.includes(target.id)) {
     return {
@@ -248,13 +252,14 @@ function castQuake(
   used: DomainEvent,
 ): ApplyActionResult {
   let shieldedTokenIds = drained.shieldedTokenIds;
+  const ringProgressMax = boardSpec(state.ruleset).ringProgressMax;
   const events: DomainEvent[] = [used];
   const tokens = state.tokens.map((token) => {
     const exposed =
       token.playerId !== action.playerId &&
       token.status === "active" &&
       token.progress !== null &&
-      token.progress <= 51;
+      token.progress <= ringProgressMax;
     if (!exposed) return token;
     if (shieldedTokenIds.includes(token.id)) {
       shieldedTokenIds = shieldedTokenIds.filter((id) => id !== token.id);

@@ -1,3 +1,4 @@
+import { boardSpec } from "./board-spec";
 import { TOKENS_PER_PLAYER } from "./constants";
 import { extremeLayout } from "./extreme-spawn";
 import type {
@@ -22,8 +23,11 @@ export function createPlayer(
   };
 }
 
-export function createTokens(player: PlayerState): TokenState[] {
-  return Array.from({ length: TOKENS_PER_PLAYER }, (_, index) => ({
+export function createTokens(
+  player: PlayerState,
+  count: number = TOKENS_PER_PLAYER,
+): TokenState[] {
+  return Array.from({ length: count }, (_, index) => ({
     id: `${player.id}-token-${index + 1}`,
     playerId: player.id,
     color: player.color,
@@ -47,7 +51,7 @@ export function createMatch(input: CreateMatchInput): MatchState {
     hostPlayerId: host.id,
     maxPlayers: input.maxPlayers,
     players: [host],
-    tokens: createTokens(host),
+    tokens: createTokens(host, boardSpec(input.ruleset).tokensPerPlayer),
     activePlayerIndex: 0,
     turnNumber: 0,
     rollNumber: 0,

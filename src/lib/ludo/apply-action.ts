@@ -1,4 +1,5 @@
 import { applyClassicAction } from "./classic";
+import { boardSpec } from "./board-spec";
 import { createPlayer, createTokens } from "./create-match";
 import { applyUsePower } from "./extreme";
 import { applyUseUltimate } from "./ultimate";
@@ -62,7 +63,10 @@ function applyJoinSeat(
     state: {
       ...state,
       players: [...state.players, player],
-      tokens: [...state.tokens, ...createTokens(player)],
+      tokens: [
+        ...state.tokens,
+        ...createTokens(player, boardSpec(state.ruleset).tokensPerPlayer),
+      ],
     },
     events,
   };
