@@ -42,6 +42,9 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
     redirect("/login");
   }
 
+  // Opportunistically clear out idle/abandoned rooms so they don't pile up.
+  await supabase.rpc("cleanup_idle_rooms");
+
   const { data, error } = await supabase
     .from("rooms")
     .select("*")
