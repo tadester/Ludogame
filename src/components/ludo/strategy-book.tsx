@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import type { PowerKind, UltimateKind } from "@/lib/ludo";
 import { loadPreferences, savePreferences } from "@/lib/ludo-ui/local-storage";
+import { createClient } from "@/lib/supabase/client";
 import {
   POWER_DESC,
   POWER_LABEL,
@@ -25,6 +27,9 @@ import styles from "./strategy-book.module.css";
 export function StrategyBook() {
   const [loadout, setLoadout] = useState<PowerKind[]>([]);
   const [ultimate, setUltimate] = useState<UltimateKind>("meteor");
+  // Powers the player owns (always includes the free Shield and Dash). Null
+  // means ownership is unknown (offline) — then everything is allowed.
+  const [owned, setOwned] = useState<Set<PowerKind> | null>(null);
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
@@ -33,6 +38,39 @@ export function StrategyBook() {
     if (prefs?.ultimate) setUltimate(prefs.ultimate);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc("list_power_store");
+        if (!active) return;
+        if (error || !data) {
+          setOwned(null);
+          return;
+        }
+        const set = new Set<PowerKind>(
+          (data as Array<{ code: string; owned: boolean }>)
+            .filter((row) => row.owned)
+            .map((row) => row.code as PowerKind),
+        );
+        set.add("shield");
+        set.add("dash");
+        setOwned(set);
+      } catch {
+        if (active) setOwned(null);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const isOwned = useCallback(
+    (power: PowerKind) => owned === null || owned.has(power),
+    [owned],
+  );
 
   const persist = useCallback(
     (nextLoadout: PowerKind[], nextUltimate: UltimateKind) => {
@@ -53,16 +91,19 @@ export function StrategyBook() {
   const togglePower = useCallback(
     (power: PowerKind) => {
       setLoadout((prev) => {
-        const next = prev.includes(power)
+        const equipped = prev.includes(power);
+        // Can't equip a power you don't own; removing is always allowed.
+        if (!equipped && (!isOwned(power) || prev.length >= STRATEGY_BOOK_CAP)) {
+          return prev;
+        }
+        const next = equipped
           ? prev.filter((p) => p !== power)
-          : prev.length >= STRATEGY_BOOK_CAP
-            ? prev
-            : [...prev, power];
+          : [...prev, power];
         persist(next, ultimate);
         return next;
       });
     },
-    [persist, ultimate],
+    [persist, ultimate, isOwned],
   );
 
   const chooseUltimate = useCallback(
@@ -90,14 +131,15 @@ export function StrategyBook() {
         <ul className={styles.list}>
           {POWER_ORDER.map((power) => {
             const equipped = loadout.includes(power);
-            const full = !equipped && loadout.length >= STRATEGY_BOOK_CAP;
+            const locked = !equipped && !isOwned(power);
+            const full = !equipped && !locked && loadout.length >= STRATEGY_BOOK_CAP;
             return (
               <li key={power}>
                 <button
                   type="button"
-                  className={`${styles.row} ${equipped ? styles.equipped : ""}`}
+                  className={`${styles.row} ${equipped ? styles.equipped : ""} ${locked ? styles.locked : ""}`}
                   aria-pressed={equipped}
-                  disabled={full}
+                  disabled={locked || full}
                   onClick={() => togglePower(power)}
                 >
                   <span className={styles.rowMain}>
@@ -105,13 +147,23 @@ export function StrategyBook() {
                     <span className={styles.desc}>{POWER_DESC[power]}</span>
                   </span>
                   <span className={styles.state}>
-                    {equipped ? "✓ Equipped" : full ? "Full" : "Equip"}
+                    {equipped
+                      ? "✓ Equipped"
+                      : locked
+                        ? "🔒 Locked"
+                        : full
+                          ? "Full"
+                          : "Equip"}
                   </span>
                 </button>
               </li>
             );
           })}
         </ul>
+        <p className={styles.hint}>
+          Don&apos;t own a power? Unlock it in the{" "}
+          <Link href="/store">Store</Link>.
+        </p>
       </section>
 
       <section className={styles.section}>
