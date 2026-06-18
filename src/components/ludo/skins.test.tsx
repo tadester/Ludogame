@@ -128,6 +128,9 @@ describe("board and dice skins", () => {
     expect(container.querySelectorAll("[data-token-color-plate]")).toHaveLength(
       match.tokens.length,
     );
+    expect(container.querySelectorAll("[data-token-contrast-ring]")).toHaveLength(
+      match.tokens.length,
+    );
   });
 
   it("renders ninja tokens with headband details", () => {

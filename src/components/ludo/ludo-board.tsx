@@ -239,6 +239,7 @@ export function LudoBoard({
                       </span>
                     ) : null}
                     <span className={styles.seatColorPlate} data-token-color-plate />
+                    <span className={styles.seatContrastRing} data-token-contrast-ring />
                   </span>
                 </button>
               );

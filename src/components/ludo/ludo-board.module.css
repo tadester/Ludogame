@@ -245,7 +245,7 @@
   height: 100%;
   border-radius: 28% / 38%;
   overflow: hidden;
-  border: 0.14rem solid rgb(255 255 255 / 92%);
+  border: 0.18rem solid rgb(255 255 255 / 96%);
   background:
     linear-gradient(135deg,
       color-mix(in srgb, var(--team-tint), white 28%) 0 18%,
@@ -253,8 +253,8 @@
       color-mix(in srgb, var(--team-tint), black 26%) 100%
     );
   box-shadow:
-    0 0 0 0.12rem rgb(8 12 20 / 60%),
-    0 0.3rem 0.45rem rgb(0 0 0 / 45%),
+    0 0 0 0.14rem rgb(8 12 20 / 82%),
+    0 0.34rem 0.5rem rgb(0 0 0 / 58%),
     inset 0 -0.2rem 0.3rem rgb(0 0 0 / 34%),
     inset 0 0.16rem 0.22rem rgb(255 255 255 / 50%);
 }
@@ -294,7 +294,7 @@
 
 .seatColorPlate {
   position: absolute;
-  z-index: 6;
+  z-index: 3;
   inset: 0;
   border-radius: inherit;
   background:
@@ -303,8 +303,21 @@
       var(--team-tint) 54%,
       color-mix(in srgb, var(--team-tint), black 18%)
     );
-  opacity: 0.48;
+  opacity: 0.98;
   mix-blend-mode: normal;
+  pointer-events: none;
+}
+
+.seatContrastRing {
+  position: absolute;
+  z-index: 8;
+  inset: -0.04rem;
+  border-radius: inherit;
+  border: clamp(0.09rem, 0.45vw, 0.16rem) solid rgb(255 255 255 / 96%);
+  box-shadow:
+    0 0 0 clamp(0.05rem, 0.28vw, 0.1rem) rgb(5 8 14 / 86%),
+    inset 0 0 0 0.05rem rgb(5 8 14 / 36%),
+    0 0.12rem 0.18rem rgb(0 0 0 / 46%);
   pointer-events: none;
 }
 
@@ -903,9 +916,9 @@
 [data-token-form="flat"] .disc[data-token-seat-fill] {
   background:
     linear-gradient(135deg,
-      color-mix(in srgb, var(--team-tint), white 30%) 0 18%,
-      var(--team-tint) 19% 72%,
-      color-mix(in srgb, var(--team-tint), black 28%) 100%
+      color-mix(in srgb, var(--team-tint), white 22%) 0 18%,
+      var(--team-tint) 19% 74%,
+      color-mix(in srgb, var(--team-tint), black 34%) 100%
     );
 }
 
@@ -927,8 +940,8 @@
       var(--team-tint) 50%,
       color-mix(in srgb, var(--team-tint), black 24%)
     );
-  opacity: 0.82;
-  mix-blend-mode: multiply;
+  opacity: 0.46;
+  mix-blend-mode: normal;
 }
 
 [data-token-detail="headband"] .disc[data-token-seat-fill] {
@@ -949,7 +962,7 @@
 }
 
 [data-token-detail="headband"] .seatColorPlate {
-  opacity: 0.34;
+  opacity: 0.72;
   mix-blend-mode: normal;
 }
 
