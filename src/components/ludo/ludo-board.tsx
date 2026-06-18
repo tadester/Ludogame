@@ -238,6 +238,7 @@ export function LudoBoard({
                         {TOKEN_SKIN_MARK[tokenSkin]}
                       </span>
                     ) : null}
+                    <span className={styles.seatColorPlate} data-token-color-plate />
                   </span>
                 </button>
               );
