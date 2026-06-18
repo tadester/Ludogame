@@ -28,6 +28,8 @@ export default async function ProtectedLayout({
     loadPlayerTheme(),
     loadPlayerWallet(),
   ]);
+  const { data: roomInvites } = await supabase.rpc("list_room_invites");
+  const roomInviteCount = Array.isArray(roomInvites) ? roomInvites.length : 0;
 
   // Treat the configured developer account as an admin even if the database
   // role backfill has not run yet, so the admin panel is always reachable.
@@ -55,7 +57,11 @@ export default async function ProtectedLayout({
 
   return (
     <AppShell background={theme.background} reducedMotion={theme.reducedMotion}>
-      <AccountNav coins={wallet.coins} isAdmin={isAdmin} />
+      <AccountNav
+        coins={wallet.coins}
+        isAdmin={isAdmin}
+        roomInviteCount={roomInviteCount}
+      />
       {children}
     </AppShell>
   );

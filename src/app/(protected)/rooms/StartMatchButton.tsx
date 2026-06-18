@@ -7,6 +7,8 @@ const ERRORS: Record<string, string> = {
   need_two_players: "You need at least two players to start.",
   forbidden: "Only the host can start the match.",
   room_not_found: "This room is no longer available.",
+  service_not_configured:
+    "The match server needs a production service key. Redeploy after setting SUPABASE_SERVICE_ROLE_KEY.",
 };
 
 export function StartMatchButton({ roomId }: { roomId: string }) {

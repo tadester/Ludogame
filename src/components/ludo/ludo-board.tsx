@@ -245,7 +245,9 @@ function PathCell({
           ✦
         </span>
       ) : !openingColor && isSafe ? (
-        <span className={styles.safeStar}>★</span>
+        <span className={styles.safeStar} aria-label="safe zone">
+          ★
+        </span>
       ) : null}
     </div>
   );
@@ -302,7 +304,7 @@ function placeTokens(
     }
     const index = group.findIndex((entry) => entry.id === token.id);
     const angle = (index / group.length) * Math.PI * 2;
-    const radius = 1.7;
+    const radius = Math.min(3.1, 1.45 + group.length * 0.22);
     return {
       token,
       left: base.left + Math.cos(angle) * radius,

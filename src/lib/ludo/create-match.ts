@@ -50,6 +50,7 @@ export function createMatch(input: CreateMatchInput): MatchState {
     version: 0,
     hostPlayerId: host.id,
     maxPlayers: input.maxPlayers,
+    turnTimerSeconds: input.turnTimerSeconds ?? null,
     players: [host],
     tokens: createTokens(host, boardSpec(input.ruleset).tokensPerPlayer),
     activePlayerIndex: 0,

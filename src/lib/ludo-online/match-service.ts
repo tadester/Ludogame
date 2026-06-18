@@ -53,6 +53,7 @@ export interface StartMatchOptions {
   readonly hostId: string;
   readonly seats: readonly OnlineSeat[];
   readonly ruleset: Ruleset;
+  readonly turnTimerSeconds?: number | null;
   /** Engine-internal id for the snapshot. */
   readonly snapshotId: string;
 }
@@ -75,6 +76,7 @@ export async function startMatch(
     options.snapshotId,
     options.seats,
     options.ruleset,
+    options.turnTimerSeconds,
   );
   return options.store.create(options.roomId, snapshot);
 }

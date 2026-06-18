@@ -14,9 +14,14 @@ const baseLinks = [
 type AccountNavProps = {
   coins?: number;
   isAdmin?: boolean;
+  roomInviteCount?: number;
 };
 
-export function AccountNav({ coins, isAdmin = false }: AccountNavProps) {
+export function AccountNav({
+  coins,
+  isAdmin = false,
+  roomInviteCount = 0,
+}: AccountNavProps) {
   return (
     <nav aria-label="Account" className="account-nav">
       <div className="account-links">
@@ -25,6 +30,9 @@ export function AccountNav({ coins, isAdmin = false }: AccountNavProps) {
             {link.label}
           </Link>
         ))}
+        {roomInviteCount > 0 ? (
+          <Link href="/rooms">Room invites {roomInviteCount}</Link>
+        ) : null}
         {isAdmin ? <Link href="/admin">Admin</Link> : null}
       </div>
       <div className="account-meta">

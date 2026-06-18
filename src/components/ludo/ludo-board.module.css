@@ -1,5 +1,5 @@
 .boardWrap {
-  width: min(100%, 48rem, calc(100dvh - 9rem));
+  width: min(100%, 48rem, calc(100svh - 14rem));
   margin-inline: auto;
   border-radius: 1.35rem;
   padding: 0.35rem;
@@ -8,7 +8,8 @@
 
 /* Extreme uses a larger, glowing arena so the mode reads as bigger and wilder. */
 .boardWrap[data-extreme="true"] {
-  width: min(100%, 60rem, calc(100dvh - 6rem));
+  width: min(100%, 56rem, calc(100svh - 16rem));
+  min-width: min(100%, 20rem);
   padding: 0.6rem;
   border: 1px solid color-mix(in srgb, var(--accent), transparent 55%);
   box-shadow:
@@ -233,6 +234,7 @@
   background: none;
   cursor: default;
   z-index: 5;
+  filter: drop-shadow(0 0.22rem 0.24rem rgb(0 0 0 / 48%));
 }
 
 .disc {

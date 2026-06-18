@@ -30,7 +30,7 @@ export async function POST(
 
   const { data: room } = await supabase
     .from("rooms")
-    .select("id, host_id, ruleset")
+    .select("id, host_id, ruleset, turn_timer_seconds")
     .eq("id", roomId)
     .maybeSingle();
   if (!room) {
@@ -49,8 +49,8 @@ export async function POST(
     return NextResponse.json({ error: "need_two_players" }, { status: 400 });
   }
 
-  const store = createSupabaseMatchStore(createServiceClient());
   try {
+    const store = createSupabaseMatchStore(createServiceClient());
     const match = await startMatch({
       store,
       roomId,
@@ -62,6 +62,7 @@ export async function POST(
         seat: m.seat,
       })),
       ruleset: room.ruleset,
+      turnTimerSeconds: room.turn_timer_seconds,
       snapshotId: randomUUID(),
     });
     return NextResponse.json({ matchId: match.id });
@@ -69,6 +70,16 @@ export async function POST(
     if (error instanceof MatchAuthorizationError) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
+    if (
+      error instanceof Error &&
+      error.message === "SUPABASE_SERVICE_ROLE_KEY is not configured"
+    ) {
+      return NextResponse.json(
+        { error: "service_not_configured" },
+        { status: 500 },
+      );
+    }
+    console.error("Unable to start room match", error);
     return NextResponse.json({ error: "start_failed" }, { status: 500 });
   }
 }
