@@ -497,6 +497,20 @@ export function LocalMatch({
     handleToken,
   ]);
 
+  // A human with exactly one legal move plays it automatically — no tapping.
+  useEffect(() => {
+    if (!match || busy || winner || handoffTo) return;
+    if (match.phase !== "awaiting-move") return;
+    const active = match.players[match.activePlayerIndex];
+    if (!active || isBotPlayerId(active.id)) return;
+    if (movesByToken.size !== 1) return;
+    const onlyTokenId = [...movesByToken.keys()][0] as string;
+    const timer = window.setTimeout(() => {
+      void handleToken(onlyTokenId);
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [match, busy, winner, handoffTo, movesByToken, handleToken]);
+
   const dieValue = (dieId: string) =>
     match?.pendingRoll?.dice.find((d) => d.id === dieId)?.value ?? 0;
 

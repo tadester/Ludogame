@@ -144,16 +144,31 @@ export function LudoBoard({
           </div>
         </div>
 
-        <div className={styles.tokenLayer}>
+        <div
+          className={styles.tokenLayer}
+          style={
+            {
+              "--token-size": `${(100 / layout.size) * 1.4}%`,
+            } as CSSProperties
+          }
+        >
+          {/* Rest pads under each yard slot so tokens sit on clear spots. */}
+          {PLAY_ORDER.flatMap((color) =>
+            layout.yardSlots[color].map((cell, slot) => {
+              const { left, top } = cellToPercentOn(layout, cell);
+              return (
+                <span
+                  key={`pad-${color}-${slot}`}
+                  className={styles.yardPad}
+                  style={{ left: `${left}%`, top: `${top}%` }}
+                />
+              );
+            }),
+          )}
           <div
             className={styles.tokenInner}
             data-token-skin={tokenSkin}
             data-animation={animationSkin}
-            style={
-              {
-                "--token-size": `${(100 / layout.size) * 0.82}%`,
-              } as CSSProperties
-            }
           >
             {placed.map(({ token, left, top }) => {
               const movable = movableTokenIds.has(token.id);
@@ -195,24 +210,15 @@ export function LudoBoard({
 function Yard({ color, layout }: { color: PlayerColor; layout: BoardLayout }) {
   const [row, col] = layout.yardOrigin[color];
   const block = (layout.size - 1) / 2 - 1;
-  const slots = layout.yardSlots[color].length;
   return (
     <div
       className={`${styles.yard} ${FILL[color]}`}
       style={{
         gridRow: `${row + 1} / ${row + 1 + block}`,
         gridColumn: `${col + 1} / ${col + 1 + block}`,
-        gridTemplateColumns: `repeat(${slots <= 4 ? 2 : 3}, 1fr)`,
       }}
     >
-      <div
-        className={styles.yardInner}
-        style={{ gridTemplateColumns: `repeat(${slots <= 4 ? 2 : 3}, 1fr)` }}
-      >
-        {Array.from({ length: slots }, (_, slot) => (
-          <span key={slot} className={styles.homeSlot} />
-        ))}
-      </div>
+      <div className={styles.yardWell} />
     </div>
   );
 }
