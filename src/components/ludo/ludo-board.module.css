@@ -6,6 +6,16 @@
   background: transparent;
 }
 
+/* Extreme uses a larger, glowing arena so the mode reads as bigger and wilder. */
+.boardWrap[data-extreme="true"] {
+  width: min(100%, 60rem, calc(100dvh - 6rem));
+  padding: 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 55%);
+  box-shadow:
+    0 0 2.4rem color-mix(in srgb, var(--accent), transparent 70%),
+    inset 0 0 1.2rem rgb(0 0 0 / 30%);
+}
+
 .boardWrap[data-background-skin="aurora"] {
   background:
     radial-gradient(circle at 20% 15%, rgb(46 211 183 / 34%), transparent 38%),
@@ -444,60 +454,90 @@
     inset 0 0 0 2px #111;
 }
 
-/* --- Anime-inspired token packs (player color preserved) --------------- */
+/* --- Anime-inspired token packs (team colour kept as the accent) -------- */
+
+/* Ninja: a Naruto-style forehead protector — a dark cloth band with a metal
+   plate, the team colour as the plate's rim. */
 [data-token-skin="ninja"] .disc {
-  background: radial-gradient(circle at 34% 28%, #68707c, #111827);
-  border-color: rgb(20 20 20 / 85%);
+  background: linear-gradient(
+    180deg,
+    #2b3340 0 30%,
+    #11161f 30% 70%,
+    #2b3340 70%
+  );
+  border: none;
+  border-radius: 0.14rem;
+  clip-path: inset(28% 0 28% 0 round 0.12rem);
   box-shadow:
-    inset 0 0 0 0.18rem var(--team-tint),
-    0 0.28rem 0.42rem rgb(0 0 0 / 38%),
-    0 0 0.55rem color-mix(in srgb, var(--team-tint), transparent 35%);
+    0 0.12rem 0.3rem rgb(0 0 0 / 55%),
+    0 0 0.5rem color-mix(in srgb, var(--team-tint), transparent 40%);
+}
+[data-token-skin="ninja"] .disc::after {
+  display: none;
 }
 [data-token-skin="ninja"] .disc::before {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 210deg,
-    rgb(0 0 0 / 50%),
-    transparent 35%,
-    rgb(0 0 0 / 45%) 70%,
-    transparent 92%
-  );
+  top: 50%;
+  left: 50%;
+  width: 46%;
+  height: 30%;
+  transform: translate(-50%, -50%);
+  border-radius: 0.05rem;
+  background: linear-gradient(145deg, #d2d9e0, #899099);
+  box-shadow:
+    inset 0 0 0 0.05rem var(--team-tint),
+    0 0 0.12rem rgb(0 0 0 / 60%);
 }
 
+/* Straw Hat: Luffy's hat — a straw dome and brim with a team-colour ribbon. */
+[data-token-skin="straw_hat"] .disc {
+  background: radial-gradient(circle at 50% 32%, #ffe9ad, #c8923a);
+  border: none;
+  clip-path: polygon(
+    32% 6%, 68% 6%, 73% 50%, 100% 72%, 100% 88%, 0 88%, 0 72%, 27% 50%
+  );
+  box-shadow:
+    0 0.12rem 0.3rem rgb(0 0 0 / 45%),
+    0 0 0.5rem color-mix(in srgb, var(--team-tint), transparent 40%);
+}
+[data-token-skin="straw_hat"] .disc::after {
+  display: none;
+}
 [data-token-skin="straw_hat"] .disc::before {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: linear-gradient(
-    transparent 40%,
-    color-mix(in srgb, var(--team-tint), white 8%) 40% 60%,
-    transparent 60%
-  );
+  left: 0;
+  right: 0;
+  top: 44%;
+  height: 13%;
+  background: var(--team-tint);
 }
 
-[data-token-skin="straw_hat"] .disc {
-  background: radial-gradient(circle at 36% 26%, #ffe7a3, #b98534);
-  box-shadow:
-    inset 0 0 0 0.18rem var(--team-tint),
-    0 0.28rem 0.42rem rgb(0 0 0 / 38%),
-    0 0 0.55rem color-mix(in srgb, var(--team-tint), transparent 35%);
-}
-
+/* Class Point: a Classroom-of-the-Elite style hexagonal merit badge. */
 [data-token-skin="class_point"] .disc {
-  background: radial-gradient(circle at 35% 25%, #f8fafc, #94a3b8);
-  border: 0.14rem solid #ffffff;
+  background: radial-gradient(circle at 38% 26%, #f8fafc, #aeb8c6);
+  border: none;
+  clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
   box-shadow:
-    inset 0 0 0 0.18rem var(--team-tint),
-    0 0.18rem 0.3rem rgb(0 0 0 / 35%),
-    inset 0 0 0 0.04rem rgb(0 0 0 / 25%),
-    0 0 0.55rem color-mix(in srgb, var(--team-tint), transparent 35%);
+    inset 0 0 0 0.16rem var(--team-tint),
+    0 0.12rem 0.3rem rgb(0 0 0 / 45%),
+    0 0 0.5rem color-mix(in srgb, var(--team-tint), transparent 40%);
 }
 [data-token-skin="class_point"] .disc::after {
   display: none;
+}
+[data-token-skin="class_point"] .disc::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 34%;
+  height: 34%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--team-tint);
+  opacity: 0.9;
 }
 
 /* --- Anime-inspired animation packs ------------------------------------ */

@@ -323,8 +323,9 @@ export function LocalMatch({
     setBusy(true);
     setRolling(true);
     const values = Array.from({ length: diceCount }, () => rollDie());
+    // Tumble through visible faces while rolling instead of blanking the die.
     for (let i = 0; i < 9; i += 1) {
-      setDieFaces([]);
+      setDieFaces(Array.from({ length: diceCount }, () => ((i + 1) % 6) + 1));
       await sleep(55);
     }
     setDieFaces(values);
@@ -696,6 +697,9 @@ export function LocalMatch({
                 })).filter((entry) => entry.count > 0);
                 return (
                   <div className={styles.dieOrders}>
+                    <p className={styles.powerHeader}>
+                      {activePlayer.displayName}&apos;s powers
+                    </p>
                     <p className={styles.message}>
                       {counts.length === 0
                         ? "No powers yet — land on ✦ tiles."

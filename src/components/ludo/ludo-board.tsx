@@ -83,7 +83,11 @@ export function LudoBoard({
   );
 
   return (
-    <div className={styles.boardWrap} data-background-skin={backgroundSkin}>
+    <div
+      className={styles.boardWrap}
+      data-background-skin={backgroundSkin}
+      data-extreme={match.ruleset === "extreme" ? "true" : undefined}
+    >
       <div className={styles.board} data-board-skin={boardSkin}>
         <div className={styles.grid}>
           {PLAY_ORDER.map((color) => (
