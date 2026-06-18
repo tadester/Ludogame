@@ -455,3 +455,10 @@
   text-transform: uppercase;
   color: var(--accent);
 }
+
+.tone_spawn .effectIcon {
+  filter: drop-shadow(0 0 1.2rem rgb(192 132 252 / 90%));
+}
+.tone_spawn .effectLabel {
+  color: #d6a8ff;
+}

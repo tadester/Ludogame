@@ -8,6 +8,7 @@ import {
   equippedUltimate,
   getLegalActions,
   isUltimateReady,
+  progressToRingIndex,
   ultimateCost,
   ultimateUsesLeft,
 } from "@/lib/ludo";
@@ -113,6 +114,20 @@ function effectFor(events: readonly DomainEvent[]): Omit<Effect, "id"> | null {
 }
 
 const SHAKE_TONES = new Set(["ult_quake", "quake"]);
+
+/** Whether any current power tile shares a ring square with an active token. */
+function tileLandedOnToken(state: MatchState): boolean {
+  const tiles = state.powerUps?.tiles ?? [];
+  if (tiles.length === 0) return false;
+  const tileRings = new Set(tiles.map((t) => t.ringIndex));
+  return state.tokens.some(
+    (token) =>
+      token.status === "active" &&
+      token.progress !== null &&
+      token.progress <= 51 &&
+      tileRings.has(progressToRingIndex(token.color, token.progress)),
+  );
+}
 
 const COLOR_CLASS: Record<PlayerColor, string> = {
   red: styles.colorRed,
@@ -237,7 +252,14 @@ export function LocalMatch({
         setTimeout(() => setCaptured(new Set()), 500);
       }
 
-      const eff = effectFor(events);
+      let eff = effectFor(events);
+      // A power respawn: flag specially when a fresh tile lands on a token.
+      if (!eff && events.some((e) => e.type === "power-tiles-refilled")) {
+        const onToken = tileLandedOnToken(next);
+        eff = onToken
+          ? { icon: "✦", label: "Power on your token!", tone: "spawn" }
+          : { icon: "✦", label: "Powers respawned!", tone: "spawn" };
+      }
       if (eff) {
         const shown = { ...eff, id: Date.now() };
         setEffect(shown);
@@ -608,6 +630,11 @@ export function LocalMatch({
           powerTileRingIndexes={
             match.powerUps
               ? new Set(match.powerUps.tiles.map((t) => t.ringIndex))
+              : undefined
+          }
+          safeRingIndexes={
+            match.powerUps?.safeRingIndexes
+              ? new Set(match.powerUps.safeRingIndexes)
               : undefined
           }
         />

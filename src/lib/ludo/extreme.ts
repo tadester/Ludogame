@@ -21,6 +21,14 @@ import type {
 
 const CLASSIC_SAFE = new Set<number>(CLASSIC_SAFE_RING_INDEXES);
 
+/** The ring squares currently safe from capture. In Extreme these are random
+ *  and respawn over time; otherwise they are the classic safe squares. */
+function safeRingSet(state: MatchState): ReadonlySet<number> {
+  const custom =
+    state.ruleset === "extreme" ? state.powerUps?.safeRingIndexes : undefined;
+  return custom ? new Set(custom) : CLASSIC_SAFE;
+}
+
 /** A player's equipped strategy-book loadout (empty when none is configured). */
 function loadoutOf(state: MatchState, playerId: string): readonly PowerKind[] {
   return state.powerUps?.loadouts?.[playerId] ?? [];
@@ -75,8 +83,9 @@ export function resolveExtremeLanding(
   let shieldedTokenIds = power.shieldedTokenIds;
   let tokens = state.tokens;
   let chargeGain = 0;
+  const safe = safeRingSet(state);
 
-  if (!CLASSIC_SAFE.has(ringIndex)) {
+  if (!safe.has(ringIndex)) {
     tokens = tokens.map((token) => {
       const opposing =
         token.playerId !== moverId &&
@@ -200,9 +209,10 @@ const BOLT_KNOCKBACK = 6;
 function nextSafeProgressAhead(
   color: TokenState["color"],
   progress: number,
+  safe: ReadonlySet<number>,
 ): number | null {
   for (let p = progress + 1; p <= RING_PROGRESS_MAX; p += 1) {
-    if (CLASSIC_SAFE.has(progressToRingIndex(color, p))) return p;
+    if (safe.has(progressToRingIndex(color, p))) return p;
   }
   return null;
 }
@@ -345,7 +355,11 @@ function applyWarp(
       "That token is too close to home to warp",
     );
   }
-  const toProgress = nextSafeProgressAhead(token.color, token.progress);
+  const toProgress = nextSafeProgressAhead(
+    token.color,
+    token.progress,
+    safeRingSet(state),
+  );
   if (toProgress === null) {
     throw new LudoRuleError(
       "INVALID_ACTION",
@@ -391,7 +405,7 @@ function applySnipe(
     target.progress! <= RING_PROGRESS_MAX
       ? progressToRingIndex(target.color, target.progress!)
       : -1;
-  if (ringIndex !== -1 && CLASSIC_SAFE.has(ringIndex)) {
+  if (ringIndex !== -1 && safeRingSet(state).has(ringIndex)) {
     throw new LudoRuleError(
       "INVALID_ACTION",
       "That token is on a safe square",
@@ -502,7 +516,7 @@ function applyBolt(
   );
   if (
     target.progress! <= RING_PROGRESS_MAX &&
-    CLASSIC_SAFE.has(progressToRingIndex(target.color, target.progress!))
+    safeRingSet(state).has(progressToRingIndex(target.color, target.progress!))
   ) {
     throw new LudoRuleError("INVALID_ACTION", "That token is on a safe square");
   }

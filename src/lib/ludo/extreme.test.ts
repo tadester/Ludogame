@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import { applyAction, getLegalActions } from "@/lib/ludo";
 import type { MatchState } from "@/lib/ludo";
-import { WON_PROGRESS } from "@/lib/ludo/constants";
+import {
+  CLASSIC_SAFE_RING_INDEXES,
+  WON_PROGRESS,
+} from "@/lib/ludo/constants";
 import {
   legalMovesByToken,
   rollActionFor,
@@ -20,8 +23,23 @@ import {
 // ((13 + 44) % 52 === 5), a non-safe square that also holds a power tile.
 const GREEN_PROGRESS_ON_RING_5 = 44;
 
+// Extreme now randomizes safe squares and power tiles per match, so pin a known
+// layout (the classic safe squares + fixed tiles) for deterministic assertions.
 function extremeMatch(): MatchState {
-  return setupLocalMatch([{ name: "Red" }, { name: "Green" }], "extreme");
+  const base = setupLocalMatch([{ name: "Red" }, { name: "Green" }], "extreme");
+  return {
+    ...base,
+    powerUps: {
+      ...base.powerUps!,
+      safeRingIndexes: [...CLASSIC_SAFE_RING_INDEXES],
+      tiles: [
+        { ringIndex: 5, power: "shield" },
+        { ringIndex: 18, power: "dash" },
+        { ringIndex: 31, power: "shield" },
+        { ringIndex: 44, power: "dash" },
+      ],
+    },
+  };
 }
 
 describe("Extreme power tiles", () => {

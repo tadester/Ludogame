@@ -86,6 +86,10 @@ export interface ExtremePowerState {
   readonly shieldedTokenIds: readonly string[];
   /** Tokens whose next move advances double the roll (dash power). */
   readonly dashTokenIds: readonly string[];
+  /** The ring squares that are currently safe from capture. In Extreme these
+   *  are randomized per quadrant and respawn over time; absent means fall back
+   *  to the classic safe squares. */
+  readonly safeRingIndexes?: readonly number[];
   /** Strategy-book loadouts: the powers each player has equipped. When a player
    *  has a non-empty loadout, a power tile grants a random power drawn from it
    *  (deterministically, for replay safety) instead of the tile's own power. */

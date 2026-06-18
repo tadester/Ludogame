@@ -1,4 +1,5 @@
-import { TOKENS_PER_PLAYER } from "./constants";
+import { EXTREME_RESPAWN_INTERVAL, TOKENS_PER_PLAYER } from "./constants";
+import { extremeLayout, respawnEpoch } from "./extreme-spawn";
 import { applyMapEvent } from "./map-events";
 import { chargeIncomingPlayer } from "./ultimate";
 import { LudoRuleError } from "./types";
@@ -91,6 +92,29 @@ export function advanceTurn(state: MatchState): TransitionResult {
       toPlayerId: state.players[nextIndex].id,
     },
   ];
+
+  // Extreme: safe squares and power tiles respawn at fresh random spots on a
+  // fixed cadence, so the board keeps shifting fairly for everyone.
+  if (
+    advanced.ruleset === "extreme" &&
+    advanced.powerUps &&
+    advanced.turnNumber > 0 &&
+    advanced.turnNumber % EXTREME_RESPAWN_INTERVAL === 0
+  ) {
+    const layout = extremeLayout(
+      advanced.id,
+      respawnEpoch(advanced.turnNumber, EXTREME_RESPAWN_INTERVAL),
+    );
+    advanced = {
+      ...advanced,
+      powerUps: {
+        ...advanced.powerUps,
+        tiles: layout.tiles,
+        safeRingIndexes: layout.safeRingIndexes,
+      },
+    };
+    events.push({ type: "power-tiles-refilled" });
+  }
 
   // Extreme map events fire as the new turn begins, shaking up the board for
   // everyone equally.

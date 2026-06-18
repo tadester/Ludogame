@@ -1,11 +1,12 @@
 import { progressToRingIndex } from "./board";
 import {
   CLASSIC_SAFE_RING_INDEXES,
-  EXTREME_POWER_TILES,
+  EXTREME_RESPAWN_INTERVAL,
   RING_PROGRESS_MAX,
   WON_PROGRESS,
 } from "./constants";
 import { isLastStandToken, resolveExtremeLanding } from "./extreme";
+import { extremeLayout, respawnEpoch } from "./extreme-spawn";
 import { sortLegalActions } from "./legal-actions";
 import {
   activePlayer,
@@ -114,17 +115,18 @@ function applyClassicRoll(
   ];
   let rolled: MatchState = { ...state, rollNumber: state.rollNumber + 1 };
   // Extreme: when the board has been cleared of power tiles, refill them at the
-  // start of a turn so powers keep flowing.
+  // current respawn epoch's random spots so powers keep flowing.
   if (
     rolled.ruleset === "extreme" &&
     rolled.powerUps &&
     rolled.powerUps.tiles.length === 0
   ) {
+    const epoch = respawnEpoch(rolled.turnNumber, EXTREME_RESPAWN_INTERVAL);
     rolled = {
       ...rolled,
       powerUps: {
         ...rolled.powerUps,
-        tiles: EXTREME_POWER_TILES.map((tile) => ({ ...tile })),
+        tiles: extremeLayout(rolled.id, epoch).tiles,
       },
     };
     events.push({ type: "power-tiles-refilled" });

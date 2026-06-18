@@ -58,6 +58,7 @@ interface LudoBoardProps {
   tokenSkin?: string;
   animationSkin?: string;
   powerTileRingIndexes?: ReadonlySet<number>;
+  safeRingIndexes?: ReadonlySet<number>;
 }
 
 const NO_POWER_TILES: ReadonlySet<number> = new Set();
@@ -75,6 +76,7 @@ export function LudoBoard({
   tokenSkin = "classic",
   animationSkin = "standard",
   powerTileRingIndexes = NO_POWER_TILES,
+  safeRingIndexes,
 }: LudoBoardProps) {
   const placed = useMemo(
     () =>
@@ -100,6 +102,11 @@ export function LudoBoard({
               cell={cell}
               ringIndex={ringIndex}
               isPowerTile={powerTileRingIndexes.has(ringIndex)}
+              isSafe={
+                safeRingIndexes
+                  ? safeRingIndexes.has(ringIndex)
+                  : SAFE_RING_INDEXES.has(ringIndex)
+              }
             />
           ))}
 
@@ -192,13 +199,14 @@ function PathCell({
   cell,
   ringIndex,
   isPowerTile,
+  isSafe,
 }: {
   cell: Cell;
   ringIndex: number;
   isPowerTile: boolean;
+  isSafe: boolean;
 }) {
   const openingColor = RING_INDEX_TO_COLOR[ringIndex];
-  const isSafe = SAFE_RING_INDEXES.has(ringIndex);
   const classes = [styles.cell, styles.pathCell];
   if (openingColor) {
     classes.push(SOFT[openingColor]);

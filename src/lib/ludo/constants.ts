@@ -33,6 +33,18 @@ export const EXTREME_POWER_TILES = [
   { ringIndex: 44, power: "dash" as const },
 ];
 
+/** Fallback powers a tile grants per quadrant when no strategy book is set. */
+export const EXTREME_TILE_FALLBACK_POWERS = [
+  "shield",
+  "dash",
+  "warp",
+  "snipe",
+] as const;
+
+/** Extreme safe squares and power tiles respawn at fresh random spots every
+ *  this many turns. */
+export const EXTREME_RESPAWN_INTERVAL = 6;
+
 /** Most powers a player may hold at once, to keep Extreme fair. */
 export const POWER_INVENTORY_CAP = 3;
 

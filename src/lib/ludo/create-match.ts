@@ -1,4 +1,5 @@
-import { EXTREME_POWER_TILES, TOKENS_PER_PLAYER } from "./constants";
+import { TOKENS_PER_PLAYER } from "./constants";
+import { extremeLayout } from "./extreme-spawn";
 import type {
   CreateMatchInput,
   MatchState,
@@ -56,7 +57,7 @@ export function createMatch(input: CreateMatchInput): MatchState {
     ...(input.ruleset === "extreme"
       ? {
           powerUps: {
-            tiles: EXTREME_POWER_TILES.map((tile) => ({ ...tile })),
+            ...extremeLayout(input.id, 0),
             inventory: { [host.id]: [] },
             shieldedTokenIds: [],
             dashTokenIds: [],
