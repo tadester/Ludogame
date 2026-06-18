@@ -12,6 +12,7 @@ import {
   ultimateCost,
   ultimateUsesLeft,
 } from "@/lib/ludo";
+import { boardSpec } from "@/lib/ludo/board-spec";
 import type {
   DomainEvent,
   MatchState,
@@ -119,13 +120,14 @@ const SHAKE_TONES = new Set(["ult_quake", "quake"]);
 function tileLandedOnToken(state: MatchState): boolean {
   const tiles = state.powerUps?.tiles ?? [];
   if (tiles.length === 0) return false;
+  const spec = boardSpec(state.ruleset);
   const tileRings = new Set(tiles.map((t) => t.ringIndex));
   return state.tokens.some(
     (token) =>
       token.status === "active" &&
       token.progress !== null &&
-      token.progress <= 51 &&
-      tileRings.has(progressToRingIndex(token.color, token.progress)),
+      token.progress <= spec.ringProgressMax &&
+      tileRings.has(progressToRingIndex(token.color, token.progress, spec)),
   );
 }
 

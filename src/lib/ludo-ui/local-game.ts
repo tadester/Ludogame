@@ -5,6 +5,7 @@ import {
   getLegalActions,
   progressToRingIndex,
 } from "@/lib/ludo";
+import { boardSpec } from "@/lib/ludo/board-spec";
 import type {
   LegalAction,
   MatchAction,
@@ -210,15 +211,16 @@ function botMoveScore(state: MatchState, action: LegalAction): number {
   if (!dest) return -1;
   const token = state.tokens.find((t) => t.id === dest.tokenId);
   if (!token) return -1;
+  const spec = boardSpec(state.ruleset);
 
   let score = dest.to;
   // Get tokens off the yard so the bot keeps options open.
   if (token.status === "yard") score += 6;
   // Finishing a token home is the goal.
-  if (dest.to >= 57) score += 40;
+  if (dest.to >= spec.wonProgress) score += 40;
 
-  if (dest.to <= 51) {
-    const ring = progressToRingIndex(token.color, dest.to);
+  if (dest.to <= spec.ringProgressMax) {
+    const ring = progressToRingIndex(token.color, dest.to, spec);
     const safe = safeRingsFor(state);
     const shielded = new Set(state.powerUps?.shieldedTokenIds ?? []);
     // Capturing an exposed opponent is the strongest play.
@@ -230,8 +232,8 @@ function botMoveScore(state: MatchState, action: LegalAction): number {
           other.playerId !== token.playerId &&
           other.status === "active" &&
           other.progress !== null &&
-          other.progress <= 51 &&
-          progressToRingIndex(other.color, other.progress) === ring &&
+          other.progress <= spec.ringProgressMax &&
+          progressToRingIndex(other.color, other.progress, spec) === ring &&
           !shielded.has(other.id),
       );
     if (captures) score += 60;

@@ -1,5 +1,5 @@
 .boardWrap {
-  width: min(100%, 48rem, calc(100dvh - 9rem));
+  width: min(100%, 48rem, calc(100svh - 8rem));
   margin-inline: auto;
   border-radius: 1.35rem;
   padding: 0.35rem;
@@ -8,7 +8,7 @@
 
 /* Extreme uses a larger, glowing arena so the mode reads as bigger and wilder. */
 .boardWrap[data-extreme="true"] {
-  width: min(100%, 60rem, calc(100dvh - 6rem));
+  width: min(100%, 60rem, calc(100svh - 5rem));
   padding: 0.6rem;
   border: 1px solid color-mix(in srgb, var(--accent), transparent 55%);
   box-shadow:

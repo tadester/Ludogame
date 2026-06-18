@@ -166,6 +166,16 @@ export function OnlineMatch({
         backgroundSkin={backgroundSkin}
         tokenSkin={tokenSkin}
         animationSkin={animationSkin}
+        powerTileRingIndexes={
+          snapshot.powerUps
+            ? new Set(snapshot.powerUps.tiles.map((t) => t.ringIndex))
+            : undefined
+        }
+        safeRingIndexes={
+          snapshot.powerUps?.safeRingIndexes
+            ? new Set(snapshot.powerUps.safeRingIndexes)
+            : undefined
+        }
       />
 
       {view.winnerName && effectSkin !== "none" ? (

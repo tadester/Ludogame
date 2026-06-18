@@ -265,9 +265,16 @@
   }
 }
 
-@media (min-width: 52rem) {
+@media (min-width: 64rem) {
   .layout {
-    grid-template-columns: minmax(32rem, 1fr) minmax(19rem, 24rem);
+    grid-template-columns: minmax(0, 1fr) minmax(19rem, 24rem);
+  }
+
+  .panel {
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100svh - 2rem);
+    overflow: auto;
   }
 }
 

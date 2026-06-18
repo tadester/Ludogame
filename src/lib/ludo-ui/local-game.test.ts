@@ -105,6 +105,44 @@ describe("local-game helpers", () => {
     expect(getLegalActions(state)).toContainEqual(move);
   });
 
+  it("scores Extreme bot captures past the classic ring length", () => {
+    const base = setupLocalMatch(
+      [{ name: "Ada" }, { name: "", kind: "bot" }],
+      "extreme",
+    );
+    const state: MatchState = {
+      ...base,
+      activePlayerIndex: 1,
+      phase: "awaiting-move",
+      pendingRoll: {
+        dice: [{ id: "d1", value: 1 }],
+        remainingDieIds: ["d1"],
+        selectedDieOrder: null,
+        forcedTokenId: null,
+        startedWithAllTokensInYard: false,
+        bonusReason: null,
+      },
+      tokens: base.tokens.map((token) => {
+        if (token.id === "bot2-token-1") {
+          return { ...token, status: "active", progress: 60 };
+        }
+        if (token.id === "bot2-token-2") {
+          return { ...token, status: "active", progress: 80 };
+        }
+        if (token.id === "p1-token-1") {
+          return { ...token, status: "active", progress: 86 };
+        }
+        return token;
+      }),
+    };
+
+    const move = botActionFor(state);
+    expect(move).toMatchObject({
+      type: "move-token",
+      tokenId: "bot2-token-1",
+    });
+  });
+
   it("seeds every seat's strategy book in Extreme mode", () => {
     const state = setupLocalMatch(
       [{ name: "Ada" }, { name: "Ben" }],

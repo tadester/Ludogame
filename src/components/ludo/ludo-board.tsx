@@ -239,7 +239,9 @@ function PathCell({
           ✦
         </span>
       ) : !openingColor && isSafe ? (
-        <span className={styles.safeStar}>★</span>
+        <span className={styles.safeStar} aria-label="safe zone">
+          ★
+        </span>
       ) : null}
     </div>
   );
