@@ -222,9 +222,9 @@
 
 .token {
   position: absolute;
-  width: var(--token-size, 5.2%);
-  aspect-ratio: 1;
-  transform: translate(-50%, -60%);
+  width: calc(var(--token-size, 5.2%) * 1.46);
+  aspect-ratio: 1.6 / 1;
+  transform: translate(-50%, -50%);
   transition:
     left 0.16s ease,
     top 0.16s ease;
@@ -241,8 +241,8 @@
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  overflow: visible;
+  border-radius: 28% / 38%;
+  overflow: hidden;
   border: 0.14rem solid rgb(255 255 255 / 92%);
   box-shadow:
     0 0 0 0.12rem rgb(8 12 20 / 60%),
@@ -254,11 +254,11 @@
 .disc::after {
   content: "";
   position: absolute;
-  top: 16%;
-  left: 22%;
-  width: 30%;
-  height: 24%;
-  border-radius: 50%;
+  top: 14%;
+  left: 14%;
+  width: 38%;
+  height: 20%;
+  border-radius: 999px;
   background: rgb(255 255 255 / 55%);
 }
 
@@ -268,7 +268,7 @@
   inset: 18%;
   display: grid;
   place-items: center;
-  border-radius: 50%;
+  border-radius: 28% / 40%;
   background: rgb(5 8 14 / 72%);
   color: #fff;
   font-size: clamp(0.48rem, 1.8vw, 0.92rem);
@@ -338,21 +338,21 @@
 @keyframes bob {
   0%,
   100% {
-    transform: translate(-50%, -60%);
+    transform: translate(-50%, -50%);
   }
   50% {
-    transform: translate(-50%, -82%);
+    transform: translate(-50%, -72%);
   }
 }
 
 @keyframes flash {
   0% {
     filter: brightness(2.4);
-    transform: translate(-50%, -60%) scale(1.35);
+    transform: translate(-50%, -50%) scale(1.35);
   }
   100% {
     filter: none;
-    transform: translate(-50%, -60%) scale(1);
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
@@ -580,101 +580,138 @@
 /* Anime skins keep the team-coloured disc (so a red token still reads red) and
    layer their emblem on top. Colour first, style second. */
 
-/* Ninja: a Naruto headband across a team-coloured disc — dark cloth band with
-   a silver Leaf plate. */
+/* Ninja: a wide forehead-plate token. The cloth/edge tint comes from the
+   token's seat colour, while the metal plate stays silver. */
+[data-token-skin="ninja"].token {
+  width: calc(var(--token-size, 5.2%) * 2.35);
+  aspect-ratio: 3.4 / 1;
+  transform: translate(-50%, -50%);
+  z-index: 8;
+}
+
 [data-token-skin="ninja"] .disc {
   overflow: hidden;
-  border-radius: 24%;
-  clip-path: polygon(50% 0, 86% 12%, 100% 50%, 86% 88%, 50% 100%, 14% 88%, 0 50%, 14% 12%);
-  background: linear-gradient(145deg, #2d3440, #0b0f16 64%);
+  border: 0.08rem solid #090d14;
+  border-radius: 18% / 48%;
+  clip-path: none;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--team-tint), #101827 42%) 0 16%,
+      #aeb6bf 16% 84%,
+      color-mix(in srgb, var(--team-tint), #101827 42%) 84% 100%
+    );
   box-shadow:
-    0 0 0 0.14rem #111827,
-    0 0.3rem 0.45rem rgb(0 0 0 / 48%),
-    inset 0 0 0 0.12rem color-mix(in srgb, var(--team-tint), white 18%),
-    inset 0 -0.2rem 0.3rem rgb(0 0 0 / 42%);
+    0 0 0 0.08rem rgb(5 8 14 / 85%),
+    0 0.2rem 0.32rem rgb(0 0 0 / 48%),
+    inset 0 0.08rem 0.12rem rgb(255 255 255 / 48%),
+    inset 0 -0.08rem 0.12rem rgb(0 0 0 / 36%);
 }
 
 [data-token-skin="ninja"] .skinShape,
 [data-token-skin="ninja"] .teamOverlay {
-  clip-path: inherit;
+  border-radius: inherit;
 }
 
 [data-token-skin="ninja"] .skinShape {
   background:
-    linear-gradient(180deg, transparent 0 35%, #151922 36% 66%, transparent 67%),
-    linear-gradient(145deg, #343c4a, #0b0f16 64%);
+    linear-gradient(110deg, transparent 0 68%, rgb(255 255 255 / 36%) 69% 78%, transparent 79%),
+    linear-gradient(90deg, rgb(15 23 42 / 52%) 0 16%, transparent 16% 84%, rgb(15 23 42 / 52%) 84% 100%),
+    repeating-linear-gradient(0deg, rgb(255 255 255 / 10%) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #ccd2d8, #929ba5 56%, #6c7683);
 }
 
 [data-token-skin="ninja"] .teamOverlay {
-  opacity: 0.38;
+  background:
+    linear-gradient(90deg,
+      var(--team-tint) 0 17%,
+      transparent 17% 83%,
+      var(--team-tint) 83% 100%
+    );
+  mix-blend-mode: multiply;
+  opacity: 0.78;
 }
+
 [data-token-skin="ninja"] .disc::before {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 37%;
-  height: 30%;
-  background: linear-gradient(180deg, #2c3138, #0b0d11 60%, #2c3138);
-  box-shadow: 0 0 0.06rem rgb(0 0 0 / 55%);
+  z-index: 4;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 0.08rem rgb(5 8 14 / 90%),
+    inset 0 0 0 0.13rem rgb(255 255 255 / 12%);
+  pointer-events: none;
 }
+
 [data-token-skin="ninja"] .disc::after {
   content: "";
   display: block;
   position: absolute;
+  z-index: 3;
   top: 50%;
   left: 50%;
-  width: 44%;
-  height: 24%;
+  width: 42%;
+  height: 58%;
   transform: translate(-50%, -50%);
-  border-radius: 0.04rem;
+  border-radius: 0.16rem;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='%231b2128' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M14 9a3.4 3.4 0 1 0 2.5 3.4'/%3E%3Cpath d='M13 4a8 8 0 1 0 7 9'/%3E%3C/g%3E%3C/svg%3E")
-      center / auto 86% no-repeat,
-    linear-gradient(160deg, #eef2f6, #b7bec7 55%, #828a94);
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 42'%3E%3Cg fill='none' stroke='%23070a0f' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 31c5-14 16-22 27-13 8 8 1 19-9 17-8-1-10-10-4-14 5-3 10 0 10 5'/%3E%3Cpath d='M15 31h29'/%3E%3Cpath d='M45 18l8-8'/%3E%3C/g%3E%3C/svg%3E")
+      center / auto 82% no-repeat,
+    linear-gradient(150deg, #e5ebf0, #aab4bf 62%, #75808c);
   box-shadow:
-    inset 0 0 0 0.03rem rgb(0 0 0 / 45%),
-    inset 0 0.05rem 0.12rem rgb(255 255 255 / 75%);
+    inset 0 0 0 0.04rem rgb(0 0 0 / 48%),
+    inset 0 0.06rem 0.12rem rgb(255 255 255 / 75%),
+    0 0.04rem 0.08rem rgb(0 0 0 / 38%);
   opacity: 1;
 }
 
 [data-token-skin="ninja"] .skinMark {
-  inset: 29% 28%;
-  border-radius: 0.16rem;
-  background: linear-gradient(160deg, #eef2f6, #8d98a5);
-  color: #101827;
-  font-size: clamp(0.42rem, 1.45vw, 0.72rem);
-  letter-spacing: 0;
-  text-shadow: none;
+  display: none;
 }
 
-/* Straw Hat: Luffy's One Piece hat sitting on a team-coloured disc. */
-[data-token-skin="straw_hat"] .disc::after {
-  content: "";
-  display: block;
+.rivets {
   position: absolute;
-  inset: 6%;
-  transform: none;
-  top: auto;
-  left: auto;
-  width: auto;
-  height: auto;
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 40'%3E%3Cellipse cx='24' cy='29' rx='23' ry='8.5' fill='%23e7b35e' stroke='%239c6b2e' stroke-width='1.6'/%3E%3Cpath d='M9 29 Q10 9 24 8 Q38 9 39 29 Z' fill='%23f3cd82' stroke='%239c6b2e' stroke-width='1.6'/%3E%3Cpath d='M10 24 Q24 30 38 24 L38 19 Q24 25 10 19 Z' fill='%23d83b34'/%3E%3C/svg%3E")
-      center / contain no-repeat;
-  border-radius: 0;
-  opacity: 1;
+  z-index: 5;
+  inset: 17% 4%;
+  pointer-events: none;
 }
 
+.rivets::before,
+.rivets::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 0.24rem;
+  height: 100%;
+  background:
+    radial-gradient(circle, #101722 0 35%, #b8c1ca 38% 58%, transparent 61%) center top / 100% 33.333% repeat-y;
+  filter: drop-shadow(0 0 0.02rem rgb(0 0 0 / 80%));
+}
+
+.rivets::before {
+  left: 0;
+}
+
+.rivets::after {
+  right: 0;
+}
+
+/* Straw Hat: skull-and-bones emblem with a seat-coloured hat band. */
 [data-token-skin="straw_hat"] .disc {
-  clip-path: polygon(28% 4%, 72% 4%, 78% 48%, 100% 68%, 100% 87%, 0 87%, 0 68%, 22% 48%);
-  border-radius: 18% 18% 34% 34%;
-  background: linear-gradient(145deg, #f8da91, #c88931 65%, #744315);
+  border-radius: 24% / 34%;
+  clip-path: none;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--team-tint), #f8d46d 48%) 0 16%, transparent 17%),
+    linear-gradient(145deg, #fff8e8, #e7c76d 54%, #8d5a21);
   box-shadow:
-    0 0 0 0.16rem #8a5a22,
-    0 0.3rem 0.45rem rgb(0 0 0 / 48%),
-    inset 0 0 0 0.14rem color-mix(in srgb, var(--team-tint), white 12%),
-    inset 0 -0.18rem 0.3rem rgb(0 0 0 / 38%);
+    0 0 0 0.12rem #6f4216,
+    0 0.24rem 0.38rem rgb(0 0 0 / 48%),
+    inset 0 0 0 0.08rem rgb(255 255 255 / 48%),
+    inset 0 -0.16rem 0.28rem rgb(0 0 0 / 34%);
+}
+
+[data-token-skin="straw_hat"] .disc::after {
+  content: none;
 }
 
 [data-token-skin="straw_hat"] .skinShape,
@@ -684,23 +721,40 @@
 
 [data-token-skin="straw_hat"] .skinShape {
   background:
-    linear-gradient(180deg, transparent 0 44%, var(--team-tint) 45% 57%, transparent 58%),
-    radial-gradient(circle at 50% 30%, #ffe8ad, #c88931 65%, #744315);
+    linear-gradient(180deg, transparent 0 24%, var(--team-tint) 25% 34%, transparent 35%),
+    radial-gradient(ellipse at 50% 20%, #ffe07b 0 25%, transparent 26%),
+    linear-gradient(180deg, #fffdf7 0 62%, #f2eadc 63% 100%);
 }
 
 [data-token-skin="straw_hat"] .teamOverlay {
-  opacity: 0.28;
+  background:
+    linear-gradient(180deg, transparent 0 24%, var(--team-tint) 25% 34%, transparent 35%),
+    linear-gradient(90deg, var(--team-tint), transparent 32% 68%, var(--team-tint));
+  opacity: 0.32;
+  mix-blend-mode: multiply;
 }
 
 [data-token-skin="straw_hat"] .skinMark {
-  inset: 16% 12%;
-  border-radius: 999px;
+  display: none;
+}
+
+.strawCrossbones {
+  position: absolute;
+  z-index: 5;
+  inset: -10% 2% -8%;
+  pointer-events: none;
   background:
-    linear-gradient(180deg, #f6d58a 0 58%, #cf2f2b 58% 72%, #d69b46 72%);
-  color: #4a2c10;
-  font-size: clamp(0.48rem, 1.55vw, 0.76rem);
-  letter-spacing: 0;
-  text-shadow: none;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 64'%3E%3Cg fill='none' stroke='%2321181a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 52 35 39M78 52 61 39M18 13l18 16M78 13 60 29'/%3E%3C/g%3E%3Cg fill='%23fffaf4' stroke='%2321181a' stroke-width='4'%3E%3Ccircle cx='14' cy='55' r='7'/%3E%3Ccircle cx='25' cy='57' r='6'/%3E%3Ccircle cx='82' cy='55' r='7'/%3E%3Ccircle cx='71' cy='57' r='6'/%3E%3Ccircle cx='14' cy='9' r='7'/%3E%3Ccircle cx='25' cy='7' r='6'/%3E%3Ccircle cx='82' cy='9' r='7'/%3E%3Ccircle cx='71' cy='7' r='6'/%3E%3Cpath d='M31 32c0-12 8-21 17-21s17 9 17 21v11c0 9-7 15-17 15s-17-6-17-15z'/%3E%3C/g%3E%3Cpath fill='%23f5ca35' stroke='%2321181a' stroke-width='4' d='M28 29c2-12 9-21 20-21s18 9 20 21z'/%3E%3Cpath fill='%23d9272f' d='M29 29h38v8H29z'/%3E%3Cpath fill='%23f5ca35' stroke='%2321181a' stroke-width='4' d='M22 36h52a3 3 0 0 1 0 6H22a3 3 0 0 1 0-6z'/%3E%3Cg fill='%2321181a'%3E%3Ccircle cx='42' cy='43' r='5'/%3E%3Ccircle cx='54' cy='43' r='5'/%3E%3Ccircle cx='48' cy='51' r='2.8'/%3E%3Cpath d='M38 55h20v3H38z'/%3E%3C/g%3E%3C/svg%3E")
+      center / contain no-repeat;
+}
+
+[data-token-skin="straw_hat"] .strawCrossbones::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 0 42%, var(--team-tint) 43% 55%, transparent 56%);
+  mix-blend-mode: multiply;
+  opacity: 0.42;
 }
 
 /* Class Point: a Classroom-of-the-Elite crest on a team-coloured disc. */
@@ -753,6 +807,19 @@
   color: #f2d36b;
   font-size: clamp(0.36rem, 1.15vw, 0.56rem);
   letter-spacing: -0.12em;
+}
+
+/* All tokens use the same readable flat-card silhouette; skins decorate inside
+   the card instead of shrinking into hard-to-see novelty outlines. */
+[data-token-form="flat"]:not([data-token-detail="headband"]) .disc {
+  clip-path: none;
+  border-radius: 24% / 34%;
+}
+
+[data-token-form="flat"]:not([data-token-detail="headband"]) .skinShape,
+[data-token-form="flat"]:not([data-token-detail="headband"]) .teamOverlay {
+  clip-path: none;
+  border-radius: inherit;
 }
 
 /* --- Anime-inspired animation packs ------------------------------------ */

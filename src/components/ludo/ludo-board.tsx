@@ -201,6 +201,10 @@ export function LudoBoard({
                   type="button"
                   className={classes}
                   data-token-skin={tokenSkin}
+                  data-token-form="flat"
+                  data-token-detail={
+                    tokenSkin === "ninja" ? "headband" : undefined
+                  }
                   style={{ left: `${left}%`, top: `${top}%` }}
                   onClick={() => interactive && movable && onTokenClick(token.id)}
                   aria-label={`${token.color} token ${tokenSlotIndex(token.id) + 1}`}
@@ -214,6 +218,15 @@ export function LudoBoard({
                           className={styles.teamOverlay}
                           data-token-team-overlay
                         />
+                        {tokenSkin === "ninja" ? (
+                          <span className={styles.rivets} data-token-rivets />
+                        ) : null}
+                        {tokenSkin === "straw_hat" ? (
+                          <span
+                            className={styles.strawCrossbones}
+                            data-token-emblem="straw-crossbones"
+                          />
+                        ) : null}
                       </>
                     ) : null}
                     {TOKEN_SKIN_MARK[tokenSkin] ? (

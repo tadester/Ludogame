@@ -86,6 +86,68 @@ describe("board and dice skins", () => {
     expect(tokens).toHaveLength(match.tokens.length);
   });
 
+  it("renders every token in the flat token form, including classic", () => {
+    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
+    const { container } = render(
+      <LudoBoard
+        match={match}
+        movableTokenIds={new Set()}
+        animatingTokenId={null}
+        animatingCell={null}
+        capturedTokenIds={new Set()}
+        interactive={false}
+        onTokenClick={() => {}}
+      />,
+    );
+
+    expect(container.querySelectorAll('[data-token-form="flat"]')).toHaveLength(
+      match.tokens.length,
+    );
+  });
+
+  it("renders ninja tokens with headband details", () => {
+    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
+    const { container } = render(
+      <LudoBoard
+        match={match}
+        movableTokenIds={new Set()}
+        animatingTokenId={null}
+        animatingCell={null}
+        capturedTokenIds={new Set()}
+        interactive={false}
+        onTokenClick={() => {}}
+        tokenSkin="ninja"
+      />,
+    );
+
+    expect(container.querySelectorAll('[data-token-detail="headband"]')).toHaveLength(
+      match.tokens.length,
+    );
+    expect(container.querySelectorAll("[data-token-rivets]")).toHaveLength(
+      match.tokens.length,
+    );
+  });
+
+  it("renders straw hat tokens with a skull-and-bones emblem", () => {
+    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
+    const { container } = render(
+      <LudoBoard
+        match={match}
+        movableTokenIds={new Set()}
+        animatingTokenId={null}
+        animatingCell={null}
+        capturedTokenIds={new Set()}
+        interactive={false}
+        onTokenClick={() => {}}
+        tokenSkin="straw_hat"
+      />,
+    );
+
+    expect(
+      container.querySelectorAll('[data-token-emblem="straw-crossbones"]'),
+    ).toHaveLength(match.tokens.length);
+  });
+
   it("renders a visible skin mark for non-classic token skins", () => {
     const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
     const { container } = render(
