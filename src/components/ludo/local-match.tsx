@@ -37,9 +37,17 @@ import {
   saveMatch,
   savePreferences,
 } from "@/lib/ludo-ui/local-storage";
+import {
+  POWER_FEEDBACK,
+  POWER_LABEL,
+  POWER_ORDER,
+  ULTIMATE_DESC,
+  ULTIMATE_LABEL,
+} from "@/lib/ludo-ui/powers-meta";
 
 import { Dice } from "./dice";
 import { LudoBoard } from "./ludo-board";
+import { StrategyBook } from "./strategy-book";
 import styles from "./local-match.module.css";
 
 const SETUP_COLORS: PlayerColor[] = ["red", "green", "yellow", "blue"];
@@ -52,61 +60,6 @@ const RULESETS: { id: Ruleset; label: string }[] = [
 ];
 const STEP_MS = 165;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const POWER_LABEL: Record<PowerKind, string> = {
-  shield: "Shield",
-  dash: "Dash",
-  warp: "Warp",
-  snipe: "Snipe",
-  swap: "Swap",
-  summon: "Summon",
-  bolt: "Bolt",
-};
-
-const POWER_FEEDBACK: Record<PowerKind, string> = {
-  shield: "Shield raised. ",
-  dash: "Dash armed. ",
-  warp: "Warped to safety. ",
-  snipe: "Snipe fired. ",
-  swap: "Positions swapped. ",
-  summon: "Token summoned. ",
-  bolt: "Bolt struck. ",
-};
-
-const POWER_ORDER: readonly PowerKind[] = [
-  "shield",
-  "dash",
-  "warp",
-  "snipe",
-  "swap",
-  "summon",
-  "bolt",
-];
-
-/** Most powers a player may equip in their strategy book. */
-const STRATEGY_BOOK_CAP = 5;
-
-const POWER_DESC: Record<PowerKind, string> = {
-  shield: "Block the next capture on a token.",
-  dash: "Your token's next move advances double.",
-  warp: "Jump a token to the next safe square.",
-  snipe: "Send an exposed enemy token home from range.",
-  swap: "Swap one of your tokens with an enemy's.",
-  summon: "Release a token from the yard without a six.",
-  bolt: "Knock an exposed enemy token back six squares.",
-};
-
-const ULTIMATE_LABEL: Record<UltimateKind, string> = {
-  meteor: "Meteor",
-  quake: "Quake",
-  surge: "Surge",
-};
-
-const ULTIMATE_DESC: Record<UltimateKind, string> = {
-  meteor: "Strike one enemy token home from any range.",
-  quake: "Knock every enemy ring token back eight.",
-  surge: "Raise a shield on all your active tokens.",
-};
 
 const tokenLabel = (token: { color: PlayerColor; id: string }) =>
   `${token.color} #${token.id.split("-").at(-1)}`;
@@ -145,11 +98,6 @@ export function LocalMatch() {
   } | null>(null);
   // While true, the player is choosing an enemy token for a Meteor ultimate.
   const [meteorTargeting, setMeteorTargeting] = useState(false);
-  // The Extreme strategy book: which powers tiles can grant. Empty means tiles
-  // keep their own power.
-  const [loadout, setLoadout] = useState<PowerKind[]>([]);
-  // The single ultimate each player has equipped for the match.
-  const [ultimate, setUltimate] = useState<UltimateKind>("meteor");
 
   const movesByToken = useMemo(() => {
     if (!match || match.phase !== "awaiting-move" || busy) {
@@ -173,6 +121,11 @@ export function LocalMatch() {
   const activePlayer = match ? match.players[match.activePlayerIndex] : null;
 
   const start = useCallback(() => {
+    // The strategy book and ultimate are managed by the StrategyBook editor and
+    // saved in preferences, so read them fresh here.
+    const prefs = loadPreferences();
+    const loadout = prefs?.loadout ?? [];
+    const ultimate = prefs?.ultimate;
     savePreferences({ count, ruleset, names, loadout, ultimate });
     const next = setupLocalMatch(
       Array.from({ length: count }, (_, i) => ({ name: names[i] ?? "" })),
@@ -187,17 +140,7 @@ export function LocalMatch() {
     setCaptured(new Set());
     setHandoffTo(null);
     setMessage(`${next.players[next.activePlayerIndex].displayName} to roll.`);
-  }, [count, ruleset, names, loadout, ultimate]);
-
-  const toggleLoadout = useCallback((power: PowerKind) => {
-    setLoadout((prev) =>
-      prev.includes(power)
-        ? prev.filter((p) => p !== power)
-        : prev.length >= STRATEGY_BOOK_CAP
-          ? prev
-          : [...prev, power],
-    );
-  }, []);
+  }, [count, ruleset, names]);
 
   const newGame = useCallback(() => {
     clearMatch();
@@ -393,8 +336,6 @@ export function LocalMatch() {
       setCount(prefs.count);
       setRuleset(prefs.ruleset);
       setNames([0, 1, 2, 3].map((i) => prefs.names[i] ?? ""));
-      if (prefs.loadout) setLoadout([...prefs.loadout]);
-      if (prefs.ultimate) setUltimate(prefs.ultimate);
     }
     setSavedMatch(loadMatch());
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -428,60 +369,12 @@ export function LocalMatch() {
           </div>
         </div>
         {ruleset === "extreme" ? (
-          <div className={styles.field}>
-            <span className={styles.fieldLabel}>
-              Strategy book ({loadout.length}/{STRATEGY_BOOK_CAP})
-            </span>
-            <p className={styles.hint}>
-              Equip powers your ✦ tiles can grant. Leave empty to use each
-              tile&apos;s own power.
-            </p>
-            {POWER_ORDER.map((power) => {
-              const equipped = loadout.includes(power);
-              return (
-                <button
-                  key={power}
-                  type="button"
-                  className={`${styles.bookRow} ${equipped ? styles.segmentActive : ""}`}
-                  aria-pressed={equipped}
-                  onClick={() => toggleLoadout(power)}
-                >
-                  <span className={styles.bookName}>
-                    {equipped ? "✓ " : ""}
-                    {POWER_LABEL[power]}
-                  </span>
-                  <span className={styles.bookDesc}>{POWER_DESC[power]}</span>
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
-        {ruleset === "extreme" ? (
-          <div className={styles.field}>
-            <span className={styles.fieldLabel}>Ultimate</span>
-            <p className={styles.hint}>
-              Everyone equips one ultimate. It charges as you play, then can be
-              unleashed — some are limited, the defensive one recharges.
-            </p>
-            {(["meteor", "quake", "surge"] as UltimateKind[]).map((kind) => {
-              const equipped = ultimate === kind;
-              return (
-                <button
-                  key={kind}
-                  type="button"
-                  className={`${styles.bookRow} ${equipped ? styles.segmentActive : ""}`}
-                  aria-pressed={equipped}
-                  onClick={() => setUltimate(kind)}
-                >
-                  <span className={styles.bookName}>
-                    {equipped ? "✓ " : ""}
-                    {ULTIMATE_LABEL[kind]}
-                  </span>
-                  <span className={styles.bookDesc}>{ULTIMATE_DESC[kind]}</span>
-                </button>
-              );
-            })}
-          </div>
+          <details className={styles.bookDetails}>
+            <summary className={styles.bookSummary}>
+              Strategy book &amp; ultimate
+            </summary>
+            <StrategyBook />
+          </details>
         ) : null}
         <div className={styles.field}>
           <span className={styles.fieldLabel}>Players</span>

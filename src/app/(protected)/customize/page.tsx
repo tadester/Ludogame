@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { CosmeticPreview } from "@/app/(protected)/customize/CosmeticPreview";
 import {
   equipCosmetic,
   updatePreferences,
@@ -76,41 +77,60 @@ export default async function CustomizePage({
         </button>
       </form>
 
-      {groups.map((group) => (
-        <div className={styles.group} key={group.kind}>
-          <h2>{KIND_LABELS[group.kind]}</h2>
-          <ul className={styles.grid}>
-            {group.items.map((item) => {
-              const equipped =
-                equippedItemId(loadout, group.kind) === item.id;
-              return (
-                <li
-                  className={`${styles.card} ${equipped ? styles.equipped : ""}`}
-                  key={item.id}
-                >
-                  <div className={styles.cardHead}>
-                    <span className={styles.name}>{item.name}</span>
-                    {equipped ? (
-                      <span className={styles.tag}>Equipped</span>
-                    ) : !item.owned ? (
-                      <span className={styles.locked}>Locked</span>
-                    ) : null}
-                  </div>
-                  <p className={styles.desc}>{item.description}</p>
-                  {item.owned && !equipped ? (
-                    <form action={equipCosmetic}>
-                      <input name="itemId" type="hidden" value={item.id} />
-                      <button className={styles.equipButton} type="submit">
-                        Equip
-                      </button>
-                    </form>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
+      {groups.map((group) => {
+        const equippedId = equippedItemId(loadout, group.kind);
+        const equippedItem = group.items.find((i) => i.id === equippedId);
+        const ownedCount = group.items.filter((i) => i.owned).length;
+        return (
+          <details
+            className={styles.group}
+            key={group.kind}
+            open={group.kind === "background"}
+          >
+            <summary className={styles.summary}>
+              <span className={styles.summaryTitle}>
+                {KIND_LABELS[group.kind]}
+              </span>
+              <span className={styles.summaryMeta}>
+                {equippedItem ? equippedItem.name : "None equipped"} ·{" "}
+                {ownedCount}/{group.items.length} owned
+              </span>
+            </summary>
+            <ul className={styles.grid}>
+              {group.items.map((item) => {
+                const equipped = equippedId === item.id;
+                return (
+                  <li
+                    className={`${styles.card} ${equipped ? styles.equipped : ""}`}
+                    key={item.id}
+                  >
+                    <CosmeticPreview kind={group.kind} code={item.code} />
+                    <div className={styles.cardBody}>
+                      <div className={styles.cardHead}>
+                        <span className={styles.name}>{item.name}</span>
+                        {equipped ? (
+                          <span className={styles.tag}>Equipped</span>
+                        ) : !item.owned ? (
+                          <span className={styles.locked}>Locked</span>
+                        ) : null}
+                      </div>
+                      <p className={styles.desc}>{item.description}</p>
+                      {item.owned && !equipped ? (
+                        <form action={equipCosmetic}>
+                          <input name="itemId" type="hidden" value={item.id} />
+                          <button className={styles.equipButton} type="submit">
+                            Equip
+                          </button>
+                        </form>
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </details>
+        );
+      })}
     </section>
   );
 }

@@ -44,36 +44,102 @@
 }
 
 .group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--panel), transparent 12%);
+  overflow: hidden;
 }
 
-.group h2 {
-  margin: 0;
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem 0.75rem;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.summaryTitle {
   font-size: 1rem;
-  color: var(--muted);
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.summaryMeta {
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 .grid {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 1rem 1rem;
   display: grid;
   gap: 0.6rem;
-  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
 }
 
 .card {
   display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.7rem;
   padding: 0.85rem;
   border: 1px solid var(--panel-border);
   border-radius: 0.7rem;
   background: color-mix(in srgb, var(--panel), transparent 12%);
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.preview {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgb(255 255 255 / 14%);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 25%);
+  overflow: hidden;
+}
+
+.tokenDots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.22rem;
+}
+
+.tokenDots span {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  border: 1px solid rgb(0 0 0 / 35%);
+}
+
+.diePreview {
+  background: #f7f9fc;
+}
+
+.diePip {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: #1b2535;
+}
+
+.glyphPreview {
+  font-size: 1.4rem;
+  background: color-mix(in srgb, var(--panel), transparent 30%);
 }
 
 .equipped {

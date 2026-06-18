@@ -1,0 +1,89 @@
+.book {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.section {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sectionHead h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.count {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.7rem;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.row.equipped {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent), transparent 86%);
+}
+
+.rowMain {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.name {
+  font-weight: 800;
+}
+
+.desc {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.state {
+  flex: none;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--accent);
+  white-space: nowrap;
+}

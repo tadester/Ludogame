@@ -7,6 +7,7 @@ const baseLinks = [
   { href: "/friends", label: "Friends" },
   { href: "/store", label: "Store" },
   { href: "/customize", label: "Inventory" },
+  { href: "/strategy", label: "Strategy" },
   { href: "/profile", label: "Profile" },
 ] as const;
 
