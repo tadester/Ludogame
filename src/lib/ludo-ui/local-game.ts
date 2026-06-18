@@ -5,6 +5,7 @@ import type {
   MatchState,
   PowerKind,
   Ruleset,
+  UltimateKind,
 } from "@/lib/ludo";
 
 import { PLAY_ORDER } from "./geometry";
@@ -27,6 +28,7 @@ export function setupLocalMatch(
   players: readonly LocalPlayerSetup[],
   ruleset: Ruleset = "classic",
   loadout: readonly PowerKind[] = [],
+  ultimate?: UltimateKind,
 ): MatchState {
   const seats = players.map<LocalSeat>((player, index) => ({
     id: `p${index + 1}`,
@@ -55,11 +57,21 @@ export function setupLocalMatch(
     playerId: seats[0].id,
   }).state;
 
-  if (ruleset === "extreme" && state.powerUps && loadout.length > 0) {
-    const loadouts = Object.fromEntries(
-      seats.map((seat) => [seat.id, [...loadout]]),
-    );
-    state = { ...state, powerUps: { ...state.powerUps, loadouts } };
+  if (ruleset === "extreme" && state.powerUps) {
+    let powerUps = state.powerUps;
+    if (loadout.length > 0) {
+      const loadouts = Object.fromEntries(
+        seats.map((seat) => [seat.id, [...loadout]]),
+      );
+      powerUps = { ...powerUps, loadouts };
+    }
+    if (ultimate) {
+      const ultimateLoadout = Object.fromEntries(
+        seats.map((seat) => [seat.id, ultimate]),
+      );
+      powerUps = { ...powerUps, ultimateLoadout };
+    }
+    state = { ...state, powerUps };
   }
 
   return state;

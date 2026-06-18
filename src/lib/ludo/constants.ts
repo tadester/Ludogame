@@ -42,3 +42,14 @@ export const MAP_EVENT_INTERVAL = 7;
 
 /** How far an earthquake slides each exposed (non-safe) token back. */
 export const EARTHQUAKE_SETBACK = 4;
+
+/** Ultimate attacks: charge fills to this cap, then can be unleashed once. */
+export const ULTIMATE_MAX = 100;
+/** Charge the incoming player gains at the start of each of their turns. */
+export const ULTIMATE_CHARGE_PER_TURN = 15;
+/** Bonus charge for capturing or sending an opponent home. */
+export const ULTIMATE_CHARGE_PER_CAPTURE = 35;
+/** Charge gained when collecting a power tile. */
+export const ULTIMATE_CHARGE_PER_POWER = 15;
+/** How far a Quake ultimate knocks each opponent token back. */
+export const QUAKE_KNOCKBACK = 8;

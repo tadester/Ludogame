@@ -1,4 +1,9 @@
-import type { MatchState, PowerKind, Ruleset } from "@/lib/ludo";
+import type {
+  MatchState,
+  PowerKind,
+  Ruleset,
+  UltimateKind,
+} from "@/lib/ludo";
 
 const MATCH_KEY = "ludo:match:v1";
 const PREFS_KEY = "ludo:prefs:v1";
@@ -24,7 +29,11 @@ export interface LocalPreferences {
   readonly names: readonly string[];
   /** The Extreme strategy-book loadout the player last equipped. */
   readonly loadout?: readonly PowerKind[];
+  /** The Extreme ultimate the player last equipped. */
+  readonly ultimate?: UltimateKind;
 }
+
+const ULTIMATES: readonly UltimateKind[] = ["meteor", "quake", "surge"];
 
 function storage(): Storage | null {
   try {
@@ -109,11 +118,15 @@ export function loadPreferences(): LocalPreferences | null {
           POWERS.includes(p as PowerKind),
         )
       : undefined;
+    const ultimate = ULTIMATES.includes(parsed.ultimate as UltimateKind)
+      ? (parsed.ultimate as UltimateKind)
+      : undefined;
     return {
       count: parsed.count,
       ruleset: parsed.ruleset as Ruleset,
       names: parsed.names.map((n) => String(n)),
       ...(loadout ? { loadout } : {}),
+      ...(ultimate ? { ultimate } : {}),
     };
   } catch {
     return null;

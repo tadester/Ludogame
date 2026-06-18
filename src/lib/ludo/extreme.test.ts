@@ -420,3 +420,105 @@ describe("dash power", () => {
     ).toBe(true);
   });
 });
+
+describe("summon power", () => {
+  function readyToSummon(): MatchState {
+    const base = extremeMatch();
+    return {
+      ...base,
+      powerUps: {
+        ...base.powerUps!,
+        inventory: { ...base.powerUps!.inventory, p1: ["summon"] },
+      },
+    };
+  }
+
+  it("releases a yard token to its start without a six", () => {
+    const state = readyToSummon();
+    const { state: next, events } = applyAction(state, {
+      type: "use-power",
+      expectedVersion: state.version,
+      playerId: "p1",
+      power: "summon",
+      tokenId: "p1-token-1",
+    });
+    const token = next.tokens.find((t) => t.id === "p1-token-1");
+    expect(token?.status).toBe("active");
+    expect(token?.progress).toBe(0);
+    expect(events.some((e) => e.type === "token-released")).toBe(true);
+    expect(powersOf(next, "p1")).toEqual([]);
+  });
+
+  it("rejects summoning a token that is already on the board", () => {
+    const base = readyToSummon();
+    const state: MatchState = {
+      ...base,
+      tokens: base.tokens.map((t) =>
+        t.id === "p1-token-1"
+          ? { ...t, status: "active" as const, progress: 4 }
+          : t,
+      ),
+    };
+    expect(() =>
+      applyAction(state, {
+        type: "use-power",
+        expectedVersion: state.version,
+        playerId: "p1",
+        power: "summon",
+        tokenId: "p1-token-1",
+      }),
+    ).toThrow();
+  });
+});
+
+describe("bolt power", () => {
+  function readyToBolt(targetProgress: number, shielded = false): MatchState {
+    const base = extremeMatch();
+    return {
+      ...base,
+      tokens: base.tokens.map((t) =>
+        t.id === "p2-token-1"
+          ? { ...t, status: "active" as const, progress: targetProgress }
+          : t,
+      ),
+      powerUps: {
+        ...base.powerUps!,
+        inventory: { ...base.powerUps!.inventory, p1: ["bolt"] },
+        shieldedTokenIds: shielded ? ["p2-token-1"] : [],
+      },
+    };
+  }
+
+  it("knocks an exposed enemy token back six squares", () => {
+    const state = readyToBolt(GREEN_PROGRESS_ON_RING_5);
+    const { state: next, events } = applyAction(state, {
+      type: "use-power",
+      expectedVersion: state.version,
+      playerId: "p1",
+      power: "bolt",
+      tokenId: "p2-token-1",
+      targetTokenId: "p2-token-1",
+    });
+    const token = next.tokens.find((t) => t.id === "p2-token-1");
+    expect(token?.status).toBe("active");
+    expect(token?.progress).toBe(GREEN_PROGRESS_ON_RING_5 - 6);
+    expect(events.some((e) => e.type === "token-warped")).toBe(true);
+  });
+
+  it("is absorbed by a shield", () => {
+    const state = readyToBolt(GREEN_PROGRESS_ON_RING_5, true);
+    const { state: next, events } = applyAction(state, {
+      type: "use-power",
+      expectedVersion: state.version,
+      playerId: "p1",
+      power: "bolt",
+      tokenId: "p2-token-1",
+      targetTokenId: "p2-token-1",
+    });
+    expect(next.tokens.find((t) => t.id === "p2-token-1")?.progress).toBe(
+      GREEN_PROGRESS_ON_RING_5,
+    );
+    expect(isShielded(next, "p2-token-1")).toBe(false);
+    expect(events.some((e) => e.type === "capture-blocked")).toBe(true);
+  });
+});

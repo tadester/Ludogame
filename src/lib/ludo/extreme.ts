@@ -3,8 +3,11 @@ import {
   CLASSIC_SAFE_RING_INDEXES,
   POWER_INVENTORY_CAP,
   RING_PROGRESS_MAX,
+  ULTIMATE_CHARGE_PER_CAPTURE,
+  ULTIMATE_CHARGE_PER_POWER,
 } from "./constants";
 import { requireActiveMatch, requireActivePlayer } from "./turn-flow";
+import { addCharge } from "./ultimate";
 import { LudoRuleError } from "./types";
 import type {
   ApplyActionResult,
@@ -71,6 +74,7 @@ export function resolveExtremeLanding(
   const events: DomainEvent[] = [];
   let shieldedTokenIds = power.shieldedTokenIds;
   let tokens = state.tokens;
+  let chargeGain = 0;
 
   if (!CLASSIC_SAFE.has(ringIndex)) {
     tokens = tokens.map((token) => {
@@ -91,6 +95,7 @@ export function resolveExtremeLanding(
         });
         return token;
       }
+      chargeGain += ULTIMATE_CHARGE_PER_CAPTURE;
       events.push({
         type: "token-captured",
         playerId: moverId,
@@ -111,6 +116,7 @@ export function resolveExtremeLanding(
       const granted = pickPowerForTile(state, moverId, ringIndex, tile.power);
       tiles = tiles.filter((entry) => entry.ringIndex !== ringIndex);
       inventory = { ...inventory, [moverId]: [...held, granted] };
+      chargeGain += ULTIMATE_CHARGE_PER_POWER;
       events.push({
         type: "power-collected",
         playerId: moverId,
@@ -120,9 +126,18 @@ export function resolveExtremeLanding(
     }
   }
 
+  const withCounts: ExtremePowerState = {
+    ...power,
+    tiles,
+    inventory,
+    shieldedTokenIds,
+  };
+  const ultimate =
+    chargeGain > 0 ? addCharge(withCounts, moverId, chargeGain) : power.ultimate;
+
   return {
     tokens,
-    powerUps: { ...power, tiles, inventory, shieldedTokenIds },
+    powerUps: { ...withCounts, ultimate },
     events,
   };
 }
@@ -173,7 +188,12 @@ const KNOWN_POWERS = new Set<PowerKind>([
   "warp",
   "snipe",
   "swap",
+  "summon",
+  "bolt",
 ]);
+
+/** How far a Bolt knocks an opponent token back. */
+const BOLT_KNOCKBACK = 6;
 
 /** The progress of the next safe ring square strictly ahead of `progress` for
  *  a token of `color`, or null when none lies ahead before the home lane. */
@@ -275,6 +295,10 @@ export function applyUsePower(
       return applySnipe(state, action, spent, used);
     case "swap":
       return applySwap(state, action, spent, used);
+    case "summon":
+      return applySummon(state, action, spent, used);
+    case "bolt":
+      return applyBolt(state, action, spent, used);
   }
 }
 
@@ -398,7 +422,10 @@ function applySnipe(
   return {
     state: {
       ...state,
-      powerUps: spent,
+      powerUps: {
+        ...spent,
+        ultimate: addCharge(spent, action.playerId, ULTIMATE_CHARGE_PER_CAPTURE),
+      },
       tokens: state.tokens.map((entry) =>
         entry.id === target.id
           ? { ...entry, status: "yard" as const, progress: null }
@@ -413,6 +440,115 @@ function applySnipe(
         tokenId: target.id,
         capturedTokenId: target.id,
         ringIndex: ringIndex === -1 ? 0 : ringIndex,
+      },
+    ],
+  };
+}
+
+/** Summon: release one of your tokens from the yard to its starting square
+ *  without needing to roll a six. */
+function applySummon(
+  state: MatchState,
+  action: Extract<MatchAction, { type: "use-power" }>,
+  spent: ExtremePowerState,
+  used: DomainEvent,
+): ApplyActionResult {
+  const token = state.tokens.find((entry) => entry.id === action.tokenId);
+  if (!token || token.playerId !== action.playerId) {
+    throw new LudoRuleError("INVALID_ACTION", "That is not your token");
+  }
+  if (token.status !== "yard") {
+    throw new LudoRuleError(
+      "INVALID_ACTION",
+      "Summon only releases a token from the yard",
+    );
+  }
+  const ringIndex = progressToRingIndex(token.color, 0);
+  return {
+    state: {
+      ...state,
+      powerUps: spent,
+      tokens: state.tokens.map((entry) =>
+        entry.id === token.id
+          ? { ...entry, status: "active" as const, progress: 0 }
+          : entry,
+      ),
+    },
+    events: [
+      used,
+      {
+        type: "token-released",
+        playerId: action.playerId,
+        tokenId: token.id,
+        dieId: "summon",
+        ringIndex,
+      },
+    ],
+  };
+}
+
+/** Bolt: knock an exposed opponent token back a few squares (not all the way
+ *  home). Safe squares block it and a shield absorbs it. A gentler snipe. */
+function applyBolt(
+  state: MatchState,
+  action: Extract<MatchAction, { type: "use-power" }>,
+  spent: ExtremePowerState,
+  used: DomainEvent,
+): ApplyActionResult {
+  const target = requireOpponentActiveToken(
+    state,
+    action.playerId,
+    action.targetTokenId,
+  );
+  if (
+    target.progress! <= RING_PROGRESS_MAX &&
+    CLASSIC_SAFE.has(progressToRingIndex(target.color, target.progress!))
+  ) {
+    throw new LudoRuleError("INVALID_ACTION", "That token is on a safe square");
+  }
+  if (spent.shieldedTokenIds.includes(target.id)) {
+    return {
+      state: {
+        ...state,
+        powerUps: {
+          ...spent,
+          shieldedTokenIds: spent.shieldedTokenIds.filter(
+            (id) => id !== target.id,
+          ),
+        },
+      },
+      events: [
+        used,
+        {
+          type: "capture-blocked",
+          playerId: target.playerId,
+          tokenId: target.id,
+          ringIndex: progressToRingIndex(
+            target.color,
+            Math.min(target.progress!, RING_PROGRESS_MAX),
+          ),
+        },
+      ],
+    };
+  }
+  const fromProgress = target.progress!;
+  const toProgress = Math.max(0, fromProgress - BOLT_KNOCKBACK);
+  return {
+    state: {
+      ...state,
+      powerUps: spent,
+      tokens: state.tokens.map((entry) =>
+        entry.id === target.id ? { ...entry, progress: toProgress } : entry,
+      ),
+    },
+    events: [
+      used,
+      {
+        type: "token-warped",
+        playerId: target.playerId,
+        tokenId: target.id,
+        fromProgress,
+        toProgress,
       },
     ],
   };

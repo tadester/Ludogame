@@ -60,6 +60,9 @@ export function createMatch(input: CreateMatchInput): MatchState {
             inventory: { [host.id]: [] },
             shieldedTokenIds: [],
             dashTokenIds: [],
+            ultimate: { [host.id]: 0 },
+            ultimateLoadout: { [host.id]: "meteor" },
+            ultimateUses: { [host.id]: 0 },
           },
         }
       : {}),

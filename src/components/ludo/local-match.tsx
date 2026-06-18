@@ -2,12 +2,21 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { applyAction, getLegalActions } from "@/lib/ludo";
+import {
+  applyAction,
+  chargeOf,
+  equippedUltimate,
+  getLegalActions,
+  isUltimateReady,
+  ultimateCost,
+  ultimateUsesLeft,
+} from "@/lib/ludo";
 import type {
   DomainEvent,
   MatchState,
   PowerKind,
   Ruleset,
+  UltimateKind,
 } from "@/lib/ludo";
 import { moveWaypoints } from "@/lib/ludo-ui/geometry";
 import type { Cell, PlayerColor } from "@/lib/ludo-ui/geometry";
@@ -50,6 +59,8 @@ const POWER_LABEL: Record<PowerKind, string> = {
   warp: "Warp",
   snipe: "Snipe",
   swap: "Swap",
+  summon: "Summon",
+  bolt: "Bolt",
 };
 
 const POWER_FEEDBACK: Record<PowerKind, string> = {
@@ -58,6 +69,8 @@ const POWER_FEEDBACK: Record<PowerKind, string> = {
   warp: "Warped to safety. ",
   snipe: "Snipe fired. ",
   swap: "Positions swapped. ",
+  summon: "Token summoned. ",
+  bolt: "Bolt struck. ",
 };
 
 const POWER_ORDER: readonly PowerKind[] = [
@@ -66,6 +79,8 @@ const POWER_ORDER: readonly PowerKind[] = [
   "warp",
   "snipe",
   "swap",
+  "summon",
+  "bolt",
 ];
 
 /** Most powers a player may equip in their strategy book. */
@@ -77,6 +92,20 @@ const POWER_DESC: Record<PowerKind, string> = {
   warp: "Jump a token to the next safe square.",
   snipe: "Send an exposed enemy token home from range.",
   swap: "Swap one of your tokens with an enemy's.",
+  summon: "Release a token from the yard without a six.",
+  bolt: "Knock an exposed enemy token back six squares.",
+};
+
+const ULTIMATE_LABEL: Record<UltimateKind, string> = {
+  meteor: "Meteor",
+  quake: "Quake",
+  surge: "Surge",
+};
+
+const ULTIMATE_DESC: Record<UltimateKind, string> = {
+  meteor: "Strike one enemy token home from any range.",
+  quake: "Knock every enemy ring token back eight.",
+  surge: "Raise a shield on all your active tokens.",
 };
 
 const tokenLabel = (token: { color: PlayerColor; id: string }) =>
@@ -114,9 +143,13 @@ export function LocalMatch() {
     power: PowerKind;
     sourceId: string;
   } | null>(null);
+  // While true, the player is choosing an enemy token for a Meteor ultimate.
+  const [meteorTargeting, setMeteorTargeting] = useState(false);
   // The Extreme strategy book: which powers tiles can grant. Empty means tiles
   // keep their own power.
   const [loadout, setLoadout] = useState<PowerKind[]>([]);
+  // The single ultimate each player has equipped for the match.
+  const [ultimate, setUltimate] = useState<UltimateKind>("meteor");
 
   const movesByToken = useMemo(() => {
     if (!match || match.phase !== "awaiting-move" || busy) {
@@ -140,11 +173,12 @@ export function LocalMatch() {
   const activePlayer = match ? match.players[match.activePlayerIndex] : null;
 
   const start = useCallback(() => {
-    savePreferences({ count, ruleset, names, loadout });
+    savePreferences({ count, ruleset, names, loadout, ultimate });
     const next = setupLocalMatch(
       Array.from({ length: count }, (_, i) => ({ name: names[i] ?? "" })),
       ruleset,
       ruleset === "extreme" ? loadout : [],
+      ruleset === "extreme" ? ultimate : undefined,
     );
     setMatch(next);
     setWinner(null);
@@ -153,7 +187,7 @@ export function LocalMatch() {
     setCaptured(new Set());
     setHandoffTo(null);
     setMessage(`${next.players[next.activePlayerIndex].displayName} to roll.`);
-  }, [count, ruleset, names, loadout]);
+  }, [count, ruleset, names, loadout, ultimate]);
 
   const toggleLoadout = useCallback((power: PowerKind) => {
     setLoadout((prev) =>
@@ -328,6 +362,27 @@ export function LocalMatch() {
     [match, busy, resolve],
   );
 
+  const handleUseUltimate = useCallback(
+    (ultimate: UltimateKind, targetTokenId?: string) => {
+      if (!match || busy || match.phase !== "awaiting-roll") return;
+      const result = applyAction(match, {
+        type: "use-ultimate",
+        expectedVersion: match.version,
+        playerId: match.players[match.activePlayerIndex].id,
+        ultimate,
+        ...(targetTokenId ? { targetTokenId } : {}),
+      });
+      setPowerTarget(null);
+      setMatch(result.state);
+      resolve(
+        result.state,
+        result.events,
+        `${ULTIMATE_LABEL[ultimate]} unleashed! `,
+      );
+    },
+    [match, busy, resolve],
+  );
+
   // Hydrate saved preferences and any in-progress match once on mount. This
   // must run in an effect (not a lazy initializer) so server and client render
   // the same defaults and avoid a hydration mismatch.
@@ -339,6 +394,7 @@ export function LocalMatch() {
       setRuleset(prefs.ruleset);
       setNames([0, 1, 2, 3].map((i) => prefs.names[i] ?? ""));
       if (prefs.loadout) setLoadout([...prefs.loadout]);
+      if (prefs.ultimate) setUltimate(prefs.ultimate);
     }
     setSavedMatch(loadMatch());
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -395,6 +451,33 @@ export function LocalMatch() {
                     {POWER_LABEL[power]}
                   </span>
                   <span className={styles.bookDesc}>{POWER_DESC[power]}</span>
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+        {ruleset === "extreme" ? (
+          <div className={styles.field}>
+            <span className={styles.fieldLabel}>Ultimate</span>
+            <p className={styles.hint}>
+              Everyone equips one ultimate. It charges as you play, then can be
+              unleashed — some are limited, the defensive one recharges.
+            </p>
+            {(["meteor", "quake", "surge"] as UltimateKind[]).map((kind) => {
+              const equipped = ultimate === kind;
+              return (
+                <button
+                  key={kind}
+                  type="button"
+                  className={`${styles.bookRow} ${equipped ? styles.segmentActive : ""}`}
+                  aria-pressed={equipped}
+                  onClick={() => setUltimate(kind)}
+                >
+                  <span className={styles.bookName}>
+                    {equipped ? "✓ " : ""}
+                    {ULTIMATE_LABEL[kind]}
+                  </span>
+                  <span className={styles.bookDesc}>{ULTIMATE_DESC[kind]}</span>
                 </button>
               );
             })}
@@ -528,6 +611,17 @@ export function LocalMatch() {
                   (t) =>
                     t.playerId !== activePlayer.id && t.status === "active",
                 );
+                const myYard = match.tokens.filter(
+                  (t) => t.playerId === activePlayer.id && t.status === "yard",
+                );
+                const myUltimate = equippedUltimate(match, activePlayer.id);
+                const charge = chargeOf(match, activePlayer.id);
+                const cost = ultimateCost(match, activePlayer.id);
+                const usesLeft = ultimateUsesLeft(match, activePlayer.id);
+                const ultimateReady = isUltimateReady(match, activePlayer.id);
+                const usesLabel = Number.isFinite(usesLeft)
+                  ? `${usesLeft} use${usesLeft === 1 ? "" : "s"} left`
+                  : "reusable";
                 const myWon = match.tokens.filter(
                   (t) => t.playerId === activePlayer.id && t.status === "won",
                 ).length;
@@ -628,17 +722,27 @@ export function LocalMatch() {
                               </button>
                             ));
                           }
-                          if (kind === "snipe") {
+                          if (kind === "snipe" || kind === "bolt") {
                             return enemyActive.map((t) => (
                               <button
-                                key={`snipe-${t.id}`}
+                                key={`${kind}-${t.id}`}
                                 type="button"
                                 className={styles.segmentButton}
-                                onClick={() =>
-                                  handleUsePower("snipe", t.id, t.id)
-                                }
+                                onClick={() => handleUsePower(kind, t.id, t.id)}
                               >
-                                Snipe {tokenLabel(t)}
+                                {POWER_LABEL[kind]} {tokenLabel(t)}
+                              </button>
+                            ));
+                          }
+                          if (kind === "summon") {
+                            return myYard.map((t) => (
+                              <button
+                                key={`summon-${t.id}`}
+                                type="button"
+                                className={styles.segmentButton}
+                                onClick={() => handleUsePower("summon", t.id)}
+                              >
+                                Summon {tokenLabel(t)}
                               </button>
                             ));
                           }
@@ -656,6 +760,72 @@ export function LocalMatch() {
                             </button>
                           ));
                         })
+                      : null}
+
+                    {usesLeft > 0 ? (
+                      <>
+                        <div className={styles.ultimateMeter} aria-hidden="true">
+                          <div
+                            className={styles.ultimateFill}
+                            style={{
+                              width: `${Math.min(100, (charge / cost) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                        <p className={styles.message}>
+                          {ULTIMATE_LABEL[myUltimate]} ultimate ·{" "}
+                          {ultimateReady
+                            ? "🔥 ready!"
+                            : `${Math.round((charge / cost) * 100)}% charged`}{" "}
+                          · {usesLabel}
+                        </p>
+                      </>
+                    ) : (
+                      <p className={styles.message}>
+                        {ULTIMATE_LABEL[myUltimate]} ultimate spent.
+                      </p>
+                    )}
+
+                    {canUse && ultimateReady && !powerTarget && meteorTargeting
+                      ? (() => (
+                          <>
+                            <p className={styles.message}>Meteor — strike…</p>
+                            {enemyActive.map((t) => (
+                              <button
+                                key={`meteor-${t.id}`}
+                                type="button"
+                                className={styles.ultimateButton}
+                                onClick={() => handleUseUltimate("meteor", t.id)}
+                              >
+                                {tokenLabel(t)}
+                              </button>
+                            ))}
+                            <button
+                              type="button"
+                              className={styles.segmentButton}
+                              onClick={() => setMeteorTargeting(false)}
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ))()
+                      : null}
+
+                    {canUse && ultimateReady && !powerTarget && !meteorTargeting
+                      ? (
+                          <button
+                            type="button"
+                            className={styles.ultimateButton}
+                            title={ULTIMATE_DESC[myUltimate]}
+                            onClick={() =>
+                              myUltimate === "meteor"
+                                ? setMeteorTargeting(true)
+                                : handleUseUltimate(myUltimate)
+                            }
+                          >
+                            Unleash {ULTIMATE_LABEL[myUltimate]}
+                          </button>
+                        )
                       : null}
                   </div>
                 );

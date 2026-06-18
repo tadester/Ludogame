@@ -283,3 +283,33 @@
     grid-template-columns: minmax(0, 1fr) 18rem;
   }
 }
+
+.ultimateMeter {
+  height: 0.55rem;
+  border-radius: 0.4rem;
+  background: rgb(255 255 255 / 10%);
+  overflow: hidden;
+  margin-top: 0.3rem;
+}
+
+.ultimateFill {
+  height: 100%;
+  border-radius: 0.4rem;
+  background: linear-gradient(90deg, #f97316, #f5b524, #ef4444);
+  transition: width 0.3s ease;
+}
+
+.ultimateButton {
+  padding: 0.65rem;
+  border: 1px solid #f5b524;
+  border-radius: 0.6rem;
+  background: linear-gradient(145deg, rgb(245 181 36 / 22%), rgb(239 68 68 / 18%));
+  color: var(--text);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.ultimateButton:hover {
+  background: linear-gradient(145deg, rgb(245 181 36 / 34%), rgb(239 68 68 / 28%));
+}

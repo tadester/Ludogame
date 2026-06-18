@@ -158,6 +158,9 @@ mechanics, only in this mode):
   blocks it and a shield absorbs it (spending the shield).
 - **Swap** — exchange the board position of one of your tokens with an
   opponent's.
+- **Summon** — release a token from the yard without rolling a six.
+- **Bolt** — knock an exposed enemy token back six squares (a gentler snipe);
+  safe squares block it and a shield absorbs it.
 - **Last Stand** — when you are down to a single piece with none home yet and
   an opponent holds a clear lead (two or more tokens home), that lone token
   automatically moves double — a comeback boost only when you are genuinely
@@ -165,11 +168,21 @@ mechanics, only in this mode):
 - **Map events** fire every few turns and hit everyone equally: an
   *earthquake* slides every exposed (non-safe) token back, and a *power surge*
   banks an extra power for every player.
-- Boosts never stack (a move at most doubles), and exact-roll home entry still
-  applies, so the mode stays balanced.
 
-Further Extreme ideas (character ultimates with range, a bigger board) are
-planned as future increments.
+**Ultimate attacks** are separate from collectible powers. Every player equips
+**one** ultimate before the match. It charges as you play — gaining a little
+each turn and more for captures and pickups — and once full can be unleashed:
+
+- **Meteor** — strike one enemy token home from any range (ignores safe
+  squares; a shield still absorbs it). Limited to two uses a match.
+- **Quake** — knock every enemy ring token back eight squares (shields absorb
+  it). Limited to three uses.
+- **Surge** — raise a shield on all your active tokens. Cheaper to charge and
+  reusable all match.
+
+Powers can be unlocked with coins in the store and equipped in your strategy
+book. Boosts never stack (a move at most doubles), and exact-roll home entry
+still applies, so the mode stays balanced.
 
 ## Architecture
 

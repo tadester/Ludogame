@@ -1,5 +1,6 @@
 import { TOKENS_PER_PLAYER } from "./constants";
 import { applyMapEvent } from "./map-events";
+import { chargeIncomingPlayer } from "./ultimate";
 import { LudoRuleError } from "./types";
 import type {
   Die,
@@ -69,7 +70,7 @@ export function nextNonForfeitedIndex(
 export function advanceTurn(state: MatchState): TransitionResult {
   const mover = activePlayer(state);
   const nextIndex = nextNonForfeitedIndex(state, state.activePlayerIndex);
-  const advanced: MatchState = {
+  let advanced: MatchState = {
     ...state,
     players: state.players.map((player) =>
       player.id === mover.id && player.consecutiveTimeouts !== 0
@@ -81,6 +82,8 @@ export function advanceTurn(state: MatchState): TransitionResult {
     phase: "awaiting-roll",
     pendingRoll: null,
   };
+  // Extreme: the player about to move charges their ultimate meter.
+  advanced = { ...advanced, powerUps: chargeIncomingPlayer(advanced) };
   const events: DomainEvent[] = [
     {
       type: "turn-advanced",

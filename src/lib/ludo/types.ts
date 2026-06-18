@@ -43,7 +43,14 @@ export interface PendingRoll {
 }
 
 /** Collectible powers in Extreme mode. Kept deliberately small and fair. */
-export type PowerKind = "shield" | "dash" | "warp" | "snipe" | "swap";
+export type PowerKind =
+  | "shield"
+  | "dash"
+  | "warp"
+  | "snipe"
+  | "swap"
+  | "summon"
+  | "bolt";
 
 /** Every power that exists, in catalog order. The strategy book equips up to
  *  five of these and each power tile grants a random one from the equipped set. */
@@ -53,6 +60,17 @@ export const ALL_POWERS: readonly PowerKind[] = [
   "warp",
   "snipe",
   "swap",
+  "summon",
+  "bolt",
+];
+
+/** Charge-based ultimate attacks in Extreme mode. */
+export type UltimateKind = "meteor" | "quake" | "surge";
+
+export const ALL_ULTIMATES: readonly UltimateKind[] = [
+  "meteor",
+  "quake",
+  "surge",
 ];
 
 export interface PowerTile {
@@ -72,6 +90,13 @@ export interface ExtremePowerState {
    *  has a non-empty loadout, a power tile grants a random power drawn from it
    *  (deterministically, for replay safety) instead of the tile's own power. */
   readonly loadouts?: Readonly<Record<string, readonly PowerKind[]>>;
+  /** Each player's ultimate charge (0 to the charge cap). At full charge a
+   *  player may unleash an ultimate attack. */
+  readonly ultimate?: Readonly<Record<string, number>>;
+  /** The single ultimate each player has equipped for the match. */
+  readonly ultimateLoadout?: Readonly<Record<string, UltimateKind>>;
+  /** How many times each player has unleashed their ultimate (some are capped). */
+  readonly ultimateUses?: Readonly<Record<string, number>>;
 }
 
 export interface MatchState {
@@ -172,6 +197,14 @@ export type MatchAction =
       readonly power: PowerKind;
       readonly tokenId: string;
       /** A second token the power acts on (snipe/swap target an opponent). */
+      readonly targetTokenId?: string;
+    }
+  | {
+      readonly type: "use-ultimate";
+      readonly expectedVersion: number;
+      readonly playerId: string;
+      readonly ultimate: UltimateKind;
+      /** The opponent token a targeted ultimate (meteor) strikes. */
       readonly targetTokenId?: string;
     };
 
@@ -284,6 +317,11 @@ export type DomainEvent =
       readonly type: "map-event";
       readonly event: "earthquake" | "power-surge";
       readonly turnNumber: number;
+    }
+  | {
+      readonly type: "ultimate-used";
+      readonly playerId: string;
+      readonly ultimate: UltimateKind;
     }
   | { readonly type: "power-tiles-refilled" };
 
