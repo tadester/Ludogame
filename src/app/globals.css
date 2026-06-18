@@ -558,6 +558,64 @@ textarea {
     linear-gradient(180deg, #3aa0ff, #1f6fd6 60%, #14538f);
 }
 
+/* The "I love you Mikayla" background — the app default. A soft violet glow,
+   with the message pinned to the very top and the date to the very bottom so
+   the centered board never covers either line. */
+.app-shell[data-background="mikayla"] {
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(circle at 18% 12%, rgb(216 180 254 / 38%) 0, transparent 42%),
+    radial-gradient(circle at 82% 16%, rgb(244 114 182 / 32%) 0, transparent 44%),
+    radial-gradient(circle at 50% 116%, rgb(168 85 247 / 45%) 0, transparent 58%),
+    linear-gradient(160deg, #1c0f30, #0b0717);
+}
+
+.app-shell[data-background="mikayla"]::before,
+.app-shell[data-background="mikayla"]::after {
+  position: fixed;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #d6a8ff;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-shadow:
+    0 0 14px rgb(192 132 252 / 65%),
+    0 2px 6px rgb(0 0 0 / 75%);
+  pointer-events: none;
+  z-index: 40;
+}
+
+.app-shell[data-background="mikayla"]::before {
+  content: "I love you Mikayla 💜";
+  top: max(0.45rem, env(safe-area-inset-top));
+  font-size: clamp(1.05rem, 4vw, 1.7rem);
+}
+
+.app-shell[data-background="mikayla"]::after {
+  content: "Feb 14 / 2026 — forever";
+  bottom: max(0.55rem, env(safe-area-inset-bottom));
+  font-size: clamp(0.85rem, 3vw, 1.25rem);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .app-shell[data-background="mikayla"]::before {
+    animation: mikaylaGlow 3.2s ease-in-out infinite;
+  }
+}
+
+@keyframes mikaylaGlow {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(0.1rem);
+  }
+}
+
 /* Tighten vertical rhythm on small phones. */
 @media (max-width: 30rem) {
   .app-content {

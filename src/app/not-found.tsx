@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <main className="app-shell">
+    <main className="app-shell" data-background="mikayla">
       <section className="status-card">
         <p className="eyebrow">404</p>
         <h1>Page not found</h1>

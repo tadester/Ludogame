@@ -8,7 +8,7 @@ type AppShellProps = {
 
 export function AppShell({
   children,
-  background = "midnight",
+  background = "mikayla",
   reducedMotion = false,
 }: AppShellProps) {
   return (

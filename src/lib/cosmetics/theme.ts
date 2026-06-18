@@ -7,7 +7,7 @@ export interface PlayerTheme {
 }
 
 const DEFAULT_THEME: PlayerTheme = {
-  background: "midnight",
+  background: "mikayla",
   reducedMotion: false,
   mutedAudio: false,
 };
@@ -49,7 +49,7 @@ export async function loadPlayerTheme(): Promise<PlayerTheme> {
       }>();
     if (error || !data) return DEFAULT_THEME;
     return {
-      background: data.background_code ?? "midnight",
+      background: data.background_code ?? "mikayla",
       reducedMotion: !!data.reduced_motion,
       mutedAudio: !!data.muted_audio,
     };

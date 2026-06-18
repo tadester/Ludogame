@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function PlayPage() {
   return (
-    <main className="app-shell">
+    <main className="app-shell" data-background="mikayla">
       <header className="app-header">
         <span className="brand-mark" />
         <span className="brand-name">Ludo</span>
