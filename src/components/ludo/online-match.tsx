@@ -5,15 +5,17 @@ import { useCallback, useEffect, useState } from "react";
 import { getLegalActions } from "@/lib/ludo";
 import type { MatchState } from "@/lib/ludo";
 import { onlineViewModel } from "@/lib/ludo-online/view";
+import { diceCountForRuleset, seatOwner } from "@/lib/ludo-online/authority";
 import type { ServerIntent } from "@/lib/ludo-online/authority";
 import { legalMovesByToken } from "@/lib/ludo-ui/local-game";
 import { createClient } from "@/lib/supabase/client";
 
-import { Dice } from "./dice";
 import { LudoBoard } from "./ludo-board";
+import { MatchHud } from "./match-hud";
 import styles from "./online-match.module.css";
 
 const EMPTY = new Set<string>();
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 interface OnlineMatchProps {
   readonly matchId: string;
@@ -41,6 +43,7 @@ export function OnlineMatch({
   const [snapshot, setSnapshot] = useState<MatchState>(initial);
   const [busy, setBusy] = useState(false);
   const [rolling, setRolling] = useState(false);
+  const [rollingFaces, setRollingFaces] = useState<number[]>([]);
   const [message, setMessage] = useState<string | null>(null);
 
   const resync = useCallback(async () => {
@@ -81,7 +84,16 @@ export function OnlineMatch({
   const send = useCallback(
     async (intent: ServerIntent) => {
       setBusy(true);
-      if (intent.kind === "roll") setRolling(true);
+      if (intent.kind === "roll") {
+        const diceCount = diceCountForRuleset(snapshot.ruleset);
+        setRolling(true);
+        for (let i = 0; i < 9; i += 1) {
+          setRollingFaces(
+            Array.from({ length: diceCount }, (_, index) => ((i + index) % 6) + 1),
+          );
+          await sleep(55);
+        }
+      }
       setMessage(null);
       try {
         const res = await fetch(`/api/matches/${matchId}/intent`, {
@@ -107,7 +119,10 @@ export function OnlineMatch({
           return;
         }
         const data = (await res.json()) as { snapshot?: MatchState };
-        if (data.snapshot) setSnapshot(data.snapshot);
+        if (data.snapshot) {
+          setSnapshot(data.snapshot);
+          setRollingFaces(data.snapshot.pendingRoll?.dice.map((d) => d.value) ?? []);
+        }
       } catch {
         setMessage("Network error. Try again.");
       } finally {
@@ -115,7 +130,7 @@ export function OnlineMatch({
         setRolling(false);
       }
     },
-    [matchId, resync],
+    [matchId, resync, snapshot.ruleset],
   );
 
   const view = onlineViewModel(snapshot, userId);
@@ -143,16 +158,43 @@ export function OnlineMatch({
   };
 
   const pendingDice = snapshot.pendingRoll?.dice ?? [];
+  const diceCount = diceCountForRuleset(snapshot.ruleset);
+  const diceFaces =
+    pendingDice.length > 0 ? pendingDice.map((die) => die.value) : rollingFaces;
+  const activePlayer = snapshot.players[snapshot.activePlayerIndex] ?? null;
+  const currentPlayer =
+    snapshot.players.find((player) => seatOwner(player.id) === userId) ?? null;
+  const status = view.winnerName
+    ? `${view.winnerName} wins!`
+    : view.isMyTurn
+      ? view.canRoll
+        ? "Your turn — roll the dice."
+        : view.phase === "awaiting-die-order"
+          ? "Choose the dice order."
+          : `Tap a highlighted token to move${
+              pendingDice.length > 0
+                ? ` (${pendingDice.map((d) => d.value).join(", ")})`
+                : ""
+            }.`
+      : `Waiting for ${view.activeName}…`;
 
   return (
     <section className={styles.match} data-background-skin={backgroundSkin}>
-      <header className={styles.status} role="status">
-        {view.winnerName
-          ? `${view.winnerName} wins!`
-          : view.isMyTurn
-            ? "Your turn"
-            : `Waiting for ${view.activeName}…`}
-      </header>
+      <MatchHud
+        activePlayer={activePlayer}
+        currentPlayer={currentPlayer}
+        players={snapshot.players}
+        tokens={snapshot.tokens}
+        status={message ?? status}
+        diceCount={diceCount}
+        diceFaces={diceFaces}
+        rolling={rolling}
+        canRoll={view.isMyTurn && view.canRoll && !busy}
+        diceSkin={diceSkin}
+        animationSkin={animationSkin}
+        timerSeconds={snapshot.turnTimerSeconds ?? null}
+        onRoll={() => void send({ kind: "roll" })}
+      />
 
       <LudoBoard
         match={snapshot}
@@ -186,21 +228,9 @@ export function OnlineMatch({
         </div>
       ) : null}
 
-      {message ? <p className={styles.message}>{message}</p> : null}
-
       {!view.winnerName && view.isMyTurn ? (
         <div className={styles.controls}>
-          {view.canRoll ? (
-            <Dice
-              value={pendingDice[0]?.value ?? null}
-              rolling={rolling}
-              ready={!busy}
-              disabled={busy}
-              skin={diceSkin}
-              animation={animationSkin}
-              onRoll={() => void send({ kind: "roll" })}
-            />
-          ) : view.phase === "awaiting-die-order" ? (
+          {view.phase === "awaiting-die-order" ? (
             <div className={styles.dieOrders}>
               {view.dieOrderOptions.map((option) => (
                 <button
@@ -224,7 +254,7 @@ export function OnlineMatch({
                 </button>
               ))}
             </div>
-          ) : (
+          ) : !view.canRoll ? (
             <p className={styles.hint}>
               Tap a highlighted token to move it
               {pendingDice.length > 0
@@ -232,7 +262,7 @@ export function OnlineMatch({
                 : ""}
               .
             </p>
-          )}
+          ) : null}
         </div>
       ) : null}
     </section>

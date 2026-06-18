@@ -30,7 +30,7 @@ export async function POST(
 
   const { data: room } = await supabase
     .from("rooms")
-    .select("id, host_id, ruleset")
+    .select("id, host_id, ruleset, turn_timer_seconds")
     .eq("id", roomId)
     .maybeSingle();
   if (!room) {
@@ -62,6 +62,7 @@ export async function POST(
         seat: m.seat,
       })),
       ruleset: room.ruleset,
+      turnTimerSeconds: room.turn_timer_seconds,
       snapshotId: randomUUID(),
     });
     return NextResponse.json({ matchId: match.id });

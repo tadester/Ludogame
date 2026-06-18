@@ -30,6 +30,7 @@ export function buildStartedMatch(
   matchId: string,
   seats: readonly OnlineSeat[],
   ruleset: Ruleset,
+  turnTimerSeconds: number | null = null,
 ): MatchState {
   const ordered = [...seats].sort((a, b) => a.seat - b.seat);
   if (ordered.length < 2 || ordered.length > 4) {
@@ -57,6 +58,7 @@ export function buildStartedMatch(
     id: matchId,
     ruleset,
     maxPlayers: colored.length as 2 | 3 | 4,
+    turnTimerSeconds,
     host: colored[0],
   });
 

@@ -49,8 +49,8 @@ import {
   ULTIMATE_LABEL,
 } from "@/lib/ludo-ui/powers-meta";
 
-import { Dice } from "./dice";
 import { LudoBoard } from "./ludo-board";
+import { MatchHud } from "./match-hud";
 import { StrategyBook } from "./strategy-book";
 import styles from "./local-match.module.css";
 
@@ -137,6 +137,23 @@ const COLOR_CLASS: Record<PlayerColor, string> = {
   yellow: styles.colorYellow,
   blue: styles.colorBlue,
 };
+
+function ultimateHudFor(state: MatchState, player: Seat | null) {
+  if (!player || state.ruleset !== "extreme" || !state.powerUps) return null;
+  const ultimate = equippedUltimate(state, player.id);
+  const charge = chargeOf(state, player.id);
+  const cost = ultimateCost(state, player.id);
+  const usesLeft = ultimateUsesLeft(state, player.id);
+  return {
+    label: ULTIMATE_LABEL[ultimate],
+    charge,
+    cost,
+    ready: isUltimateReady(state, player.id),
+    usesLabel: Number.isFinite(usesLeft)
+      ? `${usesLeft} use${usesLeft === 1 ? "" : "s"} left`
+      : "reusable",
+  };
+}
 
 type Seat = MatchState["players"][number];
 
@@ -643,32 +660,22 @@ export function LocalMatch({
         />
 
         <aside className={styles.panel}>
-          {activePlayer ? (
-            <div className={styles.turn}>
-              <span
-                className={`${styles.dot} ${COLOR_CLASS[activePlayer.color]}`}
-              />
-              {activePlayer.displayName}
-            </div>
-          ) : null}
-
-          <div className={styles.controls}>
-            <div className={styles.diceRow}>
-              {Array.from({ length: diceCount }, (_, i) => (
-                <Dice
-                  key={i}
-                  value={dieFaces[i] ?? null}
-                  rolling={rolling}
-                  ready={canRoll}
-                  disabled={!canRoll}
-                  onRoll={handleRoll}
-                  skin={diceSkin}
-                  animation={animationSkin}
-                />
-              ))}
-            </div>
-            <p className={styles.message}>{message}</p>
-          </div>
+          <MatchHud
+            activePlayer={activePlayer}
+            currentPlayer={activePlayer}
+            players={match.players}
+            tokens={match.tokens}
+            status={message}
+            diceCount={diceCount}
+            diceFaces={dieFaces}
+            rolling={rolling}
+            canRoll={canRoll}
+            diceSkin={diceSkin}
+            animationSkin={animationSkin}
+            timerSeconds={match.turnTimerSeconds ?? null}
+            ultimate={ultimateHudFor(match, activePlayer)}
+            onRoll={handleRoll}
+          />
 
           {dieOrders.length > 0 ? (
             <div className={styles.dieOrders}>

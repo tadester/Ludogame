@@ -114,6 +114,7 @@ export interface MatchState {
   readonly tokens: readonly TokenState[];
   readonly activePlayerIndex: number;
   readonly turnNumber: number;
+  readonly turnTimerSeconds?: number | null;
   readonly rollNumber: number;
   readonly phase: TurnPhase;
   readonly pendingRoll: PendingRoll | null;
@@ -126,6 +127,7 @@ export interface CreateMatchInput {
   readonly id: string;
   readonly ruleset: Ruleset;
   readonly maxPlayers: 2 | 3 | 4;
+  readonly turnTimerSeconds?: number | null;
   readonly host: {
     readonly id: string;
     readonly displayName: string;

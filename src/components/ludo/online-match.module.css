@@ -1,9 +1,8 @@
 .match {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 1rem;
-  align-items: center;
-  width: min(100%, 36rem);
+  align-items: start;
+  width: min(100%, 64rem);
   margin: 0 auto;
 }
 
