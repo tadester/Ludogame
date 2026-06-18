@@ -210,7 +210,11 @@ export function LudoBoard({
                   aria-label={`${token.color} token ${tokenSlotIndex(token.id) + 1}`}
                   disabled={!interactive || !movable}
                 >
-                  <span className={discClasses} data-team-color={token.color}>
+                  <span
+                    className={discClasses}
+                    data-team-color={token.color}
+                    data-token-seat-fill={token.color}
+                  >
                     {TOKEN_SKIN_MARK[tokenSkin] ? (
                       <>
                         <span className={styles.skinShape} data-token-skin-shape />

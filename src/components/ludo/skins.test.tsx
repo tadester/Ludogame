@@ -105,6 +105,28 @@ describe("board and dice skins", () => {
     );
   });
 
+  it("marks every token with its visible seat-color fill", () => {
+    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
+    const { container } = render(
+      <LudoBoard
+        match={match}
+        movableTokenIds={new Set()}
+        animatingTokenId={null}
+        animatingCell={null}
+        capturedTokenIds={new Set()}
+        interactive={false}
+        onTokenClick={() => {}}
+        tokenSkin="straw_hat"
+      />,
+    );
+
+    for (const color of ["red", "green"] as const) {
+      expect(
+        container.querySelectorAll(`[data-token-seat-fill="${color}"]`),
+      ).toHaveLength(4);
+    }
+  });
+
   it("renders ninja tokens with headband details", () => {
     const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
     const { container } = render(
