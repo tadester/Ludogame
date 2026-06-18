@@ -27,6 +27,9 @@ type LobbyPageProps = {
 const RULESET_LABELS: Record<string, string> = {
   classic: "Classic",
   nigerian: "Nigerian",
+  peaceful: "Peaceful",
+  blitz: "Blitz",
+  extreme: "Extreme",
 };
 
 export default async function RoomLobbyPage({

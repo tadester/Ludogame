@@ -1,4 +1,10 @@
-import { applyAction, createMatch, getLegalActions } from "@/lib/ludo";
+import {
+  applyAction,
+  CLASSIC_SAFE_RING_INDEXES,
+  createMatch,
+  getLegalActions,
+  progressToRingIndex,
+} from "@/lib/ludo";
 import type {
   LegalAction,
   MatchAction,
@@ -10,6 +16,14 @@ import type {
 
 import { PLAY_ORDER } from "./geometry";
 import type { PlayerColor } from "./geometry";
+
+const CLASSIC_SAFE = new Set<number>(CLASSIC_SAFE_RING_INDEXES);
+
+function safeRingsFor(state: MatchState): ReadonlySet<number> {
+  const custom =
+    state.ruleset === "extreme" ? state.powerUps?.safeRingIndexes : undefined;
+  return custom ? new Set(custom) : CLASSIC_SAFE;
+}
 
 export interface LocalPlayerSetup {
   readonly name: string;
@@ -195,9 +209,35 @@ function botMoveScore(state: MatchState, action: LegalAction): number {
   const dest = actionDestination(state, action);
   if (!dest) return -1;
   const token = state.tokens.find((t) => t.id === dest.tokenId);
+  if (!token) return -1;
+
   let score = dest.to;
-  if (token?.status === "yard") score += 5;
-  if (dest.to >= 56) score += 20;
+  // Get tokens off the yard so the bot keeps options open.
+  if (token.status === "yard") score += 6;
+  // Finishing a token home is the goal.
+  if (dest.to >= 57) score += 40;
+
+  if (dest.to <= 51) {
+    const ring = progressToRingIndex(token.color, dest.to);
+    const safe = safeRingsFor(state);
+    const shielded = new Set(state.powerUps?.shieldedTokenIds ?? []);
+    // Capturing an exposed opponent is the strongest play.
+    const captures =
+      state.ruleset !== "peaceful" &&
+      !safe.has(ring) &&
+      state.tokens.some(
+        (other) =>
+          other.playerId !== token.playerId &&
+          other.status === "active" &&
+          other.progress !== null &&
+          other.progress <= 51 &&
+          progressToRingIndex(other.color, other.progress) === ring &&
+          !shielded.has(other.id),
+      );
+    if (captures) score += 60;
+    // Otherwise, prefer landing somewhere safe.
+    if (safe.has(ring)) score += 8;
+  }
   return score;
 }
 
