@@ -21,12 +21,17 @@ const POWERS: readonly PowerKind[] = [
   "warp",
   "snipe",
   "swap",
+  "summon",
+  "bolt",
 ];
+const SEAT_KINDS = ["human", "bot"] as const;
+type SeatKind = (typeof SEAT_KINDS)[number];
 
 export interface LocalPreferences {
   readonly count: number;
   readonly ruleset: Ruleset;
   readonly names: readonly string[];
+  readonly seatKinds?: readonly SeatKind[];
   /** The Extreme strategy-book loadout the player last equipped. */
   readonly loadout?: readonly PowerKind[];
   /** The Extreme ultimate the player last equipped. */
@@ -121,10 +126,16 @@ export function loadPreferences(): LocalPreferences | null {
     const ultimate = ULTIMATES.includes(parsed.ultimate as UltimateKind)
       ? (parsed.ultimate as UltimateKind)
       : undefined;
+    const seatKinds = Array.isArray(parsed.seatKinds)
+      ? parsed.seatKinds.filter((kind): kind is SeatKind =>
+          SEAT_KINDS.includes(kind as SeatKind),
+        )
+      : undefined;
     return {
       count: parsed.count,
       ruleset: parsed.ruleset as Ruleset,
       names: parsed.names.map((n) => String(n)),
+      ...(seatKinds ? { seatKinds } : {}),
       ...(loadout ? { loadout } : {}),
       ...(ultimate ? { ultimate } : {}),
     };

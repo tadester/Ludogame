@@ -8,7 +8,9 @@ import {
 import type { MatchState } from "@/lib/ludo";
 
 import {
+  botActionFor,
   dieOrderOptions,
+  isBotPlayerId,
   legalMovesByToken,
   rollDie,
   rollAction,
@@ -72,6 +74,35 @@ describe("local-game helpers", () => {
       "Yellow",
       "Blue",
     ]);
+  });
+
+  it("can seat bot players in pass-the-phone matches", () => {
+    const state = setupLocalMatch([
+      { name: "Tade" },
+      { name: "", kind: "bot" },
+      { name: "Guest" },
+    ]);
+
+    expect(state.players.map((p) => p.id)).toEqual(["p1", "bot2", "p3"]);
+    expect(state.players.map((p) => p.displayName)).toEqual([
+      "Tade",
+      "Bot Green",
+      "Guest",
+    ]);
+    expect(isBotPlayerId(state.players[1].id)).toBe(true);
+  });
+
+  it("chooses legal bot actions for roll and move phases", () => {
+    let state = setupLocalMatch([{ name: "Ada" }, { name: "", kind: "bot" }]);
+    state = { ...state, activePlayerIndex: 1 };
+
+    const roll = botActionFor(state, [6]);
+    expect(roll?.type).toBe("roll-dice");
+    state = applyAction(state, roll!).state;
+
+    const move = botActionFor(state);
+    expect(move).not.toBeNull();
+    expect(getLegalActions(state)).toContainEqual(move);
   });
 
   it("seeds every seat's strategy book in Extreme mode", () => {

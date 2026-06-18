@@ -35,11 +35,17 @@ describe("local-storage", () => {
   });
 
   it("round-trips preferences and rejects invalid ones", () => {
-    savePreferences({ count: 3, ruleset: "nigerian", names: ["A", "B", "C"] });
+    savePreferences({
+      count: 3,
+      ruleset: "nigerian",
+      names: ["A", "B", "C"],
+      seatKinds: ["human", "bot", "human"],
+    });
     expect(loadPreferences()).toEqual({
       count: 3,
       ruleset: "nigerian",
       names: ["A", "B", "C"],
+      seatKinds: ["human", "bot", "human"],
     });
 
     localStorage.setItem("ludo:prefs:v1", JSON.stringify({ count: 2 }));
@@ -72,5 +78,15 @@ describe("local-storage", () => {
       }),
     );
     expect(loadPreferences()?.loadout).toEqual(["dash"]);
+  });
+
+  it("keeps newly added powers in a saved loadout", () => {
+    savePreferences({
+      count: 2,
+      ruleset: "extreme",
+      names: ["A", "B"],
+      loadout: ["summon", "bolt"],
+    });
+    expect(loadPreferences()?.loadout).toEqual(["summon", "bolt"]);
   });
 });

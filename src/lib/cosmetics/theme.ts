@@ -2,12 +2,20 @@ import { createClient } from "@/lib/supabase/server";
 
 export interface PlayerTheme {
   readonly background: string;
+  readonly board: string;
+  readonly dice: string;
+  readonly token: string;
+  readonly animation: string;
   readonly reducedMotion: boolean;
   readonly mutedAudio: boolean;
 }
 
 const DEFAULT_THEME: PlayerTheme = {
   background: "mikayla",
+  board: "classic",
+  dice: "classic",
+  token: "classic",
+  animation: "standard",
   reducedMotion: false,
   mutedAudio: false,
 };
@@ -44,12 +52,20 @@ export async function loadPlayerTheme(): Promise<PlayerTheme> {
       .rpc("get_player_theme")
       .maybeSingle<{
         background_code: string | null;
+        board_code: string | null;
+        dice_code: string | null;
+        token_code: string | null;
+        animation_code: string | null;
         reduced_motion: boolean | null;
         muted_audio: boolean | null;
       }>();
     if (error || !data) return DEFAULT_THEME;
     return {
       background: data.background_code ?? "mikayla",
+      board: data.board_code ?? "classic",
+      dice: data.dice_code ?? "classic",
+      token: data.token_code ?? "classic",
+      animation: data.animation_code ?? "standard",
       reducedMotion: !!data.reduced_motion,
       mutedAudio: !!data.muted_audio,
     };

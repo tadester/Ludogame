@@ -22,9 +22,11 @@ import { moveWaypoints } from "@/lib/ludo-ui/geometry";
 import type { Cell, PlayerColor } from "@/lib/ludo-ui/geometry";
 import {
   actionDestination,
+  botActionFor,
   defaultName,
   diceCountFor,
   dieOrderOptions,
+  isBotPlayerId,
   legalMovesByToken,
   rollActionFor,
   rollDie,
@@ -121,10 +123,32 @@ const COLOR_CLASS: Record<PlayerColor, string> = {
 
 type Seat = MatchState["players"][number];
 
-export function LocalMatch() {
+interface LocalMatchProps {
+  backgroundSkin?: string;
+  boardSkin?: string;
+  diceSkin?: string;
+  tokenSkin?: string;
+  animationSkin?: string;
+}
+
+type SeatKind = "human" | "bot";
+
+export function LocalMatch({
+  backgroundSkin = "mikayla",
+  boardSkin = "classic",
+  diceSkin = "classic",
+  tokenSkin = "classic",
+  animationSkin = "standard",
+}: LocalMatchProps) {
   const [count, setCount] = useState(2);
   const [ruleset, setRuleset] = useState<Ruleset>("classic");
   const [names, setNames] = useState<string[]>(["", "", "", ""]);
+  const [seatKinds, setSeatKinds] = useState<SeatKind[]>([
+    "human",
+    "human",
+    "human",
+    "human",
+  ]);
   const [match, setMatch] = useState<MatchState | null>(null);
   const [busy, setBusy] = useState(false);
   const [dieFaces, setDieFaces] = useState<number[]>([]);
@@ -176,9 +200,12 @@ export function LocalMatch() {
     const prefs = loadPreferences();
     const loadout = prefs?.loadout ?? [];
     const ultimate = prefs?.ultimate;
-    savePreferences({ count, ruleset, names, loadout, ultimate });
+    savePreferences({ count, ruleset, names, seatKinds, loadout, ultimate });
     const next = setupLocalMatch(
-      Array.from({ length: count }, (_, i) => ({ name: names[i] ?? "" })),
+      Array.from({ length: count }, (_, i) => ({
+        name: names[i] ?? "",
+        kind: i === 0 ? "human" : seatKinds[i],
+      })),
       ruleset,
       ruleset === "extreme" ? loadout : [],
       ruleset === "extreme" ? ultimate : undefined,
@@ -190,7 +217,7 @@ export function LocalMatch() {
     setCaptured(new Set());
     setHandoffTo(null);
     setMessage(`${next.players[next.activePlayerIndex].displayName} to roll.`);
-  }, [count, ruleset, names]);
+  }, [count, ruleset, names, seatKinds]);
 
   const newGame = useCallback(() => {
     clearMatch();
@@ -232,11 +259,14 @@ export function LocalMatch() {
 
       // A turn change hands the device to the next player — gate behind a
       // private handoff screen so play passes cleanly.
+      const nextPlayer = next.players[next.activePlayerIndex];
       if (
         next.status === "active" &&
-        events.some((e) => e.type === "turn-advanced")
+        events.some((e) => e.type === "turn-advanced") &&
+        nextPlayer &&
+        !isBotPlayerId(nextPlayer.id)
       ) {
-        setHandoffTo(next.players[next.activePlayerIndex]);
+        setHandoffTo(nextPlayer);
       }
 
       const mapEvent = events.find((e) => e.type === "map-event") as
@@ -396,6 +426,13 @@ export function LocalMatch() {
       setCount(prefs.count);
       setRuleset(prefs.ruleset);
       setNames([0, 1, 2, 3].map((i) => prefs.names[i] ?? ""));
+      if (prefs.seatKinds) {
+        setSeatKinds(
+          [0, 1, 2, 3].map((i) =>
+            i === 0 ? "human" : (prefs.seatKinds?.[i] ?? "human"),
+          ),
+        );
+      }
     }
     setSavedMatch(loadMatch());
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -405,6 +442,36 @@ export function LocalMatch() {
   useEffect(() => {
     if (match) saveMatch(match);
   }, [match]);
+
+  useEffect(() => {
+    if (!match || busy || winner || handoffTo) return;
+    const active = match.players[match.activePlayerIndex];
+    if (!active || !isBotPlayerId(active.id)) return;
+
+    const timer = window.setTimeout(() => {
+      if (match.phase === "awaiting-roll") {
+        void handleRoll();
+        return;
+      }
+      const action = botActionFor(match);
+      if (!action) return;
+      if (action.type === "select-die-order") {
+        handleSelectOrder(action.dieIds);
+      } else if (action.type === "move-token" || action.type === "release-token") {
+        void handleToken(action.tokenId);
+      }
+    }, 450);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    match,
+    busy,
+    winner,
+    handoffTo,
+    handleRoll,
+    handleSelectOrder,
+    handleToken,
+  ]);
 
   const dieValue = (dieId: string) =>
     match?.pendingRoll?.dice.find((d) => d.id === dieId)?.value ?? 0;
@@ -460,7 +527,7 @@ export function LocalMatch() {
               />
               <input
                 value={names[i]}
-                placeholder={defaultName(SETUP_COLORS[i])}
+                placeholder={defaultName(SETUP_COLORS[i], seatKinds[i] === "bot")}
                 maxLength={16}
                 onChange={(event) =>
                   setNames((prev) => {
@@ -470,6 +537,23 @@ export function LocalMatch() {
                   })
                 }
               />
+              {i > 0 ? (
+                <button
+                  type="button"
+                  className={`${styles.seatKindButton} ${
+                    seatKinds[i] === "bot" ? styles.seatKindBot : ""
+                  }`}
+                  onClick={() =>
+                    setSeatKinds((prev) => {
+                      const next = [...prev];
+                      next[i] = next[i] === "bot" ? "human" : "bot";
+                      return next;
+                    })
+                  }
+                >
+                  {seatKinds[i] === "bot" ? "Bot" : "Human"}
+                </button>
+              ) : null}
             </div>
           ))}
         </div>
@@ -516,6 +600,10 @@ export function LocalMatch() {
           capturedTokenIds={captured}
           interactive={!busy}
           onTokenClick={handleToken}
+          boardSkin={boardSkin}
+          backgroundSkin={backgroundSkin}
+          tokenSkin={tokenSkin}
+          animationSkin={animationSkin}
           powerTileRingIndexes={
             match.powerUps
               ? new Set(match.powerUps.tiles.map((t) => t.ringIndex))
@@ -543,6 +631,8 @@ export function LocalMatch() {
                   ready={canRoll}
                   disabled={!canRoll}
                   onRoll={handleRoll}
+                  skin={diceSkin}
+                  animation={animationSkin}
                 />
               ))}
             </div>

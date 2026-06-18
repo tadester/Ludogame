@@ -54,4 +54,29 @@ describe("LocalMatch", () => {
       expect(within(document.body).getAllByText(name).length).toBeGreaterThan(0);
     }
   });
+
+  it("uses the equipped cosmetics in pass-and-play games", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <LocalMatch
+        backgroundSkin="hidden_leaf"
+        boardSkin="royal"
+        tokenSkin="straw_hat"
+        diceSkin="onyx"
+        animationSkin="dynamic"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Start game" }));
+
+    expect(
+      container.querySelector('[data-background-skin="hidden_leaf"]'),
+    ).not.toBeNull();
+    expect(container.querySelector('[data-board-skin="royal"]')).not.toBeNull();
+    expect(
+      container.querySelector('[data-token-skin="straw_hat"]'),
+    ).not.toBeNull();
+    expect(container.querySelector('[data-dice-skin="onyx"]')).not.toBeNull();
+    expect(container.querySelector('[data-animation="dynamic"]')).not.toBeNull();
+  });
 });

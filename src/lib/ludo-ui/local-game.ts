@@ -1,4 +1,4 @@
-import { applyAction, createMatch } from "@/lib/ludo";
+import { applyAction, createMatch, getLegalActions } from "@/lib/ludo";
 import type {
   LegalAction,
   MatchAction,
@@ -13,6 +13,7 @@ import type { PlayerColor } from "./geometry";
 
 export interface LocalPlayerSetup {
   readonly name: string;
+  readonly kind?: "human" | "bot";
 }
 
 export interface LocalSeat {
@@ -30,11 +31,15 @@ export function setupLocalMatch(
   loadout: readonly PowerKind[] = [],
   ultimate?: UltimateKind,
 ): MatchState {
-  const seats = players.map<LocalSeat>((player, index) => ({
-    id: `p${index + 1}`,
-    color: PLAY_ORDER[index],
-    displayName: player.name.trim() || defaultName(PLAY_ORDER[index]),
-  }));
+  const seats = players.map<LocalSeat>((player, index) => {
+    const color = PLAY_ORDER[index];
+    const bot = player.kind === "bot";
+    return {
+      id: bot ? `bot${index + 1}` : `p${index + 1}`,
+      color,
+      displayName: player.name.trim() || defaultName(color, bot),
+    };
+  });
 
   let state = createMatch({
     id: `local-${Date.now()}`,
@@ -77,8 +82,13 @@ export function setupLocalMatch(
   return state;
 }
 
-export function defaultName(color: PlayerColor): string {
-  return color.charAt(0).toUpperCase() + color.slice(1);
+export function defaultName(color: PlayerColor, bot = false): string {
+  const name = color.charAt(0).toUpperCase() + color.slice(1);
+  return bot ? `Bot ${name}` : name;
+}
+
+export function isBotPlayerId(playerId: string): boolean {
+  return playerId.startsWith("bot");
 }
 
 /** A `roll-dice` action carrying a deterministic, replay-stable die id. */
@@ -157,6 +167,38 @@ export function legalMovesByToken(
     }
   }
   return byToken;
+}
+
+export function botActionFor(
+  state: MatchState,
+  rollValues?: readonly number[],
+): MatchAction | null {
+  if (state.status !== "active") return null;
+  if (state.phase === "awaiting-roll") {
+    if (!rollValues) return null;
+    return rollActionFor(state, rollValues);
+  }
+
+  const actions = getLegalActions(state);
+  if (state.phase === "awaiting-die-order") {
+    return dieOrderOptions(actions)[0]?.action ?? null;
+  }
+
+  const moves = [...legalMovesByToken(state, actions).values()];
+  if (moves.length === 0) return null;
+  return moves.reduce((best, action) =>
+    botMoveScore(state, action) > botMoveScore(state, best) ? action : best,
+  );
+}
+
+function botMoveScore(state: MatchState, action: LegalAction): number {
+  const dest = actionDestination(state, action);
+  if (!dest) return -1;
+  const token = state.tokens.find((t) => t.id === dest.tokenId);
+  let score = dest.to;
+  if (token?.status === "yard") score += 5;
+  if (dest.to >= 56) score += 20;
+  return score;
 }
 
 export function rollDie(): number {

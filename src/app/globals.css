@@ -53,7 +53,7 @@ textarea {
 }
 
 .app-shell {
-  width: min(100%, 72rem);
+  width: min(100%, 100rem);
   min-height: 100dvh;
   margin: 0 auto;
   padding: 1rem;
@@ -86,7 +86,7 @@ textarea {
 }
 
 .app-content {
-  padding: clamp(2rem, 10vw, 7rem) 0 3rem;
+  padding: clamp(1.25rem, 5vw, 4rem) 0 3rem;
 }
 
 .account-nav {
@@ -372,7 +372,7 @@ textarea {
 
 @media (min-width: 42rem) {
   .app-shell {
-    padding-inline: 2rem;
+    padding-inline: clamp(1.5rem, 4vw, 3rem);
   }
 
   .play-grid {
@@ -618,6 +618,10 @@ textarea {
 
 /* Tighten vertical rhythm on small phones. */
 @media (max-width: 30rem) {
+  .app-shell {
+    padding-inline: 0.75rem;
+  }
+
   .app-content {
     padding-top: 1.25rem;
   }

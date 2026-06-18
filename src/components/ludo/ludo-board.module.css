@@ -1,5 +1,5 @@
 .boardWrap {
-  width: min(92vw, 34rem);
+  width: min(100%, 48rem, calc(100dvh - 9rem));
   margin-inline: auto;
   border-radius: 1.35rem;
   padding: 0.35rem;
