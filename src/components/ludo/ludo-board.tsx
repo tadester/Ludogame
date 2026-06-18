@@ -45,6 +45,15 @@ const TRI: Record<PlayerColor, string> = {
   blue: styles.triBlue,
 };
 
+const TOKEN_SKIN_MARK: Record<string, string> = {
+  gem: "◆",
+  star: "★",
+  crystal: "◇",
+  ninja: "N",
+  straw_hat: "H",
+  class_point: "CP",
+};
+
 interface LudoBoardProps {
   match: MatchState;
   movableTokenIds: ReadonlySet<string>;
@@ -197,7 +206,22 @@ export function LudoBoard({
                   aria-label={`${token.color} token ${tokenSlotIndex(token.id) + 1}`}
                   disabled={!interactive || !movable}
                 >
-                  <span className={discClasses} data-team-color={token.color} />
+                  <span className={discClasses} data-team-color={token.color}>
+                    {TOKEN_SKIN_MARK[tokenSkin] ? (
+                      <>
+                        <span className={styles.skinShape} data-token-skin-shape />
+                        <span
+                          className={styles.teamOverlay}
+                          data-token-team-overlay
+                        />
+                      </>
+                    ) : null}
+                    {TOKEN_SKIN_MARK[tokenSkin] ? (
+                      <span className={styles.skinMark} data-token-skin-mark>
+                        {TOKEN_SKIN_MARK[tokenSkin]}
+                      </span>
+                    ) : null}
+                  </span>
                 </button>
               );
             })}

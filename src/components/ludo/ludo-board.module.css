@@ -242,6 +242,7 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
+  overflow: visible;
   border: 0.14rem solid rgb(255 255 255 / 92%);
   box-shadow:
     0 0 0 0.12rem rgb(8 12 20 / 60%),
@@ -259,6 +260,48 @@
   height: 24%;
   border-radius: 50%;
   background: rgb(255 255 255 / 55%);
+}
+
+.skinMark {
+  position: absolute;
+  z-index: 3;
+  inset: 18%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(5 8 14 / 72%);
+  color: #fff;
+  font-size: clamp(0.48rem, 1.8vw, 0.92rem);
+  font-weight: 1000;
+  line-height: 1;
+  letter-spacing: -0.08em;
+  text-shadow:
+    0 0.05rem 0.08rem rgb(0 0 0 / 85%),
+    0 0 0.3rem rgb(0 0 0 / 70%);
+  box-shadow:
+    inset 0 0 0 0.08rem rgb(255 255 255 / 42%),
+    0 0.08rem 0.16rem rgb(0 0 0 / 42%);
+  pointer-events: none;
+}
+
+.skinShape,
+.teamOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.skinShape {
+  background: rgb(255 255 255 / 18%);
+}
+
+.teamOverlay {
+  z-index: 2;
+  background: var(--team-tint);
+  opacity: 0.42;
+  mix-blend-mode: overlay;
 }
 
 .discRed {
@@ -328,14 +371,11 @@
 }
 
 [data-token-skin="gem"] .disc {
-  background: radial-gradient(
-    circle at 34% 28%,
-    color-mix(in srgb, var(--team-tint), white 55%) 0%,
-    var(--team-tint) 72%
-  );
   clip-path: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%);
+  border-radius: 0;
+  background: linear-gradient(145deg, #eff8ff, #7187a8 58%, #25314a);
   box-shadow:
-    inset 0 0 0 0.18rem var(--team-tint),
+    inset 0 0 0 0.2rem var(--team-tint),
     inset 0 0 0 0.06rem rgb(255 255 255 / 55%),
     inset 0 -0.12rem 0.22rem rgb(0 0 0 / 40%),
     0 0.1rem 0.3rem rgb(0 0 0 / 45%),
@@ -343,7 +383,27 @@
 }
 
 [data-token-skin="gem"] .disc::after {
-  opacity: 0.85;
+  display: none;
+}
+
+[data-token-skin="gem"] .skinMark {
+  inset: 12%;
+  background: rgb(255 255 255 / 18%);
+  color: #f8fbff;
+  font-size: clamp(0.64rem, 2.1vw, 1.1rem);
+}
+
+[data-token-skin="gem"] .skinShape {
+  clip-path: inherit;
+  background:
+    linear-gradient(115deg, transparent 0 44%, rgb(255 255 255 / 60%) 45% 52%, transparent 53%),
+    linear-gradient(35deg, rgb(255 255 255 / 52%), transparent 42%),
+    linear-gradient(145deg, #eaf6ff, #7989a7 58%, #24314d);
+}
+
+[data-token-skin="gem"] .teamOverlay {
+  clip-path: inherit;
+  opacity: 0.5;
 }
 
 /* --- Anime board packs ------------------------------------------------- */
@@ -375,15 +435,11 @@
 
 /* --- Anime token packs ------------------------------------------------- */
 [data-token-skin="star"] .disc {
-  background: radial-gradient(
-    circle at 42% 30%,
-    color-mix(in srgb, var(--team-tint), white 55%),
-    var(--team-tint)
-  );
   clip-path: polygon(
     50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%,
     50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%
   );
+  background: linear-gradient(145deg, #fff4a8, #d39a22 65%, #6f4310);
   border: none;
   box-shadow:
     inset 0 0 0 0.2rem var(--team-tint),
@@ -395,13 +451,36 @@
   display: none;
 }
 
+[data-token-skin="star"] .skinMark {
+  inset: 2%;
+  background: transparent;
+  color: #fff8b7;
+  font-size: clamp(0.8rem, 2.8vw, 1.35rem);
+  text-shadow:
+    0 0 0.22rem rgb(0 0 0 / 80%),
+    0 0 0.36rem var(--team-tint);
+  box-shadow: none;
+}
+
+[data-token-skin="star"] .skinShape,
+[data-token-skin="star"] .teamOverlay {
+  clip-path: inherit;
+}
+
+[data-token-skin="star"] .skinShape {
+  background:
+    radial-gradient(circle at 42% 28%, rgb(255 255 255 / 85%), transparent 30%),
+    linear-gradient(145deg, #fff0a5, #d39a22 66%, #73420c);
+}
+
+[data-token-skin="star"] .teamOverlay {
+  opacity: 0.46;
+}
+
 [data-token-skin="crystal"] .disc {
-  background: radial-gradient(
-    circle at 35% 20%,
-    color-mix(in srgb, var(--team-tint), white 62%),
-    var(--team-tint)
-  );
-  clip-path: polygon(50% 0, 100% 30%, 82% 100%, 18% 100%, 0 30%);
+  clip-path: polygon(50% 0, 94% 28%, 76% 100%, 24% 100%, 6% 28%);
+  border-radius: 0;
+  background: linear-gradient(145deg, #e6fbff, #7eb5df 52%, #244875);
   border: 0.08rem solid rgb(255 255 255 / 80%);
   box-shadow:
     inset 0 0 0 0.18rem color-mix(in srgb, var(--team-tint), transparent 8%),
@@ -409,6 +488,33 @@
     0 0.1rem 0.3rem rgb(0 0 0 / 45%),
     0 0 0.55rem color-mix(in srgb, var(--team-tint), transparent 35%);
   filter: brightness(1.15) saturate(1.2);
+}
+
+[data-token-skin="crystal"] .disc::after {
+  display: none;
+}
+
+[data-token-skin="crystal"] .skinMark {
+  inset: 10%;
+  background: rgb(255 255 255 / 22%);
+  color: #ecfbff;
+  font-size: clamp(0.72rem, 2.35vw, 1.18rem);
+}
+
+[data-token-skin="crystal"] .skinShape,
+[data-token-skin="crystal"] .teamOverlay {
+  clip-path: inherit;
+}
+
+[data-token-skin="crystal"] .skinShape {
+  background:
+    linear-gradient(120deg, transparent 0 46%, rgb(255 255 255 / 72%) 47% 54%, transparent 55%),
+    linear-gradient(40deg, rgb(255 255 255 / 60%) 0 24%, transparent 25%),
+    linear-gradient(145deg, #e3fbff, #72abd8 58%, #253f69);
+}
+
+[data-token-skin="crystal"] .teamOverlay {
+  opacity: 0.5;
 }
 
 /* --- Animation packs --------------------------------------------------- */
@@ -478,6 +584,29 @@
    a silver Leaf plate. */
 [data-token-skin="ninja"] .disc {
   overflow: hidden;
+  border-radius: 24%;
+  clip-path: polygon(50% 0, 86% 12%, 100% 50%, 86% 88%, 50% 100%, 14% 88%, 0 50%, 14% 12%);
+  background: linear-gradient(145deg, #2d3440, #0b0f16 64%);
+  box-shadow:
+    0 0 0 0.14rem #111827,
+    0 0.3rem 0.45rem rgb(0 0 0 / 48%),
+    inset 0 0 0 0.12rem color-mix(in srgb, var(--team-tint), white 18%),
+    inset 0 -0.2rem 0.3rem rgb(0 0 0 / 42%);
+}
+
+[data-token-skin="ninja"] .skinShape,
+[data-token-skin="ninja"] .teamOverlay {
+  clip-path: inherit;
+}
+
+[data-token-skin="ninja"] .skinShape {
+  background:
+    linear-gradient(180deg, transparent 0 35%, #151922 36% 66%, transparent 67%),
+    linear-gradient(145deg, #343c4a, #0b0f16 64%);
+}
+
+[data-token-skin="ninja"] .teamOverlay {
+  opacity: 0.38;
 }
 [data-token-skin="ninja"] .disc::before {
   content: "";
@@ -509,6 +638,16 @@
   opacity: 1;
 }
 
+[data-token-skin="ninja"] .skinMark {
+  inset: 29% 28%;
+  border-radius: 0.16rem;
+  background: linear-gradient(160deg, #eef2f6, #8d98a5);
+  color: #101827;
+  font-size: clamp(0.42rem, 1.45vw, 0.72rem);
+  letter-spacing: 0;
+  text-shadow: none;
+}
+
 /* Straw Hat: Luffy's One Piece hat sitting on a team-coloured disc. */
 [data-token-skin="straw_hat"] .disc::after {
   content: "";
@@ -527,6 +666,43 @@
   opacity: 1;
 }
 
+[data-token-skin="straw_hat"] .disc {
+  clip-path: polygon(28% 4%, 72% 4%, 78% 48%, 100% 68%, 100% 87%, 0 87%, 0 68%, 22% 48%);
+  border-radius: 18% 18% 34% 34%;
+  background: linear-gradient(145deg, #f8da91, #c88931 65%, #744315);
+  box-shadow:
+    0 0 0 0.16rem #8a5a22,
+    0 0.3rem 0.45rem rgb(0 0 0 / 48%),
+    inset 0 0 0 0.14rem color-mix(in srgb, var(--team-tint), white 12%),
+    inset 0 -0.18rem 0.3rem rgb(0 0 0 / 38%);
+}
+
+[data-token-skin="straw_hat"] .skinShape,
+[data-token-skin="straw_hat"] .teamOverlay {
+  clip-path: inherit;
+}
+
+[data-token-skin="straw_hat"] .skinShape {
+  background:
+    linear-gradient(180deg, transparent 0 44%, var(--team-tint) 45% 57%, transparent 58%),
+    radial-gradient(circle at 50% 30%, #ffe8ad, #c88931 65%, #744315);
+}
+
+[data-token-skin="straw_hat"] .teamOverlay {
+  opacity: 0.28;
+}
+
+[data-token-skin="straw_hat"] .skinMark {
+  inset: 16% 12%;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, #f6d58a 0 58%, #cf2f2b 58% 72%, #d69b46 72%);
+  color: #4a2c10;
+  font-size: clamp(0.48rem, 1.55vw, 0.76rem);
+  letter-spacing: 0;
+  text-shadow: none;
+}
+
 /* Class Point: a Classroom-of-the-Elite crest on a team-coloured disc. */
 [data-token-skin="class_point"] .disc::after {
   content: "";
@@ -543,6 +719,40 @@
       center / contain no-repeat;
   border-radius: 0;
   opacity: 1;
+}
+
+[data-token-skin="class_point"] .disc {
+  clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  border-radius: 0;
+  background: linear-gradient(145deg, #213457, #0d172d 68%);
+  box-shadow:
+    inset 0 0 0 0.18rem #d2b45b,
+    0 0.3rem 0.45rem rgb(0 0 0 / 48%),
+    0 0 0 0.08rem rgb(8 12 20 / 75%);
+}
+
+[data-token-skin="class_point"] .skinShape,
+[data-token-skin="class_point"] .teamOverlay {
+  clip-path: inherit;
+}
+
+[data-token-skin="class_point"] .skinShape {
+  background:
+    radial-gradient(circle at 50% 50%, #f2d36b 0 18%, transparent 19%),
+    linear-gradient(145deg, #273d66, #0d172d 68%);
+}
+
+[data-token-skin="class_point"] .teamOverlay {
+  opacity: 0.4;
+}
+
+[data-token-skin="class_point"] .skinMark {
+  inset: 18%;
+  border-radius: 0.2rem;
+  background: #111d36;
+  color: #f2d36b;
+  font-size: clamp(0.36rem, 1.15vw, 0.56rem);
+  letter-spacing: -0.12em;
 }
 
 /* --- Anime-inspired animation packs ------------------------------------ */

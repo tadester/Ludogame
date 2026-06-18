@@ -86,6 +86,57 @@ describe("board and dice skins", () => {
     expect(tokens).toHaveLength(match.tokens.length);
   });
 
+  it("renders a visible skin mark for non-classic token skins", () => {
+    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
+    const { container } = render(
+      <LudoBoard
+        match={match}
+        movableTokenIds={new Set()}
+        animatingTokenId={null}
+        animatingCell={null}
+        capturedTokenIds={new Set()}
+        interactive={false}
+        onTokenClick={() => {}}
+        tokenSkin="straw_hat"
+      />,
+    );
+
+    expect(container.querySelectorAll("[data-token-skin-mark]")).toHaveLength(
+      match.tokens.length,
+    );
+  });
+
+  it("renders skin shapes with seat-colored overlays", () => {
+    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
+    const { container } = render(
+      <LudoBoard
+        match={match}
+        movableTokenIds={new Set()}
+        animatingTokenId={null}
+        animatingCell={null}
+        capturedTokenIds={new Set()}
+        interactive={false}
+        onTokenClick={() => {}}
+        tokenSkin="crystal"
+      />,
+    );
+
+    expect(container.querySelectorAll("[data-token-skin-shape]")).toHaveLength(
+      match.tokens.length,
+    );
+    expect(container.querySelectorAll("[data-token-team-overlay]")).toHaveLength(
+      match.tokens.length,
+    );
+    expect(
+      container.querySelector('[data-token-skin="crystal"] [data-team-color="red"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(
+        '[data-token-skin="crystal"] [data-team-color="green"]',
+      ),
+    ).not.toBeNull();
+  });
+
   it("defaults to the classic board skin", () => {
     const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
     const { container } = render(
