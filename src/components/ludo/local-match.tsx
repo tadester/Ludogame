@@ -64,6 +64,54 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const tokenLabel = (token: { color: PlayerColor; id: string }) =>
   `${token.color} #${token.id.split("-").at(-1)}`;
 
+type Effect = { id: number; icon: string; label: string; tone: string };
+
+const POWER_EFFECT: Record<PowerKind, { icon: string; label: string }> = {
+  shield: { icon: "🛡️", label: "Shield" },
+  dash: { icon: "💨", label: "Dash" },
+  warp: { icon: "🌀", label: "Warp" },
+  snipe: { icon: "🎯", label: "Snipe" },
+  swap: { icon: "🔄", label: "Swap" },
+  summon: { icon: "✨", label: "Summon" },
+  bolt: { icon: "⚡", label: "Bolt" },
+};
+
+const ULTIMATE_EFFECT: Record<UltimateKind, { icon: string; label: string }> = {
+  meteor: { icon: "☄️", label: "Meteor!" },
+  quake: { icon: "🌋", label: "Quake!" },
+  surge: { icon: "🛡️", label: "Surge!" },
+};
+
+/** The most salient visual effect for a batch of events, if any. Ultimates beat
+ *  powers beat map events. */
+function effectFor(events: readonly DomainEvent[]): Omit<Effect, "id"> | null {
+  const ult = events.find((e) => e.type === "ultimate-used") as
+    | { ultimate: UltimateKind }
+    | undefined;
+  if (ult) {
+    const meta = ULTIMATE_EFFECT[ult.ultimate];
+    return { icon: meta.icon, label: meta.label, tone: `ult_${ult.ultimate}` };
+  }
+  const power = events.find((e) => e.type === "power-used") as
+    | { power: PowerKind }
+    | undefined;
+  if (power) {
+    const meta = POWER_EFFECT[power.power];
+    return { icon: meta.icon, label: meta.label, tone: `power_${power.power}` };
+  }
+  const map = events.find((e) => e.type === "map-event") as
+    | { event: "earthquake" | "power-surge" }
+    | undefined;
+  if (map) {
+    return map.event === "earthquake"
+      ? { icon: "🌋", label: "Earthquake!", tone: "quake" }
+      : { icon: "⚡", label: "Power surge!", tone: "surge" };
+  }
+  return null;
+}
+
+const SHAKE_TONES = new Set(["ult_quake", "quake"]);
+
 const COLOR_CLASS: Record<PlayerColor, string> = {
   red: styles.colorRed,
   green: styles.colorGreen,
@@ -98,6 +146,8 @@ export function LocalMatch() {
   } | null>(null);
   // While true, the player is choosing an enemy token for a Meteor ultimate.
   const [meteorTargeting, setMeteorTargeting] = useState(false);
+  // A transient visual flourish for powers, ultimates, and map events.
+  const [effect, setEffect] = useState<Effect | null>(null);
 
   const movesByToken = useMemo(() => {
     if (!match || match.phase !== "awaiting-move" || busy) {
@@ -158,6 +208,16 @@ export function LocalMatch() {
       if (capturedIds.length > 0) {
         setCaptured(new Set(capturedIds));
         setTimeout(() => setCaptured(new Set()), 500);
+      }
+
+      const eff = effectFor(events);
+      if (eff) {
+        const shown = { ...eff, id: Date.now() };
+        setEffect(shown);
+        setTimeout(
+          () => setEffect((cur) => (cur?.id === shown.id ? null : cur)),
+          1000,
+        );
       }
 
       const completed = events.find((e) => e.type === "match-completed");
@@ -434,7 +494,20 @@ export function LocalMatch() {
 
   return (
     <>
-      <div className={styles.layout}>
+      {effect ? (
+        <div
+          key={effect.id}
+          className={`${styles.effect} ${styles[`tone_${effect.tone}`] ?? ""}`}
+          role="status"
+          aria-label={effect.label}
+        >
+          <span className={styles.effectIcon}>{effect.icon}</span>
+          <span className={styles.effectLabel}>{effect.label}</span>
+        </div>
+      ) : null}
+      <div
+        className={`${styles.layout} ${effect && SHAKE_TONES.has(effect.tone) ? styles.shake : ""}`}
+      >
         <LudoBoard
           match={match}
           movableTokenIds={movableTokenIds}
