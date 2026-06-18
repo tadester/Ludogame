@@ -191,6 +191,7 @@ export function LudoBoard({
                   key={token.id}
                   type="button"
                   className={classes}
+                  data-token-skin={tokenSkin}
                   style={{ left: `${left}%`, top: `${top}%` }}
                   onClick={() => interactive && movable && onTokenClick(token.id)}
                   aria-label={`${token.color} token ${tokenSlotIndex(token.id) + 1}`}

@@ -67,6 +67,25 @@ describe("board and dice skins", () => {
     expect(container.querySelector('[data-team-color="green"]')).not.toBeNull();
   });
 
+  it("marks every rendered token with the equipped token skin", () => {
+    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
+    const { container } = render(
+      <LudoBoard
+        match={match}
+        movableTokenIds={new Set()}
+        animatingTokenId={null}
+        animatingCell={null}
+        capturedTokenIds={new Set()}
+        interactive={false}
+        onTokenClick={() => {}}
+        tokenSkin="ninja"
+      />,
+    );
+
+    const tokens = container.querySelectorAll('button[data-token-skin="ninja"]');
+    expect(tokens).toHaveLength(match.tokens.length);
+  });
+
   it("defaults to the classic board skin", () => {
     const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
     const { container } = render(

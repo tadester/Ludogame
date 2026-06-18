@@ -36,6 +36,9 @@ export async function equipCosmetic(formData: FormData) {
   }
 
   revalidatePath("/customize");
+  revalidatePath("/play");
+  revalidatePath("/matches");
+  revalidatePath("/", "layout");
   customizeRedirect("Equipped.");
 }
 
