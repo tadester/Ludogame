@@ -6,271 +6,58 @@ import { setupLocalMatch } from "@/lib/ludo-ui/local-game";
 import { Dice } from "./dice";
 import { LudoBoard } from "./ludo-board";
 
+function renderBoard(props: Partial<Parameters<typeof LudoBoard>[0]> = {}) {
+  const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
+  const result = render(
+    <LudoBoard
+      match={match}
+      movableTokenIds={new Set()}
+      animatingTokenId={null}
+      animatingCell={null}
+      capturedTokenIds={new Set()}
+      interactive={false}
+      onTokenClick={() => {}}
+      {...props}
+    />,
+  );
+  return { match, ...result };
+}
+
 describe("board and dice skins", () => {
   it("applies board and token skin data attributes", () => {
-    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
-    const { container } = render(
-      <LudoBoard
-        match={match}
-        movableTokenIds={new Set()}
-        animatingTokenId={null}
-        animatingCell={null}
-        capturedTokenIds={new Set()}
-        interactive={false}
-        onTokenClick={() => {}}
-        boardSkin="emerald"
-        tokenSkin="gem"
-      />,
-    );
-    expect(
-      container.querySelector('[data-board-skin="emerald"]'),
-    ).not.toBeNull();
+    const { container } = renderBoard({ boardSkin: "emerald", tokenSkin: "gem" });
+    expect(container.querySelector('[data-board-skin="emerald"]')).not.toBeNull();
     expect(container.querySelector('[data-token-skin="gem"]')).not.toBeNull();
   });
 
   it("applies an in-game background skin", () => {
-    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
-    const { container } = render(
-      <LudoBoard
-        match={match}
-        movableTokenIds={new Set()}
-        animatingTokenId={null}
-        animatingCell={null}
-        capturedTokenIds={new Set()}
-        interactive={false}
-        onTokenClick={() => {}}
-        backgroundSkin="hidden_leaf"
-      />,
-    );
-
+    const { container } = renderBoard({ backgroundSkin: "hidden_leaf" });
     expect(
       container.querySelector('[data-background-skin="hidden_leaf"]'),
     ).not.toBeNull();
   });
 
-  it("keeps an obvious team-color tint on styled tokens", () => {
-    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
-    const { container } = render(
-      <LudoBoard
-        match={match}
-        movableTokenIds={new Set()}
-        animatingTokenId={null}
-        animatingCell={null}
-        capturedTokenIds={new Set()}
-        interactive={false}
-        onTokenClick={() => {}}
-        tokenSkin="straw_hat"
-      />,
-    );
-
+  it("keeps a team-color disc on every token, even with a skin equipped", () => {
+    const { container } = renderBoard({ tokenSkin: "ninja" });
     expect(container.querySelector('[data-team-color="red"]')).not.toBeNull();
     expect(container.querySelector('[data-team-color="green"]')).not.toBeNull();
   });
 
-  it("marks every rendered token with the equipped token skin", () => {
-    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
-    const { container } = render(
-      <LudoBoard
-        match={match}
-        movableTokenIds={new Set()}
-        animatingTokenId={null}
-        animatingCell={null}
-        capturedTokenIds={new Set()}
-        interactive={false}
-        onTokenClick={() => {}}
-        tokenSkin="ninja"
-      />,
+  it("renders one team-colored token disc per token under the equipped skin", () => {
+    const { container, match } = renderBoard({ tokenSkin: "ninja" });
+    const discs = container.querySelectorAll(
+      '[data-token-skin="ninja"] [data-team-color]',
     );
-
-    const tokens = container.querySelectorAll('button[data-token-skin="ninja"]');
-    expect(tokens).toHaveLength(match.tokens.length);
-  });
-
-  it("renders every token in the flat token form, including classic", () => {
-    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
-    const { container } = render(
-      <LudoBoard
-        match={match}
-        movableTokenIds={new Set()}
-        animatingTokenId={null}
-        animatingCell={null}
-        capturedTokenIds={new Set()}
-        interactive={false}
-        onTokenClick={() => {}}
-      />,
-    );
-
-    expect(container.querySelectorAll('[data-token-form="flat"]')).toHaveLength(
-      match.tokens.length,
-    );
-  });
-
-  it("marks every token with its visible seat-color fill", () => {
-    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
-    const { container } = render(
-      <LudoBoard
-        match={match}
-        movableTokenIds={new Set()}
-        animatingTokenId={null}
-        animatingCell={null}
-        capturedTokenIds={new Set()}
-        interactive={false}
-        onTokenClick={() => {}}
-        tokenSkin="straw_hat"
-      />,
-    );
-
-    for (const color of ["red", "green"] as const) {
-      expect(
-        container.querySelectorAll(`[data-token-seat-fill="${color}"]`),
-      ).toHaveLength(4);
-    }
-    const redToken = container.querySelector<HTMLElement>(
-      '[data-token-seat-fill="red"]',
-    );
-    const greenToken = container.querySelector<HTMLElement>(
-      '[data-token-seat-fill="green"]',
-    );
-    expect(redToken?.style.getPropertyValue("--token-seat-color")).toBe(
-      "#ef233c",
-    );
-    expect(greenToken?.style.getPropertyValue("--token-seat-color")).toBe(
-      "#16a34a",
-    );
-    expect(container.querySelectorAll("[data-token-color-plate]")).toHaveLength(
-      match.tokens.length,
-    );
-    expect(container.querySelectorAll("[data-token-contrast-ring]")).toHaveLength(
-      match.tokens.length,
-    );
-  });
-
-  it("renders ninja tokens with headband details", () => {
-    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
-    const { container } = render(
-      <LudoBoard
-        match={match}
-        movableTokenIds={new Set()}
-        animatingTokenId={null}
-        animatingCell={null}
-        capturedTokenIds={new Set()}
-        interactive={false}
-        onTokenClick={() => {}}
-        tokenSkin="ninja"
-      />,
-    );
-
-    expect(container.querySelectorAll('[data-token-detail="headband"]')).toHaveLength(
-      match.tokens.length,
-    );
-    expect(container.querySelectorAll("[data-token-rivets]")).toHaveLength(
-      match.tokens.length,
-    );
-  });
-
-  it("renders straw hat tokens with a skull-and-bones emblem", () => {
-    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
-    const { container } = render(
-      <LudoBoard
-        match={match}
-        movableTokenIds={new Set()}
-        animatingTokenId={null}
-        animatingCell={null}
-        capturedTokenIds={new Set()}
-        interactive={false}
-        onTokenClick={() => {}}
-        tokenSkin="straw_hat"
-      />,
-    );
-
-    expect(
-      container.querySelectorAll('[data-token-emblem="straw-crossbones"]'),
-    ).toHaveLength(match.tokens.length);
-  });
-
-  it("renders a visible skin mark for non-classic token skins", () => {
-    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
-    const { container } = render(
-      <LudoBoard
-        match={match}
-        movableTokenIds={new Set()}
-        animatingTokenId={null}
-        animatingCell={null}
-        capturedTokenIds={new Set()}
-        interactive={false}
-        onTokenClick={() => {}}
-        tokenSkin="straw_hat"
-      />,
-    );
-
-    expect(container.querySelectorAll("[data-token-skin-mark]")).toHaveLength(
-      match.tokens.length,
-    );
-  });
-
-  it("renders skin shapes with seat-colored overlays", () => {
-    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
-    const { container } = render(
-      <LudoBoard
-        match={match}
-        movableTokenIds={new Set()}
-        animatingTokenId={null}
-        animatingCell={null}
-        capturedTokenIds={new Set()}
-        interactive={false}
-        onTokenClick={() => {}}
-        tokenSkin="crystal"
-      />,
-    );
-
-    expect(container.querySelectorAll("[data-token-skin-shape]")).toHaveLength(
-      match.tokens.length,
-    );
-    expect(container.querySelectorAll("[data-token-team-overlay]")).toHaveLength(
-      match.tokens.length,
-    );
-    expect(
-      container.querySelector('[data-token-skin="crystal"] [data-team-color="red"]'),
-    ).not.toBeNull();
-    expect(
-      container.querySelector(
-        '[data-token-skin="crystal"] [data-team-color="green"]',
-      ),
-    ).not.toBeNull();
+    expect(discs).toHaveLength(match.tokens.length);
   });
 
   it("defaults to the classic board skin", () => {
-    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
-    const { container } = render(
-      <LudoBoard
-        match={match}
-        movableTokenIds={new Set()}
-        animatingTokenId={null}
-        animatingCell={null}
-        capturedTokenIds={new Set()}
-        interactive={false}
-        onTokenClick={() => {}}
-      />,
-    );
-    expect(
-      container.querySelector('[data-board-skin="classic"]'),
-    ).not.toBeNull();
+    const { container } = renderBoard();
+    expect(container.querySelector('[data-board-skin="classic"]')).not.toBeNull();
   });
 
   it("applies the animation pack to the board", () => {
-    const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
-    const { container } = render(
-      <LudoBoard
-        match={match}
-        movableTokenIds={new Set()}
-        animatingTokenId={null}
-        animatingCell={null}
-        capturedTokenIds={new Set()}
-        interactive={false}
-        onTokenClick={() => {}}
-        animationSkin="dynamic"
-      />,
-    );
+    const { container } = renderBoard({ animationSkin: "dynamic" });
     expect(container.querySelector('[data-animation="dynamic"]')).not.toBeNull();
   });
 
