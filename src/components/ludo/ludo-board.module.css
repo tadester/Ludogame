@@ -321,6 +321,17 @@
   pointer-events: none;
 }
 
+.postSkinColor {
+  position: absolute;
+  z-index: 14;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--token-seat-color, var(--team-tint));
+  opacity: 0.34;
+  mix-blend-mode: normal;
+  pointer-events: none;
+}
+
 .skinShape,
 .teamOverlay {
   position: absolute;
