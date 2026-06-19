@@ -44,6 +44,22 @@ const TRI: Record<PlayerColor, string> = {
   yellow: styles.triYellow,
   blue: styles.triBlue,
 };
+const TOKEN_SEAT_COLOR: Record<PlayerColor, string> = {
+  red: "#ef233c",
+  green: "#16a34a",
+  yellow: "#facc15",
+  blue: "#1683e7",
+};
+
+const TOKEN_SKIN_MARK: Record<string, string> = {
+  gem: "◆",
+  star: "★",
+  crystal: "◇",
+  ninja: "N",
+  straw_hat: "H",
+  class_point: "CP",
+};
+
 interface LudoBoardProps {
   match: MatchState;
   movableTokenIds: ReadonlySet<string>;
@@ -190,12 +206,54 @@ export function LudoBoard({
                   key={token.id}
                   type="button"
                   className={classes}
+                  data-token-skin={tokenSkin}
+                  data-token-form="flat"
+                  data-token-detail={
+                    tokenSkin === "ninja" ? "headband" : undefined
+                  }
                   style={{ left: `${left}%`, top: `${top}%` }}
                   onClick={() => interactive && movable && onTokenClick(token.id)}
                   aria-label={`${token.color} token ${tokenSlotIndex(token.id) + 1}`}
                   disabled={!interactive || !movable}
                 >
-                  <span className={discClasses} data-team-color={token.color} />
+                  <span
+                    className={discClasses}
+                    data-team-color={token.color}
+                    data-token-seat-fill={token.color}
+                    style={
+                      {
+                        "--team-tint": TOKEN_SEAT_COLOR[token.color],
+                        "--token-seat-color": TOKEN_SEAT_COLOR[token.color],
+                        background: TOKEN_SEAT_COLOR[token.color],
+                      } as CSSProperties
+                    }
+                  >
+                    {TOKEN_SKIN_MARK[tokenSkin] ? (
+                      <>
+                        <span className={styles.skinShape} data-token-skin-shape />
+                        <span
+                          className={styles.teamOverlay}
+                          data-token-team-overlay
+                        />
+                        {tokenSkin === "ninja" ? (
+                          <span className={styles.rivets} data-token-rivets />
+                        ) : null}
+                        {tokenSkin === "straw_hat" ? (
+                          <span
+                            className={styles.strawCrossbones}
+                            data-token-emblem="straw-crossbones"
+                          />
+                        ) : null}
+                      </>
+                    ) : null}
+                    {TOKEN_SKIN_MARK[tokenSkin] ? (
+                      <span className={styles.skinMark} data-token-skin-mark>
+                        {TOKEN_SKIN_MARK[tokenSkin]}
+                      </span>
+                    ) : null}
+                    <span className={styles.seatColorPlate} data-token-color-plate />
+                    <span className={styles.seatContrastRing} data-token-contrast-ring />
+                  </span>
                 </button>
               );
             })}
