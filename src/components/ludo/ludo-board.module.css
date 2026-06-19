@@ -1006,3 +1006,25 @@
     animation: none;
   }
 }
+
+/* ============================================================
+   Team colour must be unmistakable on every token.
+   The seat-colour plate becomes fully opaque so it always covers
+   the skin's metal/silver fills, and each skin's emblem is lifted
+   above the plate so the style still reads — colour first.
+   ============================================================ */
+.seatColorPlate {
+  opacity: 1 !important;
+}
+
+/* Lift skin emblems above the opaque seat-colour plate (z-index 10). */
+[data-token-skin="ninja"] .disc::after,
+[data-token-skin="straw_hat"] .disc::after,
+[data-token-skin="class_point"] .disc::after {
+  z-index: 11 !important;
+}
+
+/* The skin badge/letter and the white contrast ring already sit above. */
+.skinMark {
+  z-index: 12 !important;
+}
