@@ -1008,23 +1008,57 @@
 }
 
 /* ============================================================
-   Team colour must be unmistakable on every token.
-   The seat-colour plate becomes fully opaque so it always covers
-   the skin's metal/silver fills, and each skin's emblem is lifted
-   above the plate so the style still reads — colour first.
+   Tokens: the team colour fills the whole token; the equipped skin
+   shows only as a small central badge, so colour always dominates.
+   Plus a larger board that uses more of the screen.
    ============================================================ */
+
+/* Solid, fully-opaque team-colour fill that covers any silver/metal
+   skin base. The broad skin washes are switched off so nothing
+   lightens the colour. */
 .seatColorPlate {
   opacity: 1 !important;
 }
+/* Thinner white rim so small (yard) tokens still read as their colour. */
+.disc {
+  border-width: 0.09rem !important;
+}
+.skinShape,
+.teamOverlay,
+.postSkinColor {
+  opacity: 0 !important;
+}
 
-/* Lift skin emblems above the opaque seat-colour plate (z-index 10). */
+/* Each skin's emblem becomes a small centred badge above the colour. */
+[data-token-skin="ninja"] .disc::before {
+  display: none !important;
+}
 [data-token-skin="ninja"] .disc::after,
 [data-token-skin="straw_hat"] .disc::after,
 [data-token-skin="class_point"] .disc::after {
-  z-index: 11 !important;
+  z-index: 16 !important;
+  inset: auto !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 44% !important;
+  height: 44% !important;
+  transform: translate(-50%, -50%) !important;
+}
+.skinMark {
+  z-index: 16 !important;
+  inset: 32% !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.rivets,
+.strawCrossbones {
+  z-index: 16 !important;
 }
 
-/* The skin badge/letter and the white contrast ring already sit above. */
-.skinMark {
-  z-index: 12 !important;
+/* A bigger board that fills more of the screen. */
+.boardWrap {
+  width: min(100%, 62rem, calc(100svh - 7rem)) !important;
+}
+.boardWrap[data-extreme="true"] {
+  width: min(100%, 74rem, calc(100svh - 7rem)) !important;
 }
