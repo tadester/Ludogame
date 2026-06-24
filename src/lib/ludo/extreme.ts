@@ -6,7 +6,7 @@ import {
   ULTIMATE_CHARGE_PER_CAPTURE,
   ULTIMATE_CHARGE_PER_POWER,
 } from "./constants";
-import { requireActiveMatch, requireActivePlayer } from "./turn-flow";
+import { requireActiveMatch, requireActivePlayer, sameTeam } from "./turn-flow";
 import { addCharge } from "./ultimate";
 import { LudoRuleError } from "./types";
 import type {
@@ -92,7 +92,7 @@ export function resolveExtremeLanding(
   if (!safe.has(ringIndex)) {
     tokens = tokens.map((token) => {
       const opposing =
-        token.playerId !== moverId &&
+        !sameTeam(state, token.playerId, moverId) &&
         token.status === "active" &&
         token.progress !== null &&
         token.progress <= RING_PROGRESS_MAX &&

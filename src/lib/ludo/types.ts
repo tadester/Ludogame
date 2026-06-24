@@ -119,6 +119,10 @@ export interface MatchState {
   readonly phase: TurnPhase;
   readonly pendingRoll: PendingRoll | null;
   readonly winnerPlayerId: string | null;
+  /** Maps each seat (player id) to its owning team id. Seats sharing a team id
+   *  belong to one controller, so they never capture each other. Absent (or a
+   *  seat with no entry) means the seat is its own team. */
+  readonly teams?: Readonly<Record<string, string>>;
   /** Present only in Extreme mode. */
   readonly powerUps?: ExtremePowerState;
 }

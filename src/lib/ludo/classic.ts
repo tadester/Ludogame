@@ -15,6 +15,7 @@ import {
   hasWonMatch,
   playerTokens,
   requireActivePlayer,
+  sameTeam,
   validateDice,
 } from "./turn-flow";
 import { LudoRuleError } from "./types";
@@ -170,7 +171,7 @@ function captureOnRing(
   const events: DomainEvent[] = [];
   const tokens = state.tokens.map((token) => {
     const isOpposingRingToken =
-      token.playerId !== moverId &&
+      !sameTeam(state, token.playerId, moverId) &&
       token.status === "active" &&
       token.progress !== null &&
       token.progress <= spec.ringProgressMax &&

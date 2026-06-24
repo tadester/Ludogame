@@ -70,11 +70,18 @@ export function buildStartedMatch(
     }).state;
   }
 
-  return applyAction(state, {
+  const started = applyAction(state, {
     type: "start-match",
     expectedVersion: state.version,
     playerId: colored[0].id,
   }).state;
+
+  // Group seats by their owning user so seats one person controls are allies
+  // (they never capture each other). Carried forward through every transition.
+  const teams = Object.fromEntries(
+    colored.map((player) => [player.id, seatOwner(player.id)]),
+  );
+  return { ...started, teams };
 }
 
 /** Separator between a seat's owner id and its color in a player id. uuids

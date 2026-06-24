@@ -28,6 +28,20 @@ export function playerTokens(
   return state.tokens.filter((token) => token.playerId === playerId);
 }
 
+/** Whether two seats are controlled by the same team (so their tokens are
+ *  allies that never capture each other). A seat is always its own ally. */
+export function sameTeam(
+  state: MatchState,
+  a: string,
+  b: string,
+): boolean {
+  if (a === b) return true;
+  const teams = state.teams;
+  if (!teams) return false;
+  const teamA = teams[a];
+  return teamA !== undefined && teamA === teams[b];
+}
+
 export function requireActiveMatch(state: MatchState): void {
   if (state.status !== "active") {
     throw new LudoRuleError("INVALID_ACTION", "Match is not active");
