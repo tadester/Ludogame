@@ -6,8 +6,10 @@ import { setupLocalMatch } from "@/lib/ludo-ui/local-game";
 import { Dice } from "./dice";
 import { LudoBoard } from "./ludo-board";
 
-function renderBoard(props: Partial<Parameters<typeof LudoBoard>[0]> = {}) {
-  const match = setupLocalMatch([{ name: "A" }, { name: "B" }]);
+function renderBoard(
+  props: Partial<Parameters<typeof LudoBoard>[0]> = {},
+  match = setupLocalMatch([{ name: "A" }, { name: "B" }]),
+) {
   const result = render(
     <LudoBoard
       match={match}
@@ -59,6 +61,17 @@ describe("board and dice skins", () => {
   it("applies the animation pack to the board", () => {
     const { container } = renderBoard({ animationSkin: "dynamic" });
     expect(container.querySelector('[data-animation="dynamic"]')).not.toBeNull();
+  });
+
+  it("draws safe-zone stars in classic but not in Nigerian", () => {
+    const { container: classic } = renderBoard();
+    expect(
+      classic.querySelectorAll('[aria-label="safe zone"]').length,
+    ).toBeGreaterThan(0);
+
+    const nigerian = setupLocalMatch([{ name: "A" }, { name: "B" }], "nigerian");
+    const { container: ng } = renderBoard({}, nigerian);
+    expect(ng.querySelectorAll('[aria-label="safe zone"]').length).toBe(0);
   });
 
   it("applies the dice skin and roll animation", () => {

@@ -62,6 +62,7 @@ interface LudoBoardProps {
 }
 
 const NO_POWER_TILES: ReadonlySet<number> = new Set();
+const NO_SAFE_TILES: ReadonlySet<number> = new Set();
 
 export function LudoBoard({
   match,
@@ -80,6 +81,11 @@ export function LudoBoard({
 }: LudoBoardProps) {
   const layout = getBoardLayout(match.ruleset);
   const openingColors = useMemo(() => ringIndexToColor(layout), [layout]);
+  // Nigerian rules have no safe squares, so never draw safe stars there.
+  const effectiveSafe =
+    match.ruleset === "nigerian"
+      ? NO_SAFE_TILES
+      : (safeRingIndexes ?? SAFE_RING_INDEXES);
   const mid = (layout.size - 1) / 2;
   const placed = useMemo(
     () => placeTokens(layout, match.tokens, animatingTokenId, animatingCell),
@@ -110,11 +116,7 @@ export function LudoBoard({
               cell={cell}
               openingColor={openingColors[ringIndex]}
               isPowerTile={powerTileRingIndexes.has(ringIndex)}
-              isSafe={
-                safeRingIndexes
-                  ? safeRingIndexes.has(ringIndex)
-                  : SAFE_RING_INDEXES.has(ringIndex)
-              }
+              isSafe={effectiveSafe.has(ringIndex)}
             />
           ))}
 
@@ -170,12 +172,13 @@ export function LudoBoard({
             data-token-skin={tokenSkin}
             data-animation={animationSkin}
           >
-            {placed.map(({ token, left, top }) => {
+            {placed.map(({ token, left, top, won }) => {
               const movable = movableTokenIds.has(token.id);
               const btnClasses = [
                 styles.gToken,
                 movable ? styles.gMovable : "",
                 interactive && movable ? styles.gClickable : "",
+                won ? styles.gWon : "",
               ]
                 .filter(Boolean)
                 .join(" ");
@@ -197,6 +200,7 @@ export function LudoBoard({
                   disabled={!interactive || !movable}
                 >
                   <span
+                    key={`${Math.round(left)},${Math.round(top)}`}
                     className={pieceClasses}
                     data-team-color={token.color}
                     data-token-skin={tokenSkin}
@@ -269,6 +273,7 @@ interface PlacedToken {
   token: Token;
   left: number;
   top: number;
+  won: boolean;
 }
 
 /** Resolves every token to a board percentage, fanning out shared cells. */
@@ -278,16 +283,26 @@ function placeTokens(
   animatingTokenId: string | null,
   animatingCell: Cell | null,
 ): PlacedToken[] {
+  // Finished tokens come to rest in their own colour's home lane (closest to
+  // the centre first) instead of piling onto the shared centre triangle.
+  const wonSeen: Record<string, number> = {};
   const resolved = tokens.map((token) => {
-    const cell =
-      token.id === animatingTokenId && animatingCell
-        ? animatingCell
-        : cellForProgressOn(
-            layout,
-            token.color,
-            token.progress,
-            tokenSlotIndex(token.id),
-          );
+    if (token.id === animatingTokenId && animatingCell) {
+      return { token, cell: animatingCell };
+    }
+    if (token.status === "won") {
+      const lane = layout.homeLane[token.color];
+      const order = wonSeen[token.color] ?? 0;
+      wonSeen[token.color] = order + 1;
+      const cell = lane[lane.length - 1 - order] ?? layout.center;
+      return { token, cell };
+    }
+    const cell = cellForProgressOn(
+      layout,
+      token.color,
+      token.progress,
+      tokenSlotIndex(token.id),
+    );
     return { token, cell };
   });
 
@@ -301,13 +316,14 @@ function placeTokens(
 
   return resolved.map(({ token, cell }) => {
     const base = cellToPercentOn(layout, cell);
+    const won = token.status === "won";
     if (token.id === animatingTokenId) {
-      return { token, left: base.left, top: base.top };
+      return { token, left: base.left, top: base.top, won };
     }
     const key = `${Math.round(cell[0])},${Math.round(cell[1])}`;
     const group = groups.get(key) ?? [token];
     if (group.length <= 1) {
-      return { token, left: base.left, top: base.top };
+      return { token, left: base.left, top: base.top, won };
     }
     const index = group.findIndex((entry) => entry.id === token.id);
     const angle = (index / group.length) * Math.PI * 2;
@@ -316,6 +332,7 @@ function placeTokens(
       token,
       left: base.left + Math.cos(angle) * radius,
       top: base.top + Math.sin(angle) * radius,
+      won,
     };
   });
 }

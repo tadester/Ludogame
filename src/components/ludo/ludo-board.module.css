@@ -1138,13 +1138,36 @@
   outline-offset: 0.05rem;
 }
 
-.gCaptured {
+.gPiece.gCaptured {
   animation: gFlash 0.45s ease;
 }
 
 @keyframes gFlash {
   0% { filter: brightness(2.2); transform: scale(1.3); }
   100% { filter: none; transform: scale(1); }
+}
+
+/* Finished tokens come home: shrink to nestle into their own colour lane. */
+.gWon {
+  width: calc(var(--token-size, 6%) * 0.62);
+  z-index: 4;
+  filter: drop-shadow(0 0.12rem 0.18rem rgb(0 0 0 / 45%));
+}
+
+.gWon .gPiece {
+  opacity: 0.96;
+}
+
+/* Motion blur: the piece is remounted (keyed on its cell) whenever it moves,
+   so this one-shot blur replays on every step. */
+.gPiece {
+  animation: gMove 0.32s ease;
+}
+
+@keyframes gMove {
+  0% { filter: blur(2.4px) brightness(1.14); }
+  60% { filter: blur(1.1px) brightness(1.06); }
+  100% { filter: blur(0) brightness(1); }
 }
 
 /* Imprinted emblem stamped on the colour (per skin). */
