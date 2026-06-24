@@ -1064,10 +1064,10 @@
 
 /* A bigger board that fills more of the screen. */
 .boardWrap {
-  width: min(100%, 62rem, calc(100svh - 7rem)) !important;
+  width: min(100%, 72rem, calc(100svh - 4.5rem)) !important;
 }
 .boardWrap[data-extreme="true"] {
-  width: min(100%, 74rem, calc(100svh - 7rem)) !important;
+  width: min(100%, 84rem, calc(100svh - 4.5rem)) !important;
 }
 
 /* ============================================================
@@ -1085,6 +1085,7 @@
   transition:
     left 0.16s ease,
     top 0.16s ease;
+  pointer-events: auto;
   border: none;
   padding: 0;
   background: none;

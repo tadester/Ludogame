@@ -148,7 +148,7 @@ export function LudoBoard({
           className={styles.tokenLayer}
           style={
             {
-              "--token-size": `${(100 / layout.size) * 1.4}%`,
+              "--token-size": `${(100 / layout.size) * 1.12}%`,
             } as CSSProperties
           }
         >
