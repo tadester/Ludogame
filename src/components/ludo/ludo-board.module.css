@@ -1031,25 +1031,35 @@
   display: none !important;
 }
 
-/* Thinner white rim so small (yard) tokens still read as their colour. */
-.disc {
-  border-width: 0.1rem !important;
+/* Force every token to its solid team colour with a matching darker edge.
+   !important beats the inline style and any skin layer, so the colour
+   always shows — red fill + red edge, blue + blue, etc. */
+.disc[data-team-color="red"] {
+  background: var(--red) !important;
+  border: 0.13rem solid color-mix(in srgb, var(--red), black 32%) !important;
+}
+.disc[data-team-color="green"] {
+  background: var(--green) !important;
+  border: 0.13rem solid color-mix(in srgb, var(--green), black 32%) !important;
+}
+.disc[data-team-color="yellow"] {
+  background: var(--yellow) !important;
+  border: 0.13rem solid color-mix(in srgb, var(--yellow), black 38%) !important;
+}
+.disc[data-team-color="blue"] {
+  background: var(--blue) !important;
+  border: 0.13rem solid color-mix(in srgb, var(--blue), black 32%) !important;
 }
 
-/* Small letter badge for the equipped skin, centred on the colour. */
+/* Drop the skin letter for now so nothing dilutes the colour. */
 .skinMark {
-  display: grid !important;
-  z-index: 6 !important;
-  inset: 30% !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  color: #fff !important;
-  text-shadow:
-    0 0.06rem 0.1rem rgb(0 0 0 / 90%),
-    0 0 0.2rem rgb(0 0 0 / 70%) !important;
+  display: none !important;
 }
-[data-token-skin="ninja"] .skinMark {
-  display: grid !important;
+
+/* White rest pads so a token in its own colour home still stands out. */
+.yardPad {
+  background: rgb(255 255 255 / 88%) !important;
+  box-shadow: inset 0 0 0 0.06rem rgb(0 0 0 / 22%) !important;
 }
 
 /* A bigger board that fills more of the screen. */
