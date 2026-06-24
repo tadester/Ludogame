@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { getLegalActions } from "@/lib/ludo";
 import type { MatchState } from "@/lib/ludo";
 import { onlineViewModel } from "@/lib/ludo-online/view";
 import { diceCountForRuleset, seatOwner } from "@/lib/ludo-online/authority";
 import type { ServerIntent } from "@/lib/ludo-online/authority";
-import { legalMovesByToken } from "@/lib/ludo-ui/local-game";
+import { dieOrderOptions, legalMovesByToken } from "@/lib/ludo-ui/local-game";
 import { createClient } from "@/lib/supabase/client";
 
 import { LudoBoard } from "./ludo-board";
@@ -40,11 +41,20 @@ export function OnlineMatch({
   animationSkin = "standard",
   effectSkin = "none",
 }: OnlineMatchProps) {
+  const router = useRouter();
   const [snapshot, setSnapshot] = useState<MatchState>(initial);
   const [busy, setBusy] = useState(false);
   const [rolling, setRolling] = useState(false);
   const [rollingFaces, setRollingFaces] = useState<number[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  // Consecutive turns this client let the clock auto-play for the local user.
+  const autoPlaysRef = useRef(0);
+
+  // Reset the auto-play streak whenever the local player acts on purpose.
+  const markManualAction = useCallback(() => {
+    autoPlaysRef.current = 0;
+  }, []);
 
   const resync = useCallback(async () => {
     const supabase = createClient();
@@ -178,6 +188,89 @@ export function OnlineMatch({
     return () => window.clearTimeout(timer);
   }, [snapshot, userId, busy, send]);
 
+  // Play the active player's best/forced move on their behalf when the clock
+  // runs out so an idle (or briefly disconnected) seat never stalls the game.
+  const autoPlay = useCallback(() => {
+    const vm = onlineViewModel(snapshot, userId);
+    if (!vm.isMyTurn) return;
+    const actions = getLegalActions(snapshot);
+    if (snapshot.phase === "awaiting-roll") {
+      if (vm.canRoll) void send({ kind: "roll" });
+      return;
+    }
+    if (snapshot.phase === "awaiting-die-order") {
+      const option = dieOrderOptions(actions)[0];
+      if (option) void send({ kind: "select-die-order", dieIds: option.dieIds });
+      return;
+    }
+    if (snapshot.phase === "awaiting-move") {
+      const [action] = [...legalMovesByToken(snapshot, actions).values()];
+      if (!action) return;
+      if (action.type === "release-token") {
+        void send({
+          kind: "release-token",
+          tokenId: action.tokenId,
+          dieId: action.dieId,
+        });
+      } else if (action.type === "move-token") {
+        void send({
+          kind: "move-token",
+          tokenId: action.tokenId,
+          dieIds: action.dieIds,
+        });
+      }
+    }
+  }, [snapshot, userId, send]);
+
+  const turnTimerSeconds = snapshot.turnTimerSeconds ?? null;
+  const timerActive =
+    Boolean(turnTimerSeconds) &&
+    snapshot.status === "active" &&
+    !snapshot.winnerPlayerId;
+  // A signature that changes every time the active seat faces a fresh decision,
+  // so the countdown restarts on each roll/move prompt.
+  const decisionKey = `${snapshot.turnNumber}:${snapshot.activePlayerIndex}:${
+    snapshot.phase
+  }:${snapshot.pendingRoll?.dice.map((d) => d.id).join(",") ?? ""}`;
+
+  // Restart the countdown whenever a new decision arrives. Resetting during
+  // render (rather than in an effect) keeps a stale "0" from briefly firing the
+  // expiry logic before the next turn's clock is installed.
+  const [trackedDecision, setTrackedDecision] = useState<string>("");
+  if (trackedDecision !== decisionKey) {
+    setTrackedDecision(decisionKey);
+    setSecondsLeft(timerActive ? turnTimerSeconds : null);
+  }
+
+  // Tick the countdown down once per second.
+  useEffect(() => {
+    if (secondsLeft === null || secondsLeft <= 0) return;
+    const timer = window.setTimeout(() => {
+      setSecondsLeft((value) => (value === null ? null : value - 1));
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [secondsLeft]);
+
+  // When the clock hits zero on the local player's turn, auto-play for them —
+  // and after ten straight auto-plays, drop them from the match.
+  useEffect(() => {
+    if (secondsLeft !== 0 || busy) return;
+    const vm = onlineViewModel(snapshot, userId);
+    if (
+      !vm.isMyTurn ||
+      snapshot.status !== "active" ||
+      snapshot.winnerPlayerId
+    ) {
+      return;
+    }
+    autoPlaysRef.current += 1;
+    if (autoPlaysRef.current >= 10) {
+      router.push("/rooms?message=Removed+for+inactivity.");
+      return;
+    }
+    autoPlay();
+  }, [secondsLeft, busy, snapshot, userId, autoPlay, router]);
+
   const view = onlineViewModel(snapshot, userId);
   const movable = new Set(view.movableTokenIds);
 
@@ -187,6 +280,7 @@ export function OnlineMatch({
       tokenId,
     );
     if (!action) return;
+    markManualAction();
     if (action.type === "release-token") {
       void send({
         kind: "release-token",
@@ -237,8 +331,11 @@ export function OnlineMatch({
         canRoll={view.isMyTurn && view.canRoll && !busy}
         diceSkin={diceSkin}
         animationSkin={animationSkin}
-        timerSeconds={snapshot.turnTimerSeconds ?? null}
-        onRoll={() => void send({ kind: "roll" })}
+        timerSeconds={secondsLeft}
+        onRoll={() => {
+          markManualAction();
+          void send({ kind: "roll" });
+        }}
       />
 
       <LudoBoard
@@ -282,12 +379,13 @@ export function OnlineMatch({
                   className={styles.orderButton}
                   disabled={busy}
                   key={option.dieIds.join("-")}
-                  onClick={() =>
+                  onClick={() => {
+                    markManualAction();
                     void send({
                       kind: "select-die-order",
                       dieIds: option.dieIds,
-                    })
-                  }
+                    });
+                  }}
                   type="button"
                 >
                   {option.dieIds

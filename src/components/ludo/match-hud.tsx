@@ -71,8 +71,17 @@ export function MatchHud({
             You are {currentPlayer.color}
           </span>
         ) : null}
-        <span className={styles.timer}>
-          {timerSeconds ? `Timer: ${timerSeconds}s` : "Timer: off"}
+        <span
+          className={styles.timer}
+          data-low={
+            typeof timerSeconds === "number" && timerSeconds <= 5
+              ? "true"
+              : undefined
+          }
+        >
+          {typeof timerSeconds === "number"
+            ? `Timer: ${timerSeconds}s`
+            : "Timer: off"}
         </span>
       </div>
 

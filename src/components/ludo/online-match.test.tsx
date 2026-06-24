@@ -5,6 +5,17 @@ import { setupLocalMatch } from "@/lib/ludo-ui/local-game";
 
 import { OnlineMatch } from "./online-match";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: () => undefined,
+    replace: () => undefined,
+    refresh: () => undefined,
+    prefetch: () => undefined,
+    back: () => undefined,
+    forward: () => undefined,
+  }),
+}));
+
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
     channel: () => ({
