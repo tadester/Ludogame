@@ -1091,7 +1091,10 @@
   background: none;
   cursor: default;
   z-index: 5;
-  filter: drop-shadow(0 0.2rem 0.26rem rgb(0 0 0 / 52%));
+  /* Promote to its own layer so the sliding token repaints cleanly (avoids
+     the smeared shadow trail WebKit leaves when animating left/top). */
+  will-change: left, top;
+  backface-visibility: hidden;
 }
 
 .gClickable {
@@ -1122,9 +1125,12 @@
     color-mix(in srgb, var(--tc), black 30%) 100%
   );
   border: 0.12rem solid color-mix(in srgb, var(--tc), black 40%);
+  /* Elevation via box-shadow (not filter drop-shadow) so movement never
+     smears — box-shadow composites cleanly during the position transition. */
   box-shadow:
     inset 0 0.1rem 0.16rem rgb(255 255 255 / 45%),
-    inset 0 -0.12rem 0.18rem rgb(0 0 0 / 34%);
+    inset 0 -0.12rem 0.18rem rgb(0 0 0 / 34%),
+    0 0.18rem 0.24rem rgb(0 0 0 / 45%);
 }
 
 /* Team-colour fallback if the inline --tc is missing. */
@@ -1138,7 +1144,7 @@
   outline-offset: 0.05rem;
 }
 
-.gPiece.gCaptured {
+.gCaptured {
   animation: gFlash 0.45s ease;
 }
 
@@ -1151,23 +1157,10 @@
 .gWon {
   width: calc(var(--token-size, 6%) * 0.62);
   z-index: 4;
-  filter: drop-shadow(0 0.12rem 0.18rem rgb(0 0 0 / 45%));
 }
 
 .gWon .gPiece {
   opacity: 0.96;
-}
-
-/* Motion blur: the piece is remounted (keyed on its cell) whenever it moves,
-   so this one-shot blur replays on every step. */
-.gPiece {
-  animation: gMove 0.32s ease;
-}
-
-@keyframes gMove {
-  0% { filter: blur(2.4px) brightness(1.14); }
-  60% { filter: blur(1.1px) brightness(1.06); }
-  100% { filter: blur(0) brightness(1); }
 }
 
 /* Imprinted emblem stamped on the colour (per skin). */

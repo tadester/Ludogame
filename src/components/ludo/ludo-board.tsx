@@ -200,7 +200,6 @@ export function LudoBoard({
                   disabled={!interactive || !movable}
                 >
                   <span
-                    key={`${Math.round(left)},${Math.round(top)}`}
                     className={pieceClasses}
                     data-team-color={token.color}
                     data-token-skin={tokenSkin}
