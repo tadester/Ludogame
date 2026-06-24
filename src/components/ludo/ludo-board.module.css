@@ -1008,51 +1008,48 @@
 }
 
 /* ============================================================
-   Tokens: the team colour fills the whole token; the equipped skin
-   shows only as a small central badge, so colour always dominates.
+   Tokens: show the disc's solid seat colour. Every overlay layer that
+   was covering it with silver/white skin art is hidden; only a small
+   letter badge marks the equipped skin. Colour first, guaranteed.
    Plus a larger board that uses more of the screen.
    ============================================================ */
 
-/* Solid, fully-opaque team-colour fill that covers any silver/metal
-   skin base. The broad skin washes are switched off so nothing
-   lightens the colour. */
-.seatColorPlate {
-  opacity: 1 !important;
-}
-/* Thinner white rim so small (yard) tokens still read as their colour. */
-.disc {
-  border-width: 0.09rem !important;
-}
+/* Hide every layer that was painting over the seat colour. The disc's
+   own inline background is the team colour, so once these are gone the
+   token reads as its colour. */
 .skinShape,
 .teamOverlay,
-.postSkinColor {
-  opacity: 0 !important;
-}
-
-/* Each skin's emblem becomes a small centred badge above the colour. */
-[data-token-skin="ninja"] .disc::before {
-  display: none !important;
-}
-[data-token-skin="ninja"] .disc::after,
-[data-token-skin="straw_hat"] .disc::after,
-[data-token-skin="class_point"] .disc::after {
-  z-index: 16 !important;
-  inset: auto !important;
-  top: 50% !important;
-  left: 50% !important;
-  width: 44% !important;
-  height: 44% !important;
-  transform: translate(-50%, -50%) !important;
-}
-.skinMark {
-  z-index: 16 !important;
-  inset: 32% !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
+.seatColorPlate,
+.seatContrastRing,
+.postSkinColor,
 .rivets,
 .strawCrossbones {
-  z-index: 16 !important;
+  display: none !important;
+}
+[data-token-skin] .disc::before,
+[data-token-skin] .disc::after {
+  display: none !important;
+}
+
+/* Thinner white rim so small (yard) tokens still read as their colour. */
+.disc {
+  border-width: 0.1rem !important;
+}
+
+/* Small letter badge for the equipped skin, centred on the colour. */
+.skinMark {
+  display: grid !important;
+  z-index: 6 !important;
+  inset: 30% !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #fff !important;
+  text-shadow:
+    0 0.06rem 0.1rem rgb(0 0 0 / 90%),
+    0 0 0.2rem rgb(0 0 0 / 70%) !important;
+}
+[data-token-skin="ninja"] .skinMark {
+  display: grid !important;
 }
 
 /* A bigger board that fills more of the screen. */
