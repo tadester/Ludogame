@@ -9,6 +9,8 @@ import { onlineViewModel } from "@/lib/ludo-online/view";
 import { diceCountForRuleset, seatOwner } from "@/lib/ludo-online/authority";
 import type { ServerIntent } from "@/lib/ludo-online/authority";
 import { dieOrderOptions, legalMovesByToken } from "@/lib/ludo-ui/local-game";
+import { getBoardLayout, moveWaypointsOn } from "@/lib/ludo-ui/geometry";
+import type { Cell, PlayerColor } from "@/lib/ludo-ui/geometry";
 import { createClient } from "@/lib/supabase/client";
 
 import { LudoBoard } from "./ludo-board";
@@ -16,6 +18,8 @@ import { MatchHud } from "./match-hud";
 import styles from "./online-match.module.css";
 
 const EMPTY = new Set<string>();
+// Per-cell step time for the move walk — slow enough to follow, not sluggish.
+const STEP_MS = 210;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 interface OnlineMatchProps {
@@ -50,6 +54,11 @@ export function OnlineMatch({
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   // Consecutive turns this client let the clock auto-play for the local user.
   const autoPlaysRef = useRef(0);
+  // Step a moved token along its path (works for my own and opponents' moves).
+  const [anim, setAnim] = useState<{ tokenId: string; cell: Cell } | null>(null);
+  const prevProgressRef = useRef<Map<string, number | null>>(
+    new Map(initial.tokens.map((token) => [token.id, token.progress])),
+  );
 
   // Reset the auto-play streak whenever the local player acts on purpose.
   const markManualAction = useCallback(() => {
@@ -170,6 +179,7 @@ export function OnlineMatch({
     const moves = legalMovesByToken(snapshot, getLegalActions(snapshot));
     if (moves.size !== 1) return;
     const [action] = [...moves.values()];
+    // Pause so the roll is visible before the only move plays itself.
     const timer = window.setTimeout(() => {
       if (action.type === "release-token") {
         void send({
@@ -184,7 +194,7 @@ export function OnlineMatch({
           dieIds: action.dieIds,
         });
       }
-    }, 350);
+    }, 700);
     return () => window.clearTimeout(timer);
   }, [snapshot, userId, busy, send]);
 
@@ -270,6 +280,55 @@ export function OnlineMatch({
     }
     autoPlay();
   }, [secondsLeft, busy, snapshot, userId, autoPlay, router]);
+
+  // Detect the token that advanced between snapshots and walk it through its
+  // path cells so moves are animated, not teleported. setState only happens in
+  // timer callbacks, never synchronously in the effect body.
+  useEffect(() => {
+    const prev = prevProgressRef.current;
+    let mover: {
+      id: string;
+      color: PlayerColor;
+      from: number;
+      to: number;
+    } | null = null;
+    for (const token of snapshot.tokens) {
+      const before = prev.get(token.id);
+      if (
+        before !== undefined &&
+        before !== null &&
+        token.progress !== null &&
+        token.progress > before
+      ) {
+        mover = {
+          id: token.id,
+          color: token.color,
+          from: before,
+          to: token.progress,
+        };
+        break;
+      }
+    }
+    prevProgressRef.current = new Map(
+      snapshot.tokens.map((token) => [token.id, token.progress]),
+    );
+    if (!mover) return;
+    const layout = getBoardLayout(snapshot.ruleset);
+    const waypoints = moveWaypointsOn(layout, mover.color, mover.from, mover.to);
+    const moverId = mover.id;
+    const timers: number[] = [];
+    waypoints.forEach((cell, index) => {
+      timers.push(
+        window.setTimeout(() => {
+          setAnim({ tokenId: moverId, cell });
+          if (index === waypoints.length - 1) {
+            timers.push(window.setTimeout(() => setAnim(null), STEP_MS));
+          }
+        }, index * STEP_MS),
+      );
+    });
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [snapshot]);
 
   const view = onlineViewModel(snapshot, userId);
   const movable = new Set(view.movableTokenIds);
@@ -362,8 +421,8 @@ export function OnlineMatch({
       <LudoBoard
         match={snapshot}
         movableTokenIds={view.isMyTurn ? movable : EMPTY}
-        animatingTokenId={null}
-        animatingCell={null}
+        animatingTokenId={anim?.tokenId ?? null}
+        animatingCell={anim?.cell ?? null}
         capturedTokenIds={EMPTY}
         interactive={view.isMyTurn && !busy}
         onTokenClick={onTokenClick}
