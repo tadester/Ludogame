@@ -114,6 +114,11 @@ describe("local-game helpers", () => {
       ...base,
       activePlayerIndex: 1,
       phase: "awaiting-move",
+      // Pin the safe squares to the openings so the capture target (ring 86)
+      // is never randomly safe — otherwise this test depends on the layout.
+      powerUps: base.powerUps
+        ? { ...base.powerUps, safeRingIndexes: [0, 25, 50, 75] }
+        : base.powerUps,
       pendingRoll: {
         dice: [{ id: "d1", value: 1 }],
         remainingDieIds: ["d1"],

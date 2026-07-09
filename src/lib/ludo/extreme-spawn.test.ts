@@ -23,17 +23,19 @@ describe("extremeLayout", () => {
     }
   });
 
-  it("places one extra safe square and one tile in each quadrant", () => {
+  it("places two extra safe squares and one tile in each quadrant", () => {
     const { safeRingIndexes, tiles } = extremeLayout("match-A", 2);
     expect(tiles).toHaveLength(4);
-    // Four openings plus one random safe per quadrant.
-    expect(safeRingIndexes).toHaveLength(8);
+    // Four openings plus two random safe squares per quadrant.
+    expect(safeRingIndexes).toHaveLength(12);
+    // No duplicate safe squares.
+    expect(new Set(safeRingIndexes).size).toBe(safeRingIndexes.length);
     for (let q = 0; q < 4; q += 1) {
       expect(tiles.filter((t) => quadrantOf(t.ringIndex) === q)).toHaveLength(1);
       const nonOpeningSafe = safeRingIndexes.filter(
         (idx) => quadrantOf(idx) === q && !QUADRANTS.includes(idx),
       );
-      expect(nonOpeningSafe).toHaveLength(1);
+      expect(nonOpeningSafe).toHaveLength(2);
     }
   });
 

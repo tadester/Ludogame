@@ -37,22 +37,35 @@ function lcg(seed: number): () => number {
  * releasing a token is never an instant loss. Fully deterministic in the match
  * id and epoch, so online play and replays stay identical.
  */
+/** Number of random safe squares placed within each quadrant (on top of the
+ *  quadrant's colour opening), so Extreme boards show plenty of safe stars. */
+const SAFE_PER_QUADRANT = 2;
+
 export function extremeLayout(matchId: string, epoch: number): ExtremeLayout {
   const rand = lcg(hashSeed(matchId) ^ Math.imul(epoch + 1, 2654435761));
   const safeRingIndexes: number[] = [...QUADRANT_STARTS];
   const tiles: PowerTile[] = [];
 
   QUADRANT_STARTS.forEach((start, quadrant) => {
-    const safeOffset = 1 + Math.floor(rand() * (QUADRANT_SIZE - 1));
-    safeRingIndexes.push(start + safeOffset);
+    // Pick distinct offsets within the quadrant for each safe square and the
+    // power tile, deterministically walking forward on any collision.
+    const used = new Set<number>();
+    const pickOffset = (): number => {
+      let offset = 1 + Math.floor(rand() * (QUADRANT_SIZE - 1));
+      while (used.has(offset)) {
+        offset = (offset % (QUADRANT_SIZE - 1)) + 1;
+      }
+      used.add(offset);
+      return offset;
+    };
 
-    let tileOffset = 1 + Math.floor(rand() * (QUADRANT_SIZE - 1));
-    if (tileOffset === safeOffset) {
-      tileOffset = (safeOffset % (QUADRANT_SIZE - 1)) + 1;
+    for (let i = 0; i < SAFE_PER_QUADRANT; i += 1) {
+      safeRingIndexes.push(start + pickOffset());
     }
+
     const power: PowerKind =
       EXTREME_TILE_FALLBACK_POWERS[quadrant % EXTREME_TILE_FALLBACK_POWERS.length];
-    tiles.push({ ringIndex: start + tileOffset, power });
+    tiles.push({ ringIndex: start + pickOffset(), power });
   });
 
   return { safeRingIndexes, tiles };

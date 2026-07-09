@@ -1,0 +1,125 @@
+.panel {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--panel), transparent 8%);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.legend b {
+  font-size: 1rem;
+}
+
+.star {
+  color: #f7c948;
+}
+
+.tile {
+  color: #a06bff;
+}
+
+.players {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--pc, var(--accent)), transparent 88%);
+}
+
+.player[data-color="red"] { --pc: var(--red); }
+.player[data-color="green"] { --pc: var(--green); }
+.player[data-color="yellow"] { --pc: var(--yellow); }
+.player[data-color="blue"] { --pc: var(--blue); }
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 800;
+}
+
+.dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--pc, var(--accent));
+  box-shadow: 0 0 0.3rem var(--pc, var(--accent));
+}
+
+.you {
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.7rem;
+  font-size: 0.82rem;
+  color: var(--text);
+}
+
+.shield {
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.ready {
+  color: #f7c948;
+  font-weight: 900;
+}
+
+.meter {
+  height: 0.35rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 14%);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--pc, var(--accent));
+  transition: width 0.3s ease;
+}
+
+.help {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.help summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.help ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.help b {
+  color: var(--text);
+}

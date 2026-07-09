@@ -13,6 +13,7 @@ import { getBoardLayout, moveWaypointsOn } from "@/lib/ludo-ui/geometry";
 import type { Cell, PlayerColor } from "@/lib/ludo-ui/geometry";
 import { createClient } from "@/lib/supabase/client";
 
+import { ExtremePanel } from "./extreme-panel";
 import { LudoBoard } from "./ludo-board";
 import { MatchHud } from "./match-hud";
 import styles from "./online-match.module.css";
@@ -441,6 +442,8 @@ export function OnlineMatch({
             : undefined
         }
       />
+
+      <ExtremePanel state={snapshot} userId={userId} />
 
       {view.winnerName && effectSkin !== "none" ? (
         <div aria-hidden="true" className={styles.winEffect} data-effect={effectSkin}>
