@@ -66,10 +66,24 @@
   gap: 0.8rem;
 }
 
+.diceGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
 .diceRow {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.rollLabel {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--accent);
+  text-align: center;
 }
 
 .status {

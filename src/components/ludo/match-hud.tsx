@@ -25,6 +25,7 @@ interface MatchHudProps {
   readonly canRoll: boolean;
   readonly diceSkin?: string;
   readonly animationSkin?: string;
+  readonly rollLabel?: string | null;
   readonly timerSeconds?: number | null;
   readonly ultimate?: {
     readonly label: string;
@@ -48,6 +49,7 @@ export function MatchHud({
   canRoll,
   diceSkin = "classic",
   animationSkin = "standard",
+  rollLabel = null,
   timerSeconds = null,
   ultimate = null,
   onRoll,
@@ -86,19 +88,22 @@ export function MatchHud({
       </div>
 
       <div className={styles.controls}>
-        <div className={styles.diceRow}>
-          {Array.from({ length: diceCount }, (_, index) => (
-            <Dice
-              key={index}
-              value={diceFaces[index] ?? null}
-              rolling={rolling}
-              ready={canRoll}
-              disabled={!canRoll}
-              onRoll={onRoll}
-              skin={diceSkin}
-              animation={animationSkin}
-            />
-          ))}
+        <div className={styles.diceGroup}>
+          <div className={styles.diceRow}>
+            {Array.from({ length: diceCount }, (_, index) => (
+              <Dice
+                key={index}
+                value={diceFaces[index] ?? null}
+                rolling={rolling}
+                ready={canRoll}
+                disabled={!canRoll}
+                onRoll={onRoll}
+                skin={diceSkin}
+                animation={animationSkin}
+              />
+            ))}
+          </div>
+          {rollLabel ? <p className={styles.rollLabel}>{rollLabel}</p> : null}
         </div>
         <p className={styles.status}>{status}</p>
       </div>

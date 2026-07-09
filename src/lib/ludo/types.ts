@@ -118,6 +118,13 @@ export interface MatchState {
   readonly rollNumber: number;
   readonly phase: TurnPhase;
   readonly pendingRoll: PendingRoll | null;
+  /** The most recent dice roll, kept after the roll is consumed so every player
+   *  can always see what the last mover rolled. Set by each roll. */
+  readonly lastRoll?: {
+    readonly playerId: string;
+    readonly dice: readonly number[];
+    readonly turnNumber: number;
+  } | null;
   readonly winnerPlayerId: string | null;
   /** Maps each seat (player id) to its owning team id. Seats sharing a team id
    *  belong to one controller, so they never capture each other. Absent (or a

@@ -114,7 +114,15 @@ function applyClassicRoll(
   const events: DomainEvent[] = [
     { type: "dice-rolled", playerId: action.playerId, dice: action.dice },
   ];
-  let rolled: MatchState = { ...state, rollNumber: state.rollNumber + 1 };
+  let rolled: MatchState = {
+    ...state,
+    rollNumber: state.rollNumber + 1,
+    lastRoll: {
+      playerId: action.playerId,
+      dice: action.dice.map((entry) => entry.value),
+      turnNumber: state.turnNumber,
+    },
+  };
   // Extreme: when the board has been cleared of power tiles, refill them at the
   // current respawn epoch's random spots so powers keep flowing.
   if (

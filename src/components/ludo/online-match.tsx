@@ -298,8 +298,28 @@ export function OnlineMatch({
 
   const pendingDice = snapshot.pendingRoll?.dice ?? [];
   const diceCount = diceCountForRuleset(snapshot.ruleset);
+  const lastRoll = snapshot.lastRoll ?? null;
+  // Prefer the live pending roll, then the local roll animation, then the last
+  // persisted roll — so the dice never fall blank and everyone can see what the
+  // last player rolled, even after the roll is consumed.
   const diceFaces =
-    pendingDice.length > 0 ? pendingDice.map((die) => die.value) : rollingFaces;
+    pendingDice.length > 0
+      ? pendingDice.map((die) => die.value)
+      : rollingFaces.length > 0
+        ? rollingFaces
+        : (lastRoll?.dice ?? []);
+  const lastRoller = lastRoll
+    ? (snapshot.players.find((player) => player.id === lastRoll.playerId) ??
+      null)
+    : null;
+  const rollLabel =
+    lastRoll && !rolling && pendingDice.length === 0
+      ? `${
+          seatOwner(lastRoll.playerId) === userId
+            ? "You"
+            : (lastRoller?.displayName ?? "Player")
+        } rolled ${lastRoll.dice.join(" + ")}`
+      : null;
   const activePlayer = snapshot.players[snapshot.activePlayerIndex] ?? null;
   const currentPlayer =
     snapshot.players.find((player) => seatOwner(player.id) === userId) ?? null;
@@ -331,6 +351,7 @@ export function OnlineMatch({
         canRoll={view.isMyTurn && view.canRoll && !busy}
         diceSkin={diceSkin}
         animationSkin={animationSkin}
+        rollLabel={rollLabel}
         timerSeconds={secondsLeft}
         onRoll={() => {
           markManualAction();
